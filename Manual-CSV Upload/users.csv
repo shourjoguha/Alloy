@@ -1,0 +1,9 @@
+"id","name","email","hashed_password","is_active","created_at","experience_level","persona_aggression","persona_tone"
+2,Direct Test,directtest1769353993@gainsly.com,$2b$12$rQVvr6aSLliYErmglOOCfemg/yTvNm7ox12q4Y6YyUyY.14Lebnxi,true,2026-01-25 15:13:14.049759,intermediate,BALANCED,supportive
+4,J Doe,jdoe2@example.com,$2b$12$LBHYpQ1m3rSZaUiWIRVek.ZFfYMRTxeNt6Hx4Clg40l2WgTT0N4yO,true,2026-01-25 18:58:11.60954,intermediate,BALANCED,supportive
+5,Test User,testuser@example.com,$2b$12$XsKT/r9qIh5E37fN/9FB5uX4Hbtzpa5AeIAZCnDVX4QCKpJPLXt0W,true,2026-01-25 19:02:05.297194,intermediate,BALANCED,supportive
+6,J Doe Test,testjdoe@example.com,$2b$12$Y6akJw8vr6ZPX0FJzQD1q.8hV/I7DYAN4T78nWPhytttDBXBbjXq2,true,2026-01-26 01:49:32.727955,intermediate,BALANCED,supportive
+3,J Doe,a@b.com,$2b$12$dG34GmqXV49o.zWVKv3w.esMoBK.hQ2VO7EUP5t82m5YCY9g20EEK,true,2026-01-25 15:17:39.664373,intermediate,BALANCED,supportive
+7,J Doe,jdoe@example.com,$2b$12$ymaurNZRqBZ5U/tAVncF7OKmQKGn2hSaDZIpiuaVRsJkPCnn0G7Te,true,2026-01-26 01:56:58.493151,intermediate,BALANCED,supportive
+1,Gain Smith,gainsmith@gainsly.com,$2b$12$3L2Qig0UyxzKH2CMhZn6bOpThgqynx6lCERXbmBE4fZUvtISyfvEa,true,2026-01-25 08:31:48.276593,intermediate,MODERATE_AGGRESSIVE,supportive
+9,tester 45,b@c.com,$2b$12$RlWOygwgMRdeS0fDqA8HPew8pFbAqr0jUA0CD5kBs1AWm0btLuoOu,true,2026-01-26 12:48:20.405762,intermediate,BALANCED,supportive

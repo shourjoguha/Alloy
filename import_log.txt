@@ -1,0 +1,1678 @@
+[2026-01-27 12:31:41] [INFO] ================================================================================
+[2026-01-27 12:31:41] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 12:31:41] [INFO] ================================================================================
+[2026-01-27 12:31:41] [INFO] Mode: FULL
+[2026-01-27 12:31:41] [INFO] Started at: 2026-01-27T12:31:41.094308
+[2026-01-27 12:31:41] [INFO] 
+[2026-01-27 12:31:41] [INFO] 
+[2026-01-27 12:31:41] [INFO] ================================================================================
+[2026-01-27 12:31:41] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 12:31:41] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 12:31:41] [INFO] Tables: 7
+[2026-01-27 12:31:41] [INFO] Timeout: 60s
+[2026-01-27 12:31:41] [INFO] ================================================================================
+[2026-01-27 12:31:41] [INFO] 
+[2026-01-27 12:31:41] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:31:41] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 12:31:41] [WARN] Warning: Failed to apply SET wal_buffers = '64MB';: parameter "wal_buffers" cannot be changed without restarting the server
+
+[2026-01-27 12:31:41] [WARN] Warning: Failed to apply SET CONSTRAINTS ALL DEFERRED;: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:41] [WARN] Warning: Failed to apply SET session_replication_role = 'replica';: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:41] [INFO] 
+Processing table: alembic_version
+[2026-01-27 12:31:41] [ERROR]   ✗ Error clearing alembic_version: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:41] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:46] [ERROR]   ✗ Error clearing alembic_version: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:46] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:51] [ERROR]   ✗ Error clearing alembic_version: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:51] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:51] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 12:31:51] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:31:57] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:02] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:02] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 12:32:02] [INFO] 
+Processing table: users
+[2026-01-27 12:32:02] [ERROR]   ✗ Error clearing users: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:02] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:07] [ERROR]   ✗ Error clearing users: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:07] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:12] [ERROR]   ✗ Error clearing users: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:12] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:12] [INFO]   → Importing 8 rows for users
+[2026-01-27 12:32:12] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:17] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:22] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:22] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 12:32:22] [INFO] 
+Processing table: muscles
+[2026-01-27 12:32:22] [ERROR]   ✗ Error clearing muscles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:22] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:27] [ERROR]   ✗ Error clearing muscles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:27] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:32] [ERROR]   ✗ Error clearing muscles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:32] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:32] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 12:32:32] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:37] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:42] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:42] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 12:32:42] [INFO] 
+Processing table: equipment
+[2026-01-27 12:32:43] [ERROR]   ✗ Error clearing equipment: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:43] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:48] [ERROR]   ✗ Error clearing equipment: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:48] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:53] [ERROR]   ✗ Error clearing equipment: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:53] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:53] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 12:32:53] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:32:58] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:03] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:03] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 12:33:03] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 12:33:03] [ERROR]   ✗ Error clearing activity_definitions: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:03] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:08] [ERROR]   ✗ Error clearing activity_definitions: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:08] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:13] [ERROR]   ✗ Error clearing activity_definitions: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:13] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:13] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 12:33:13] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:18] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:23] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:23] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 12:33:23] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 12:33:23] [ERROR]   ✗ Error clearing heuristic_configs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:23] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:28] [ERROR]   ✗ Error clearing heuristic_configs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:28] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:33] [ERROR]   ✗ Error clearing heuristic_configs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:33] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:33] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 12:33:33] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:39] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:44] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:44] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 12:33:44] [INFO] 
+Processing table: tags
+[2026-01-27 12:33:44] [ERROR]   ✗ Error clearing tags: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:44] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:49] [ERROR]   ✗ Error clearing tags: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:49] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:54] [ERROR]   ✗ Error clearing tags: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:54] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:54] [INFO]   → Importing 30 rows for tags
+[2026-01-27 12:33:54] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:33:59] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:04] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:04] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 12:34:04] [INFO] 
+[2026-01-27 12:34:04] [INFO] ✓ Phase PHASE_1_CORE_TABLES completed successfully
+[2026-01-27 12:34:04] [INFO] 
+[2026-01-27 12:34:04] [INFO] ================================================================================
+[2026-01-27 12:34:04] [INFO] PHASE: PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 12:34:04] [INFO] Description: Movement foundation tables
+[2026-01-27 12:34:04] [INFO] Tables: 8
+[2026-01-27 12:34:04] [INFO] Timeout: 120s
+[2026-01-27 12:34:04] [INFO] ================================================================================
+[2026-01-27 12:34:04] [INFO] 
+[2026-01-27 12:34:05] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:34:05] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 12:34:05] [WARN] Warning: Failed to apply SET wal_buffers = '64MB';: parameter "wal_buffers" cannot be changed without restarting the server
+
+[2026-01-27 12:34:05] [WARN] Warning: Failed to apply SET CONSTRAINTS ALL DEFERRED;: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:05] [WARN] Warning: Failed to apply SET session_replication_role = 'replica';: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:05] [INFO] 
+Processing table: movements
+[2026-01-27 12:34:05] [ERROR]   ✗ Error clearing movements: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:05] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:10] [ERROR]   ✗ Error clearing movements: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:10] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:15] [ERROR]   ✗ Error clearing movements: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:15] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:15] [INFO]   → Importing 828 rows for movements
+[2026-01-27 12:34:15] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:20] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:25] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:25] [ERROR]   ✗ Failed to import movements after 3 attempts
+[2026-01-27 12:34:25] [INFO] 
+Processing table: movements_legacy
+[2026-01-27 12:34:25] [ERROR]   ✗ Error clearing movements_legacy: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:25] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:30] [ERROR]   ✗ Error clearing movements_legacy: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:30] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:36] [ERROR]   ✗ Error clearing movements_legacy: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:36] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:36] [INFO]   → Importing 389 rows for movements_legacy
+[2026-01-27 12:34:36] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:41] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:46] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:46] [ERROR]   ✗ Failed to import movements_legacy after 3 attempts
+[2026-01-27 12:34:46] [INFO] 
+Processing table: movement_disciplines
+[2026-01-27 12:34:46] [ERROR]   ✗ Error clearing movement_disciplines: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:46] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:51] [ERROR]   ✗ Error clearing movement_disciplines: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:51] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:56] [ERROR]   ✗ Error clearing movement_disciplines: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:56] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:34:56] [INFO]   → Importing 235 rows for movement_disciplines
+[2026-01-27 12:34:56] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:01] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:06] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:06] [ERROR]   ✗ Failed to import movement_disciplines after 3 attempts
+[2026-01-27 12:35:06] [INFO] 
+Processing table: movement_equipment
+[2026-01-27 12:35:06] [ERROR]   ✗ Error clearing movement_equipment: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:06] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:11] [ERROR]   ✗ Error clearing movement_equipment: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:11] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:16] [ERROR]   ✗ Error clearing movement_equipment: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:16] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:16] [INFO]   → Importing 432 rows for movement_equipment
+[2026-01-27 12:35:16] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:21] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:26] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:26] [ERROR]   ✗ Failed to import movement_equipment after 3 attempts
+[2026-01-27 12:35:26] [INFO] 
+Processing table: movement_coaching_cues
+[2026-01-27 12:35:26] [ERROR]   ✗ Error clearing movement_coaching_cues: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:26] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:31] [ERROR]   ✗ Error clearing movement_coaching_cues: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:31] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:36] [ERROR]   ✗ Error clearing movement_coaching_cues: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:36] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:36] [INFO]   → Importing 1082 rows for movement_coaching_cues
+[2026-01-27 12:35:37] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:42] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:47] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:47] [ERROR]   ✗ Failed to import movement_coaching_cues after 3 attempts
+[2026-01-27 12:35:47] [INFO] 
+Processing table: movement_muscle_map
+[2026-01-27 12:35:47] [ERROR]   ✗ Error clearing movement_muscle_map: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:47] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:52] [ERROR]   ✗ Error clearing movement_muscle_map: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:52] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:57] [ERROR]   ✗ Error clearing movement_muscle_map: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:57] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:35:57] [INFO]   → Importing 612 rows for movement_muscle_map
+[2026-01-27 12:35:57] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:02] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:07] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:07] [ERROR]   ✗ Failed to import movement_muscle_map after 3 attempts
+[2026-01-27 12:36:07] [INFO] 
+Processing table: movement_tags
+[2026-01-27 12:36:07] [ERROR]   ✗ Error clearing movement_tags: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:07] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:12] [ERROR]   ✗ Error clearing movement_tags: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:12] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:17] [ERROR]   ✗ Error clearing movement_tags: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:17] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:17] [INFO]   → Importing 466 rows for movement_tags
+[2026-01-27 12:36:17] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:22] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:27] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:27] [ERROR]   ✗ Failed to import movement_tags after 3 attempts
+[2026-01-27 12:36:27] [INFO] 
+Processing table: movement_relationships
+[2026-01-27 12:36:28] [ERROR]   ✗ Error clearing movement_relationships: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:28] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:33] [ERROR]   ✗ Error clearing movement_relationships: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:33] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:38] [ERROR]   ✗ Error clearing movement_relationships: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:38] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:38] [INFO]   → Importing 21 rows for movement_relationships
+[2026-01-27 12:36:38] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:43] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:48] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:48] [ERROR]   ✗ Failed to import movement_relationships after 3 attempts
+[2026-01-27 12:36:48] [INFO] 
+[2026-01-27 12:36:48] [INFO] ✓ Phase PHASE_2_MOVEMENT_FOUNDATION completed successfully
+[2026-01-27 12:36:48] [INFO] 
+[2026-01-27 12:36:48] [INFO] ================================================================================
+[2026-01-27 12:36:48] [INFO] PHASE: PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 12:36:48] [INFO] Description: Programs and circuit templates
+[2026-01-27 12:36:48] [INFO] Tables: 4
+[2026-01-27 12:36:48] [INFO] Timeout: 120s
+[2026-01-27 12:36:48] [INFO] ================================================================================
+[2026-01-27 12:36:48] [INFO] 
+[2026-01-27 12:36:48] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:36:48] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 12:36:48] [WARN] Warning: Failed to apply SET wal_buffers = '64MB';: parameter "wal_buffers" cannot be changed without restarting the server
+
+[2026-01-27 12:36:48] [WARN] Warning: Failed to apply SET CONSTRAINTS ALL DEFERRED;: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:48] [WARN] Warning: Failed to apply SET session_replication_role = 'replica';: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:48] [INFO] 
+Processing table: microcycles
+[2026-01-27 12:36:48] [ERROR]   ✗ Error clearing microcycles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:48] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:53] [ERROR]   ✗ Error clearing microcycles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:53] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:58] [ERROR]   ✗ Error clearing microcycles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:58] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:36:58] [INFO]   → Importing 462 rows for microcycles
+[2026-01-27 12:36:58] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:03] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:08] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:08] [ERROR]   ✗ Failed to import microcycles after 3 attempts
+[2026-01-27 12:37:08] [INFO] 
+Processing table: programs
+[2026-01-27 12:37:08] [ERROR]   ✗ Error clearing programs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:08] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:13] [ERROR]   ✗ Error clearing programs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:13] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:18] [ERROR]   ✗ Error clearing programs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:18] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:18] [INFO]   → Importing 58 rows for programs
+[2026-01-27 12:37:18] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:23] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:29] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:29] [ERROR]   ✗ Failed to import programs after 3 attempts
+[2026-01-27 12:37:29] [INFO] 
+Processing table: program_disciplines
+[2026-01-27 12:37:29] [ERROR]   ✗ Error clearing program_disciplines: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:29] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:34] [ERROR]   ✗ Error clearing program_disciplines: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:34] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:39] [ERROR]   ✗ Error clearing program_disciplines: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:39] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:39] [INFO]   → Importing 222 rows for program_disciplines
+[2026-01-27 12:37:39] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:44] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:49] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:49] [ERROR]   ✗ Failed to import program_disciplines after 3 attempts
+[2026-01-27 12:37:49] [INFO] 
+Processing table: circuit_templates
+[2026-01-27 12:37:49] [ERROR]   ✗ Error clearing circuit_templates: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:49] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:54] [ERROR]   ✗ Error clearing circuit_templates: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:54] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:59] [ERROR]   ✗ Error clearing circuit_templates: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:59] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:37:59] [INFO]   → Importing 27 rows for circuit_templates
+[2026-01-27 12:37:59] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:04] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:09] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:09] [ERROR]   ✗ Failed to import circuit_templates after 3 attempts
+[2026-01-27 12:38:09] [INFO] 
+[2026-01-27 12:38:09] [INFO] ✓ Phase PHASE_3_PROGRAMS_TEMPLATES completed successfully
+[2026-01-27 12:38:09] [INFO] 
+[2026-01-27 12:38:09] [INFO] ================================================================================
+[2026-01-27 12:38:09] [INFO] PHASE: PHASE_4_SESSION_DATA
+[2026-01-27 12:38:09] [INFO] Description: Session data (largest tables)
+[2026-01-27 12:38:09] [INFO] Tables: 3
+[2026-01-27 12:38:09] [INFO] Timeout: 300s
+[2026-01-27 12:38:09] [INFO] ================================================================================
+[2026-01-27 12:38:09] [INFO] 
+[2026-01-27 12:38:09] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:38:09] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 12:38:09] [WARN] Warning: Failed to apply SET wal_buffers = '64MB';: parameter "wal_buffers" cannot be changed without restarting the server
+
+[2026-01-27 12:38:09] [WARN] Warning: Failed to apply SET CONSTRAINTS ALL DEFERRED;: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:09] [WARN] Warning: Failed to apply SET session_replication_role = 'replica';: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:09] [INFO] 
+Processing table: sessions
+[2026-01-27 12:38:09] [ERROR]   ✗ Error clearing sessions: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:09] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:15] [ERROR]   ✗ Error clearing sessions: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:15] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:20] [ERROR]   ✗ Error clearing sessions: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:20] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:20] [INFO]   → Importing 9100 rows for sessions
+[2026-01-27 12:38:20] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:25] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:30] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:30] [ERROR]   ✗ Failed to import sessions after 3 attempts
+[2026-01-27 12:38:30] [INFO] 
+Processing table: sessions_legacy_temp
+[2026-01-27 12:38:30] [ERROR]   ✗ Error clearing sessions_legacy_temp: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:30] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:35] [ERROR]   ✗ Error clearing sessions_legacy_temp: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:35] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:40] [ERROR]   ✗ Error clearing sessions_legacy_temp: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:40] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:40] [INFO]   → Importing 4480 rows for sessions_legacy_temp
+[2026-01-27 12:38:40] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:45] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:50] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:50] [ERROR]   ✗ Failed to import sessions_legacy_temp after 3 attempts
+[2026-01-27 12:38:50] [INFO] 
+Processing table: session_exercises
+[2026-01-27 12:38:50] [ERROR]   ✗ Error clearing session_exercises: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:50] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:56] [ERROR]   ✗ Error clearing session_exercises: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:38:56] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:01] [ERROR]   ✗ Error clearing session_exercises: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:01] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:01] [INFO]   → Importing 174 rows for session_exercises
+[2026-01-27 12:39:01] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:06] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:11] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:11] [ERROR]   ✗ Failed to import session_exercises after 3 attempts
+[2026-01-27 12:39:11] [INFO] 
+[2026-01-27 12:39:11] [INFO] ✓ Phase PHASE_4_SESSION_DATA completed successfully
+[2026-01-27 12:39:11] [INFO] 
+[2026-01-27 12:39:11] [INFO] ================================================================================
+[2026-01-27 12:39:11] [INFO] PHASE: PHASE_5_USER_DATA
+[2026-01-27 12:39:11] [INFO] Description: User-specific data
+[2026-01-27 12:39:11] [INFO] Tables: 7
+[2026-01-27 12:39:11] [INFO] Timeout: 60s
+[2026-01-27 12:39:11] [INFO] ================================================================================
+[2026-01-27 12:39:11] [INFO] 
+[2026-01-27 12:39:11] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:39:11] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 12:39:11] [WARN] Warning: Failed to apply SET wal_buffers = '64MB';: parameter "wal_buffers" cannot be changed without restarting the server
+
+[2026-01-27 12:39:11] [WARN] Warning: Failed to apply SET CONSTRAINTS ALL DEFERRED;: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:11] [WARN] Warning: Failed to apply SET session_replication_role = 'replica';: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:11] [INFO] 
+Processing table: user_profiles
+[2026-01-27 12:39:11] [ERROR]   ✗ Error clearing user_profiles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:11] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:16] [ERROR]   ✗ Error clearing user_profiles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:16] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:21] [ERROR]   ✗ Error clearing user_profiles: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:39:21] [ERROR] ✗ Phase PHASE_5_USER_DATA failed: [Errno 32] Broken pipe
+[2026-01-27 12:39:21] [INFO] 
+[2026-01-27 12:39:21] [INFO] ================================================================================
+[2026-01-27 12:39:21] [INFO] IMPORT PROGRESS
+[2026-01-27 12:39:21] [INFO] ================================================================================
+[2026-01-27 12:39:21] [INFO] 
+✓ PHASE_1_CORE_TABLES
+[2026-01-27 12:39:21] [INFO] 
+✓ PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 12:39:21] [INFO] 
+✓ PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 12:39:21] [INFO] 
+✓ PHASE_4_SESSION_DATA
+[2026-01-27 12:39:21] [INFO] 
+⟳ PHASE_5_USER_DATA
+[2026-01-27 12:39:21] [INFO] 
+[2026-01-27 12:39:21] [INFO] ================================================================================
+[2026-01-27 12:39:21] [INFO] Progress: 0/29 cleared, 0/29 imported (80%)
+[2026-01-27 12:39:21] [INFO] Rows imported: 0
+[2026-01-27 12:39:21] [INFO] Errors: 0
+[2026-01-27 12:39:21] [INFO] ================================================================================
+[2026-01-27 12:39:21] [INFO] 
+[2026-01-27 12:39:21] [INFO] ================================================================================
+[2026-01-27 12:39:21] [INFO] Import completed in 460.5 seconds (7.7 minutes)
+[2026-01-27 12:39:21] [INFO] ================================================================================
+[2026-01-27 12:39:51] [INFO] ================================================================================
+[2026-01-27 12:39:51] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 12:39:51] [INFO] ================================================================================
+[2026-01-27 12:39:51] [INFO] Mode: FULL
+[2026-01-27 12:39:51] [INFO] Started at: 2026-01-27T12:39:51.653165
+[2026-01-27 12:39:51] [INFO] 
+[2026-01-27 12:39:51] [INFO] 
+[2026-01-27 12:39:51] [INFO] ================================================================================
+[2026-01-27 12:39:51] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 12:39:51] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 12:39:51] [INFO] Tables: 7
+[2026-01-27 12:39:51] [INFO] Timeout: 60s
+[2026-01-27 12:39:51] [INFO] ================================================================================
+[2026-01-27 12:39:51] [INFO] 
+[2026-01-27 12:39:52] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:39:52] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 12:41:21] [INFO] ================================================================================
+[2026-01-27 12:41:21] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 12:41:21] [INFO] ================================================================================
+[2026-01-27 12:41:21] [INFO] Mode: FULL
+[2026-01-27 12:41:21] [INFO] Started at: 2026-01-27T12:41:21.328445
+[2026-01-27 12:41:21] [INFO] 
+[2026-01-27 12:41:21] [INFO] 
+[2026-01-27 12:41:21] [INFO] ================================================================================
+[2026-01-27 12:41:21] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 12:41:21] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 12:41:21] [INFO] Tables: 7
+[2026-01-27 12:41:21] [INFO] Timeout: 60s
+[2026-01-27 12:41:21] [INFO] ================================================================================
+[2026-01-27 12:41:21] [INFO] 
+[2026-01-27 12:41:22] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:41:22] [INFO] Applied: SET session_replication_role = 'replica';
+[2026-01-27 12:41:22] [INFO] 
+Processing table: alembic_version
+[2026-01-27 12:41:22] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: users
+[2026-01-27 12:41:22] [INFO]   → Importing 8 rows for users
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: muscles
+[2026-01-27 12:41:22] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: equipment
+[2026-01-27 12:41:22] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 12:41:22] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 12:41:22] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: tags
+[2026-01-27 12:41:22] [INFO]   → Importing 30 rows for tags
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+[2026-01-27 12:41:22] [INFO] ✓ Phase PHASE_1_CORE_TABLES completed successfully
+[2026-01-27 12:41:22] [INFO] 
+[2026-01-27 12:41:22] [INFO] ================================================================================
+[2026-01-27 12:41:22] [INFO] PHASE: PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 12:41:22] [INFO] Description: Movement foundation tables
+[2026-01-27 12:41:22] [INFO] Tables: 8
+[2026-01-27 12:41:22] [INFO] Timeout: 120s
+[2026-01-27 12:41:22] [INFO] ================================================================================
+[2026-01-27 12:41:22] [INFO] 
+[2026-01-27 12:41:22] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:41:22] [INFO] Applied: SET session_replication_role = 'replica';
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movements
+[2026-01-27 12:41:22] [INFO]   → Importing 828 rows for movements
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movements after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movements_legacy
+[2026-01-27 12:41:22] [INFO]   → Importing 389 rows for movements_legacy
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movements_legacy after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movement_disciplines
+[2026-01-27 12:41:22] [INFO]   → Importing 235 rows for movement_disciplines
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movement_disciplines after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movement_equipment
+[2026-01-27 12:41:22] [INFO]   → Importing 432 rows for movement_equipment
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movement_equipment after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movement_coaching_cues
+[2026-01-27 12:41:22] [INFO]   → Importing 1082 rows for movement_coaching_cues
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movement_coaching_cues after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movement_muscle_map
+[2026-01-27 12:41:22] [INFO]   → Importing 612 rows for movement_muscle_map
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movement_muscle_map after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movement_tags
+[2026-01-27 12:41:22] [INFO]   → Importing 466 rows for movement_tags
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movement_tags after 3 attempts
+[2026-01-27 12:41:22] [INFO] 
+Processing table: movement_relationships
+[2026-01-27 12:41:22] [INFO]   → Importing 21 rows for movement_relationships
+[2026-01-27 12:41:22] [ERROR]   ✗ Failed to import movement_relationships after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] ✓ Phase PHASE_2_MOVEMENT_FOUNDATION completed successfully
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] ================================================================================
+[2026-01-27 12:41:23] [INFO] PHASE: PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 12:41:23] [INFO] Description: Programs and circuit templates
+[2026-01-27 12:41:23] [INFO] Tables: 4
+[2026-01-27 12:41:23] [INFO] Timeout: 120s
+[2026-01-27 12:41:23] [INFO] ================================================================================
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:41:23] [INFO] Applied: SET session_replication_role = 'replica';
+[2026-01-27 12:41:23] [INFO] 
+Processing table: microcycles
+[2026-01-27 12:41:23] [INFO]   → Importing 462 rows for microcycles
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import microcycles after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+Processing table: programs
+[2026-01-27 12:41:23] [INFO]   → Importing 58 rows for programs
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import programs after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+Processing table: program_disciplines
+[2026-01-27 12:41:23] [INFO]   → Importing 222 rows for program_disciplines
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import program_disciplines after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+Processing table: circuit_templates
+[2026-01-27 12:41:23] [INFO]   → Importing 27 rows for circuit_templates
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import circuit_templates after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] ✓ Phase PHASE_3_PROGRAMS_TEMPLATES completed successfully
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] ================================================================================
+[2026-01-27 12:41:23] [INFO] PHASE: PHASE_4_SESSION_DATA
+[2026-01-27 12:41:23] [INFO] Description: Session data (largest tables)
+[2026-01-27 12:41:23] [INFO] Tables: 3
+[2026-01-27 12:41:23] [INFO] Timeout: 300s
+[2026-01-27 12:41:23] [INFO] ================================================================================
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:41:23] [INFO] Applied: SET session_replication_role = 'replica';
+[2026-01-27 12:41:23] [INFO] 
+Processing table: sessions
+[2026-01-27 12:41:23] [INFO]   → Importing 9100 rows for sessions
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import sessions after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+Processing table: sessions_legacy_temp
+[2026-01-27 12:41:23] [INFO]   → Importing 4480 rows for sessions_legacy_temp
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import sessions_legacy_temp after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+Processing table: session_exercises
+[2026-01-27 12:41:23] [INFO]   → Importing 174 rows for session_exercises
+[2026-01-27 12:41:23] [ERROR]   ✗ Failed to import session_exercises after 3 attempts
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] ✓ Phase PHASE_4_SESSION_DATA completed successfully
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] ================================================================================
+[2026-01-27 12:41:23] [INFO] PHASE: PHASE_5_USER_DATA
+[2026-01-27 12:41:23] [INFO] Description: User-specific data
+[2026-01-27 12:41:23] [INFO] Tables: 7
+[2026-01-27 12:41:23] [INFO] Timeout: 60s
+[2026-01-27 12:41:23] [INFO] ================================================================================
+[2026-01-27 12:41:23] [INFO] 
+[2026-01-27 12:41:23] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 12:41:23] [INFO] Applied: SET session_replication_role = 'replica';
+[2026-01-27 12:41:23] [INFO] 
+Processing table: user_profiles
+[2026-01-27 12:41:23] [ERROR]   ✗ Error clearing user_profiles: syntax error at or near "_id_seq"
+LINE 1: ALTER SEQUENCE IF EXISTS "user_profiles"_id_seq RESTART WITH...
+                                                ^
+
+[2026-01-27 12:41:23] [WARN]   ✗ Clear attempt 3/3 failed: syntax error at or near "_id_seq"
+LINE 1: ALTER SEQUENCE IF EXISTS "user_profiles"_id_seq RESTART WITH...
+                                                ^
+
+[2026-01-27 12:41:24] [INFO]   → Importing 1 rows for user_profiles
+[2026-01-27 12:41:24] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:29] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:34] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:34] [ERROR]   ✗ Failed to import user_profiles after 3 attempts
+[2026-01-27 12:41:34] [INFO] 
+Processing table: user_settings
+[2026-01-27 12:41:34] [ERROR]   ✗ Error clearing user_settings: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:34] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:39] [ERROR]   ✗ Error clearing user_settings: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:39] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:44] [ERROR]   ✗ Error clearing user_settings: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:44] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:44] [INFO]   → Importing 1 rows for user_settings
+[2026-01-27 12:41:44] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:49] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:54] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:54] [ERROR]   ✗ Failed to import user_settings after 3 attempts
+[2026-01-27 12:41:54] [INFO] 
+Processing table: user_enjoyable_activities
+[2026-01-27 12:41:54] [ERROR]   ✗ Error clearing user_enjoyable_activities: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:54] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:59] [ERROR]   ✗ Error clearing user_enjoyable_activities: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:41:59] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:04] [ERROR]   ✗ Error clearing user_enjoyable_activities: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:04] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:04] [INFO]   → Importing 9 rows for user_enjoyable_activities
+[2026-01-27 12:42:04] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:09] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:14] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:14] [ERROR]   ✗ Failed to import user_enjoyable_activities after 3 attempts
+[2026-01-27 12:42:14] [INFO] 
+Processing table: user_movement_rules
+[2026-01-27 12:42:14] [ERROR]   ✗ Error clearing user_movement_rules: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:14] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:19] [ERROR]   ✗ Error clearing user_movement_rules: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:19] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:25] [ERROR]   ✗ Error clearing user_movement_rules: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:25] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:25] [INFO]   → Importing 6 rows for user_movement_rules
+[2026-01-27 12:42:25] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:30] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:35] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:35] [ERROR]   ✗ Failed to import user_movement_rules after 3 attempts
+[2026-01-27 12:42:35] [INFO] 
+Processing table: muscle_recovery_states
+[2026-01-27 12:42:35] [ERROR]   ✗ Error clearing muscle_recovery_states: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:35] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:40] [ERROR]   ✗ Error clearing muscle_recovery_states: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:40] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:45] [ERROR]   ✗ Error clearing muscle_recovery_states: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:45] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:45] [INFO]   → Importing 1 rows for muscle_recovery_states
+[2026-01-27 12:42:45] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:50] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:55] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:55] [ERROR]   ✗ Failed to import muscle_recovery_states after 3 attempts
+[2026-01-27 12:42:55] [INFO] 
+Processing table: soreness_logs
+[2026-01-27 12:42:55] [ERROR]   ✗ Error clearing soreness_logs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:42:55] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:00] [ERROR]   ✗ Error clearing soreness_logs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:00] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:05] [ERROR]   ✗ Error clearing soreness_logs: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:05] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:06] [INFO]   → Importing 7 rows for soreness_logs
+[2026-01-27 12:43:06] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:11] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:16] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:16] [ERROR]   ✗ Failed to import soreness_logs after 3 attempts
+[2026-01-27 12:43:16] [INFO] 
+Processing table: favorites
+[2026-01-27 12:43:16] [ERROR]   ✗ Error clearing favorites: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:16] [WARN]   ✗ Clear attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:21] [ERROR]   ✗ Error clearing favorites: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:21] [WARN]   ✗ Clear attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:26] [ERROR]   ✗ Error clearing favorites: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:26] [WARN]   ✗ Clear attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:26] [INFO]   → Importing 2 rows for favorites
+[2026-01-27 12:43:26] [WARN]   ✗ Import attempt 1/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:31] [WARN]   ✗ Import attempt 2/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:36] [WARN]   ✗ Import attempt 3/3 failed: current transaction is aborted, commands ignored until end of transaction block
+
+[2026-01-27 12:43:36] [ERROR]   ✗ Failed to import favorites after 3 attempts
+[2026-01-27 12:43:36] [INFO] 
+[2026-01-27 12:43:36] [INFO] ✓ Phase PHASE_5_USER_DATA completed successfully
+[2026-01-27 12:43:36] [INFO] 
+[2026-01-27 12:43:36] [INFO] ================================================================================
+[2026-01-27 12:43:36] [INFO] IMPORT PROGRESS
+[2026-01-27 12:43:36] [INFO] ================================================================================
+[2026-01-27 12:43:36] [INFO] 
+✓ PHASE_1_CORE_TABLES
+[2026-01-27 12:43:36] [INFO] 
+✓ PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 12:43:36] [INFO] 
+✓ PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 12:43:36] [INFO] 
+✓ PHASE_4_SESSION_DATA
+[2026-01-27 12:43:36] [INFO] 
+✓ PHASE_5_USER_DATA
+[2026-01-27 12:43:36] [INFO] 
+[2026-01-27 12:43:36] [INFO] ================================================================================
+[2026-01-27 12:43:36] [INFO] Progress: 0/29 cleared, 0/29 imported (100%)
+[2026-01-27 12:43:36] [INFO] Rows imported: 0
+[2026-01-27 12:43:36] [INFO] Errors: 0
+[2026-01-27 12:43:36] [INFO] ================================================================================
+[2026-01-27 12:43:36] [INFO] 
+[2026-01-27 12:43:36] [INFO] ================================================================================
+[2026-01-27 12:43:36] [INFO] Import completed in 135.1 seconds (2.3 minutes)
+[2026-01-27 12:43:36] [INFO] ================================================================================
+[2026-01-27 13:03:33] [INFO] ================================================================================
+[2026-01-27 13:03:33] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 13:03:33] [INFO] ================================================================================
+[2026-01-27 13:03:33] [INFO] Mode: FULL
+[2026-01-27 13:03:33] [INFO] Started at: 2026-01-27T13:03:33.620921
+[2026-01-27 13:03:33] [INFO] 
+[2026-01-27 13:03:33] [INFO] 
+[2026-01-27 13:03:33] [INFO] ================================================================================
+[2026-01-27 13:03:33] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 13:03:33] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 13:03:33] [INFO] Tables: 7
+[2026-01-27 13:03:33] [INFO] Timeout: 60s
+[2026-01-27 13:03:33] [INFO] ================================================================================
+[2026-01-27 13:03:33] [INFO] 
+[2026-01-27 13:03:34] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:03:34] [INFO] Applied: SET work_mem = '2GB';
+[2026-01-27 13:03:34] [INFO] 
+Disabling foreign key constraints for 7 tables...
+[2026-01-27 13:03:34] [INFO]   ✓ Disabled 1 foreign key constraints
+[2026-01-27 13:03:34] [INFO] 
+Processing table: alembic_version
+[2026-01-27 13:03:34] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Processing table: users
+[2026-01-27 13:03:34] [INFO]   → Importing 8 rows for users
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Processing table: muscles
+[2026-01-27 13:03:34] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Processing table: equipment
+[2026-01-27 13:03:34] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 13:03:34] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 13:03:34] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Processing table: tags
+[2026-01-27 13:03:34] [INFO]   → Importing 30 rows for tags
+[2026-01-27 13:03:34] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 13:03:34] [INFO] 
+Re-enabling foreign key constraints for 7 tables...
+[2026-01-27 13:04:07] [INFO]   ✓ Re-enabled 1 foreign key constraints
+[2026-01-27 13:04:07] [INFO]   Constraint management: 1 disabled, 1 re-enabled
+[2026-01-27 13:07:10] [INFO] ================================================================================
+[2026-01-27 13:07:10] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 13:07:10] [INFO] ================================================================================
+[2026-01-27 13:07:10] [INFO] Mode: FULL
+[2026-01-27 13:07:10] [INFO] Started at: 2026-01-27T13:07:10.701471
+[2026-01-27 13:07:10] [INFO] 
+[2026-01-27 13:07:10] [INFO] 
+[2026-01-27 13:07:10] [INFO] ================================================================================
+[2026-01-27 13:07:10] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 13:07:10] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 13:07:10] [INFO] Tables: 7
+[2026-01-27 13:07:10] [INFO] Timeout: 60s
+[2026-01-27 13:07:10] [INFO] ================================================================================
+[2026-01-27 13:07:10] [INFO] 
+[2026-01-27 13:07:11] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:07:11] [INFO] 
+Processing table: alembic_version
+[2026-01-27 13:07:11] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: users
+[2026-01-27 13:07:11] [INFO]   → Importing 8 rows for users
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: muscles
+[2026-01-27 13:07:11] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: equipment
+[2026-01-27 13:07:11] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 13:07:11] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 13:07:11] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: tags
+[2026-01-27 13:07:11] [INFO]   → Importing 30 rows for tags
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+[2026-01-27 13:07:11] [INFO] ✓ Phase PHASE_1_CORE_TABLES completed successfully
+[2026-01-27 13:07:11] [INFO] 
+[2026-01-27 13:07:11] [INFO] ================================================================================
+[2026-01-27 13:07:11] [INFO] PHASE: PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 13:07:11] [INFO] Description: Movement foundation tables
+[2026-01-27 13:07:11] [INFO] Tables: 8
+[2026-01-27 13:07:11] [INFO] Timeout: 120s
+[2026-01-27 13:07:11] [INFO] ================================================================================
+[2026-01-27 13:07:11] [INFO] 
+[2026-01-27 13:07:11] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movements
+[2026-01-27 13:07:11] [INFO]   → Importing 828 rows for movements
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movements after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movements_legacy
+[2026-01-27 13:07:11] [INFO]   → Importing 389 rows for movements_legacy
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movements_legacy after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movement_disciplines
+[2026-01-27 13:07:11] [INFO]   → Importing 235 rows for movement_disciplines
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movement_disciplines after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movement_equipment
+[2026-01-27 13:07:11] [INFO]   → Importing 432 rows for movement_equipment
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movement_equipment after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movement_coaching_cues
+[2026-01-27 13:07:11] [INFO]   → Importing 1082 rows for movement_coaching_cues
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movement_coaching_cues after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movement_muscle_map
+[2026-01-27 13:07:11] [INFO]   → Importing 612 rows for movement_muscle_map
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movement_muscle_map after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movement_tags
+[2026-01-27 13:07:11] [INFO]   → Importing 466 rows for movement_tags
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movement_tags after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+Processing table: movement_relationships
+[2026-01-27 13:07:11] [INFO]   → Importing 21 rows for movement_relationships
+[2026-01-27 13:07:11] [ERROR]   ✗ Failed to import movement_relationships after 3 attempts
+[2026-01-27 13:07:11] [INFO] 
+[2026-01-27 13:07:11] [INFO] ✓ Phase PHASE_2_MOVEMENT_FOUNDATION completed successfully
+[2026-01-27 13:07:11] [INFO] 
+[2026-01-27 13:07:11] [INFO] ================================================================================
+[2026-01-27 13:07:11] [INFO] PHASE: PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 13:07:11] [INFO] Description: Programs and circuit templates
+[2026-01-27 13:07:11] [INFO] Tables: 4
+[2026-01-27 13:07:11] [INFO] Timeout: 120s
+[2026-01-27 13:07:11] [INFO] ================================================================================
+[2026-01-27 13:07:11] [INFO] 
+[2026-01-27 13:07:30] [WARN] Warning: Failed to apply SET statement_timeout = 0;: could not receive data from server: Operation timed out
+SSL SYSCALL error: Operation timed out
+
+[2026-01-27 13:07:30] [INFO] 
+Processing table: microcycles
+[2026-01-27 13:07:30] [INFO]   → Importing 462 rows for microcycles
+[2026-01-27 13:07:30] [ERROR]   ✗ Failed to import microcycles after 3 attempts
+[2026-01-27 13:07:30] [INFO] 
+Processing table: programs
+[2026-01-27 13:07:30] [INFO]   → Importing 58 rows for programs
+[2026-01-27 13:07:30] [ERROR]   ✗ Failed to import programs after 3 attempts
+[2026-01-27 13:07:30] [INFO] 
+Processing table: program_disciplines
+[2026-01-27 13:07:30] [INFO]   → Importing 222 rows for program_disciplines
+[2026-01-27 13:07:30] [ERROR]   ✗ Failed to import program_disciplines after 3 attempts
+[2026-01-27 13:07:30] [INFO] 
+Processing table: circuit_templates
+[2026-01-27 13:07:30] [INFO]   → Importing 27 rows for circuit_templates
+[2026-01-27 13:07:30] [ERROR]   ✗ Failed to import circuit_templates after 3 attempts
+[2026-01-27 13:12:29] [INFO] ================================================================================
+[2026-01-27 13:12:29] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 13:12:29] [INFO] ================================================================================
+[2026-01-27 13:12:29] [INFO] Mode: FULL
+[2026-01-27 13:12:29] [INFO] Started at: 2026-01-27T13:12:29.397142
+[2026-01-27 13:12:29] [INFO] 
+[2026-01-27 13:12:29] [INFO] 
+[2026-01-27 13:12:29] [INFO] ================================================================================
+[2026-01-27 13:12:29] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 13:12:29] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 13:12:29] [INFO] Tables: 7
+[2026-01-27 13:12:29] [INFO] Timeout: 60s
+[2026-01-27 13:12:29] [INFO] ================================================================================
+[2026-01-27 13:12:29] [INFO] 
+[2026-01-27 13:12:29] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:12:29] [INFO] 
+Processing table: alembic_version
+[2026-01-27 13:12:29] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+Processing table: users
+[2026-01-27 13:12:29] [INFO]   → Importing 8 rows for users
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+Processing table: muscles
+[2026-01-27 13:12:29] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+Processing table: equipment
+[2026-01-27 13:12:29] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 13:12:29] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 13:12:29] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+Processing table: tags
+[2026-01-27 13:12:29] [INFO]   → Importing 30 rows for tags
+[2026-01-27 13:12:29] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 13:12:29] [INFO] 
+[2026-01-27 13:12:29] [INFO] ✓ Phase PHASE_1_CORE_TABLES completed successfully
+[2026-01-27 13:12:29] [INFO] 
+[2026-01-27 13:12:29] [INFO] ================================================================================
+[2026-01-27 13:12:29] [INFO] PHASE: PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 13:12:29] [INFO] Description: Movement foundation tables
+[2026-01-27 13:12:29] [INFO] Tables: 8
+[2026-01-27 13:12:29] [INFO] Timeout: 120s
+[2026-01-27 13:12:29] [INFO] ================================================================================
+[2026-01-27 13:12:29] [INFO] 
+[2026-01-27 13:12:30] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movements
+[2026-01-27 13:12:30] [INFO]   → Importing 828 rows for movements
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movements after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movements_legacy
+[2026-01-27 13:12:30] [INFO]   → Importing 389 rows for movements_legacy
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movements_legacy after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movement_disciplines
+[2026-01-27 13:12:30] [INFO]   → Importing 235 rows for movement_disciplines
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movement_disciplines after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movement_equipment
+[2026-01-27 13:12:30] [INFO]   → Importing 432 rows for movement_equipment
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movement_equipment after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movement_coaching_cues
+[2026-01-27 13:12:30] [INFO]   → Importing 1082 rows for movement_coaching_cues
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movement_coaching_cues after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movement_muscle_map
+[2026-01-27 13:12:30] [INFO]   → Importing 612 rows for movement_muscle_map
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movement_muscle_map after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movement_tags
+[2026-01-27 13:12:30] [INFO]   → Importing 466 rows for movement_tags
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movement_tags after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: movement_relationships
+[2026-01-27 13:12:30] [INFO]   → Importing 21 rows for movement_relationships
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import movement_relationships after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ✓ Phase PHASE_2_MOVEMENT_FOUNDATION completed successfully
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ================================================================================
+[2026-01-27 13:12:30] [INFO] PHASE: PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 13:12:30] [INFO] Description: Programs and circuit templates
+[2026-01-27 13:12:30] [INFO] Tables: 4
+[2026-01-27 13:12:30] [INFO] Timeout: 120s
+[2026-01-27 13:12:30] [INFO] ================================================================================
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:12:30] [INFO] 
+Processing table: microcycles
+[2026-01-27 13:12:30] [INFO]   → Importing 462 rows for microcycles
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import microcycles after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: programs
+[2026-01-27 13:12:30] [INFO]   → Importing 58 rows for programs
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import programs after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: program_disciplines
+[2026-01-27 13:12:30] [INFO]   → Importing 222 rows for program_disciplines
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import program_disciplines after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: circuit_templates
+[2026-01-27 13:12:30] [INFO]   → Importing 27 rows for circuit_templates
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import circuit_templates after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ✓ Phase PHASE_3_PROGRAMS_TEMPLATES completed successfully
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ================================================================================
+[2026-01-27 13:12:30] [INFO] PHASE: PHASE_4_SESSION_DATA
+[2026-01-27 13:12:30] [INFO] Description: Session data (largest tables)
+[2026-01-27 13:12:30] [INFO] Tables: 3
+[2026-01-27 13:12:30] [INFO] Timeout: 300s
+[2026-01-27 13:12:30] [INFO] ================================================================================
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:12:30] [INFO] 
+Processing table: sessions
+[2026-01-27 13:12:30] [INFO]   → Importing 9100 rows for sessions
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import sessions after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: sessions_legacy_temp
+[2026-01-27 13:12:30] [INFO]   → Importing 4480 rows for sessions_legacy_temp
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import sessions_legacy_temp after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: session_exercises
+[2026-01-27 13:12:30] [INFO]   → Importing 174 rows for session_exercises
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import session_exercises after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ✓ Phase PHASE_4_SESSION_DATA completed successfully
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ================================================================================
+[2026-01-27 13:12:30] [INFO] PHASE: PHASE_5_USER_DATA
+[2026-01-27 13:12:30] [INFO] Description: User-specific data
+[2026-01-27 13:12:30] [INFO] Tables: 7
+[2026-01-27 13:12:30] [INFO] Timeout: 60s
+[2026-01-27 13:12:30] [INFO] ================================================================================
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:12:30] [INFO] 
+Processing table: user_profiles
+[2026-01-27 13:12:30] [INFO]   → Importing 1 rows for user_profiles
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import user_profiles after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: user_settings
+[2026-01-27 13:12:30] [INFO]   → Importing 1 rows for user_settings
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import user_settings after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: user_enjoyable_activities
+[2026-01-27 13:12:30] [INFO]   → Importing 9 rows for user_enjoyable_activities
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import user_enjoyable_activities after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: user_movement_rules
+[2026-01-27 13:12:30] [INFO]   → Importing 6 rows for user_movement_rules
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import user_movement_rules after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: muscle_recovery_states
+[2026-01-27 13:12:30] [INFO]   → Importing 1 rows for muscle_recovery_states
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import muscle_recovery_states after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: soreness_logs
+[2026-01-27 13:12:30] [INFO]   → Importing 7 rows for soreness_logs
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import soreness_logs after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+Processing table: favorites
+[2026-01-27 13:12:30] [INFO]   → Importing 2 rows for favorites
+[2026-01-27 13:12:30] [ERROR]   ✗ Failed to import favorites after 3 attempts
+[2026-01-27 13:12:30] [INFO] 
+[2026-01-27 13:12:30] [INFO] ✓ Phase PHASE_5_USER_DATA completed successfully
+[2026-01-27 13:13:47] [INFO] ================================================================================
+[2026-01-27 13:13:47] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 13:13:47] [INFO] ================================================================================
+[2026-01-27 13:13:47] [INFO] Mode: FULL
+[2026-01-27 13:13:47] [INFO] Started at: 2026-01-27T13:13:47.345920
+[2026-01-27 13:13:47] [INFO] 
+[2026-01-27 13:13:47] [INFO] 
+[2026-01-27 13:13:47] [INFO] ================================================================================
+[2026-01-27 13:13:47] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 13:13:47] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 13:13:47] [INFO] Tables: 7
+[2026-01-27 13:13:47] [INFO] Timeout: 60s
+[2026-01-27 13:13:47] [INFO] ================================================================================
+[2026-01-27 13:13:47] [INFO] 
+[2026-01-27 13:13:47] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:13:47] [INFO] 
+Processing table: alembic_version
+[2026-01-27 13:13:47] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+Processing table: users
+[2026-01-27 13:13:47] [INFO]   → Importing 8 rows for users
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+Processing table: muscles
+[2026-01-27 13:13:47] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+Processing table: equipment
+[2026-01-27 13:13:47] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 13:13:47] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 13:13:47] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+Processing table: tags
+[2026-01-27 13:13:47] [INFO]   → Importing 30 rows for tags
+[2026-01-27 13:13:47] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 13:13:47] [INFO] 
+[2026-01-27 13:13:47] [INFO] ✓ Phase PHASE_1_CORE_TABLES completed successfully
+[2026-01-27 13:13:47] [INFO] 
+[2026-01-27 13:13:47] [INFO] ================================================================================
+[2026-01-27 13:13:47] [INFO] PHASE: PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 13:13:47] [INFO] Description: Movement foundation tables
+[2026-01-27 13:13:47] [INFO] Tables: 8
+[2026-01-27 13:13:47] [INFO] Timeout: 120s
+[2026-01-27 13:13:47] [INFO] ================================================================================
+[2026-01-27 13:13:47] [INFO] 
+[2026-01-27 13:13:48] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movements
+[2026-01-27 13:13:48] [INFO]   → Importing 828 rows for movements
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movements after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movements_legacy
+[2026-01-27 13:13:48] [INFO]   → Importing 389 rows for movements_legacy
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movements_legacy after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movement_disciplines
+[2026-01-27 13:13:48] [INFO]   → Importing 235 rows for movement_disciplines
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movement_disciplines after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movement_equipment
+[2026-01-27 13:13:48] [INFO]   → Importing 432 rows for movement_equipment
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movement_equipment after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movement_coaching_cues
+[2026-01-27 13:13:48] [INFO]   → Importing 1082 rows for movement_coaching_cues
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movement_coaching_cues after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movement_muscle_map
+[2026-01-27 13:13:48] [INFO]   → Importing 612 rows for movement_muscle_map
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movement_muscle_map after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movement_tags
+[2026-01-27 13:13:48] [INFO]   → Importing 466 rows for movement_tags
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movement_tags after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: movement_relationships
+[2026-01-27 13:13:48] [INFO]   → Importing 21 rows for movement_relationships
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import movement_relationships after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ✓ Phase PHASE_2_MOVEMENT_FOUNDATION completed successfully
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] PHASE: PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 13:13:48] [INFO] Description: Programs and circuit templates
+[2026-01-27 13:13:48] [INFO] Tables: 4
+[2026-01-27 13:13:48] [INFO] Timeout: 120s
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:13:48] [INFO] 
+Processing table: microcycles
+[2026-01-27 13:13:48] [INFO]   → Importing 462 rows for microcycles
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import microcycles after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: programs
+[2026-01-27 13:13:48] [INFO]   → Importing 58 rows for programs
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import programs after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: program_disciplines
+[2026-01-27 13:13:48] [INFO]   → Importing 222 rows for program_disciplines
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import program_disciplines after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: circuit_templates
+[2026-01-27 13:13:48] [INFO]   → Importing 27 rows for circuit_templates
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import circuit_templates after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ✓ Phase PHASE_3_PROGRAMS_TEMPLATES completed successfully
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] PHASE: PHASE_4_SESSION_DATA
+[2026-01-27 13:13:48] [INFO] Description: Session data (largest tables)
+[2026-01-27 13:13:48] [INFO] Tables: 3
+[2026-01-27 13:13:48] [INFO] Timeout: 300s
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:13:48] [INFO] 
+Processing table: sessions
+[2026-01-27 13:13:48] [INFO]   → Importing 9100 rows for sessions
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import sessions after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: sessions_legacy_temp
+[2026-01-27 13:13:48] [INFO]   → Importing 4480 rows for sessions_legacy_temp
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import sessions_legacy_temp after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: session_exercises
+[2026-01-27 13:13:48] [INFO]   → Importing 174 rows for session_exercises
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import session_exercises after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ✓ Phase PHASE_4_SESSION_DATA completed successfully
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] PHASE: PHASE_5_USER_DATA
+[2026-01-27 13:13:48] [INFO] Description: User-specific data
+[2026-01-27 13:13:48] [INFO] Tables: 7
+[2026-01-27 13:13:48] [INFO] Timeout: 60s
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:13:48] [INFO] 
+Processing table: user_profiles
+[2026-01-27 13:13:48] [INFO]   → Importing 1 rows for user_profiles
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import user_profiles after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: user_settings
+[2026-01-27 13:13:48] [INFO]   → Importing 1 rows for user_settings
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import user_settings after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: user_enjoyable_activities
+[2026-01-27 13:13:48] [INFO]   → Importing 9 rows for user_enjoyable_activities
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import user_enjoyable_activities after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: user_movement_rules
+[2026-01-27 13:13:48] [INFO]   → Importing 6 rows for user_movement_rules
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import user_movement_rules after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: muscle_recovery_states
+[2026-01-27 13:13:48] [INFO]   → Importing 1 rows for muscle_recovery_states
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import muscle_recovery_states after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: soreness_logs
+[2026-01-27 13:13:48] [INFO]   → Importing 7 rows for soreness_logs
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import soreness_logs after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+Processing table: favorites
+[2026-01-27 13:13:48] [INFO]   → Importing 2 rows for favorites
+[2026-01-27 13:13:48] [ERROR]   ✗ Failed to import favorites after 3 attempts
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ✓ Phase PHASE_5_USER_DATA completed successfully
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] IMPORT PROGRESS
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] 
+✓ PHASE_1_CORE_TABLES
+[2026-01-27 13:13:48] [INFO] 
+✓ PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 13:13:48] [INFO] 
+✓ PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 13:13:48] [INFO] 
+✓ PHASE_4_SESSION_DATA
+[2026-01-27 13:13:48] [INFO] 
+✓ PHASE_5_USER_DATA
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] Progress: 0/29 cleared, 0/29 imported (100%)
+[2026-01-27 13:13:48] [INFO] Rows imported: 0
+[2026-01-27 13:13:48] [INFO] Errors: 0
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] 
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:13:48] [INFO] Import completed in 1.4 seconds (0.0 minutes)
+[2026-01-27 13:13:48] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] ORCHESTRATED SUPABASE IMPORT
+[2026-01-27 13:14:50] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] Mode: FULL
+[2026-01-27 13:14:50] [INFO] Started at: 2026-01-27T13:14:50.439286
+[2026-01-27 13:14:50] [INFO] 
+[2026-01-27 13:14:50] [INFO] 
+[2026-01-27 13:14:50] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] PHASE: PHASE_1_CORE_TABLES
+[2026-01-27 13:14:50] [INFO] Description: Core tables (no dependencies)
+[2026-01-27 13:14:50] [INFO] Tables: 7
+[2026-01-27 13:14:50] [INFO] Timeout: 60s
+[2026-01-27 13:14:50] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] 
+[2026-01-27 13:14:50] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:14:50] [INFO] 
+Processing table: alembic_version
+[2026-01-27 13:14:50] [INFO]   → Importing 1 rows for alembic_version
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import alembic_version after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+Processing table: users
+[2026-01-27 13:14:50] [INFO]   → Importing 8 rows for users
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import users after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+Processing table: muscles
+[2026-01-27 13:14:50] [INFO]   → Importing 19 rows for muscles
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import muscles after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+Processing table: equipment
+[2026-01-27 13:14:50] [INFO]   → Importing 28 rows for equipment
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import equipment after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+Processing table: activity_definitions
+[2026-01-27 13:14:50] [INFO]   → Importing 19 rows for activity_definitions
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import activity_definitions after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+Processing table: heuristic_configs
+[2026-01-27 13:14:50] [INFO]   → Importing 9 rows for heuristic_configs
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import heuristic_configs after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+Processing table: tags
+[2026-01-27 13:14:50] [INFO]   → Importing 30 rows for tags
+[2026-01-27 13:14:50] [ERROR]   ✗ Failed to import tags after 3 attempts
+[2026-01-27 13:14:50] [INFO] 
+[2026-01-27 13:14:50] [INFO] ✓ Phase PHASE_1_CORE_TABLES completed successfully
+[2026-01-27 13:14:50] [INFO] 
+[2026-01-27 13:14:50] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] PHASE: PHASE_2_MOVEMENT_FOUNDATION
+[2026-01-27 13:14:50] [INFO] Description: Movement foundation tables
+[2026-01-27 13:14:50] [INFO] Tables: 8
+[2026-01-27 13:14:50] [INFO] Timeout: 120s
+[2026-01-27 13:14:50] [INFO] ================================================================================
+[2026-01-27 13:14:50] [INFO] 
+[2026-01-27 13:14:51] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movements
+[2026-01-27 13:14:51] [INFO]   → Importing 828 rows for movements
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movements after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movements_legacy
+[2026-01-27 13:14:51] [INFO]   → Importing 389 rows for movements_legacy
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movements_legacy after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movement_disciplines
+[2026-01-27 13:14:51] [INFO]   → Importing 235 rows for movement_disciplines
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movement_disciplines after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movement_equipment
+[2026-01-27 13:14:51] [INFO]   → Importing 432 rows for movement_equipment
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movement_equipment after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movement_coaching_cues
+[2026-01-27 13:14:51] [INFO]   → Importing 1082 rows for movement_coaching_cues
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movement_coaching_cues after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movement_muscle_map
+[2026-01-27 13:14:51] [INFO]   → Importing 612 rows for movement_muscle_map
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movement_muscle_map after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movement_tags
+[2026-01-27 13:14:51] [INFO]   → Importing 466 rows for movement_tags
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movement_tags after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: movement_relationships
+[2026-01-27 13:14:51] [INFO]   → Importing 21 rows for movement_relationships
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import movement_relationships after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] ✓ Phase PHASE_2_MOVEMENT_FOUNDATION completed successfully
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] ================================================================================
+[2026-01-27 13:14:51] [INFO] PHASE: PHASE_3_PROGRAMS_TEMPLATES
+[2026-01-27 13:14:51] [INFO] Description: Programs and circuit templates
+[2026-01-27 13:14:51] [INFO] Tables: 4
+[2026-01-27 13:14:51] [INFO] Timeout: 120s
+[2026-01-27 13:14:51] [INFO] ================================================================================
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:14:51] [INFO] 
+Processing table: microcycles
+[2026-01-27 13:14:51] [INFO]   → Importing 462 rows for microcycles
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import microcycles after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: programs
+[2026-01-27 13:14:51] [INFO]   → Importing 58 rows for programs
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import programs after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: program_disciplines
+[2026-01-27 13:14:51] [INFO]   → Importing 222 rows for program_disciplines
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import program_disciplines after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: circuit_templates
+[2026-01-27 13:14:51] [INFO]   → Importing 27 rows for circuit_templates
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import circuit_templates after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] ✓ Phase PHASE_3_PROGRAMS_TEMPLATES completed successfully
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] ================================================================================
+[2026-01-27 13:14:51] [INFO] PHASE: PHASE_4_SESSION_DATA
+[2026-01-27 13:14:51] [INFO] Description: Session data (largest tables)
+[2026-01-27 13:14:51] [INFO] Tables: 3
+[2026-01-27 13:14:51] [INFO] Timeout: 300s
+[2026-01-27 13:14:51] [INFO] ================================================================================
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:14:51] [INFO] 
+Processing table: sessions
+[2026-01-27 13:14:51] [INFO]   → Importing 9100 rows for sessions
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import sessions after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: sessions_legacy_temp
+[2026-01-27 13:14:51] [INFO]   → Importing 4480 rows for sessions_legacy_temp
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import sessions_legacy_temp after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: session_exercises
+[2026-01-27 13:14:51] [INFO]   → Importing 174 rows for session_exercises
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import session_exercises after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] ✓ Phase PHASE_4_SESSION_DATA completed successfully
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] ================================================================================
+[2026-01-27 13:14:51] [INFO] PHASE: PHASE_5_USER_DATA
+[2026-01-27 13:14:51] [INFO] Description: User-specific data
+[2026-01-27 13:14:51] [INFO] Tables: 7
+[2026-01-27 13:14:51] [INFO] Timeout: 60s
+[2026-01-27 13:14:51] [INFO] ================================================================================
+[2026-01-27 13:14:51] [INFO] 
+[2026-01-27 13:14:51] [INFO] Applied: SET statement_timeout = 0;
+[2026-01-27 13:14:51] [INFO] 
+Processing table: user_profiles
+[2026-01-27 13:14:51] [INFO]   → Importing 1 rows for user_profiles
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import user_profiles after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: user_settings
+[2026-01-27 13:14:51] [INFO]   → Importing 1 rows for user_settings
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import user_settings after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: user_enjoyable_activities
+[2026-01-27 13:14:51] [INFO]   → Importing 9 rows for user_enjoyable_activities
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import user_enjoyable_activities after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: user_movement_rules
+[2026-01-27 13:14:51] [INFO]   → Importing 6 rows for user_movement_rules
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import user_movement_rules after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: muscle_recovery_states
+[2026-01-27 13:14:51] [INFO]   → Importing 1 rows for muscle_recovery_states
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import muscle_recovery_states after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: soreness_logs
+[2026-01-27 13:14:51] [INFO]   → Importing 7 rows for soreness_logs
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import soreness_logs after 3 attempts
+[2026-01-27 13:14:51] [INFO] 
+Processing table: favorites
+[2026-01-27 13:14:51] [INFO]   → Importing 2 rows for favorites
+[2026-01-27 13:14:51] [ERROR]   ✗ Failed to import favorites after 3 attempts

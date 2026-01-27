@@ -1,0 +1,10 @@
+"id","user_id","activity_type","custom_name","recommend_every_days","enabled","notes"
+1,1,TENNIS,,28,true,
+2,1,CYCLING,,28,true,
+3,1,CYCLING,,28,true,
+4,1,TENNIS,,28,true,
+5,1,OTHER,running,28,true,
+6,1,CYCLING,,28,true,
+7,1,TENNIS,,28,true,
+8,1,OTHER,stretching,28,true,
+9,1,CYCLING,,28,true,

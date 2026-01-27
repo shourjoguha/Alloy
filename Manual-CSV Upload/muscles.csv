@@ -1,0 +1,20 @@
+"id","slug","region","created_at","stimulus_coefficient","fatigue_coefficient"
+39,quadriceps,anterior lower,2026-01-23 01:34:36.993759,1,1
+40,hamstrings,posterior lower,2026-01-23 01:34:36.993765,1,1
+41,glutes,posterior lower,2026-01-23 01:34:36.993766,1,1
+42,calves,posterior lower,2026-01-23 01:34:36.993768,1,1
+43,chest,anterior upper,2026-01-23 01:34:36.993769,1,1
+44,lats,posterior upper,2026-01-23 01:34:36.99377,1,1
+45,upper_back,posterior upper,2026-01-23 01:34:36.993771,1,1
+46,rear_delts,posterior upper,2026-01-23 01:34:36.993772,1,1
+47,front_delts,anterior upper,2026-01-23 01:34:36.993773,1,1
+48,side_delts,shoulder,2026-01-23 01:34:36.993774,1,1
+49,biceps,anterior upper,2026-01-23 01:34:36.993775,1,1
+50,triceps,posterior upper,2026-01-23 01:34:36.993776,1,1
+51,forearms,anterior upper,2026-01-23 01:34:36.993777,1,1
+52,core,full body,2026-01-23 01:34:36.993778,1,1
+53,obliques,full body,2026-01-23 01:34:36.993779,1,1
+54,lower_back,posterior lower,2026-01-23 01:34:36.99378,1,1
+55,hip_flexors,anterior lower,2026-01-23 01:34:36.993781,1,1
+56,adductors,anterior lower,2026-01-23 01:34:36.993782,1,1
+57,full_body,full body,2026-01-23 01:34:36.993783,1,1

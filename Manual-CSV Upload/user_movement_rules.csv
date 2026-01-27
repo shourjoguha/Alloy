@@ -1,0 +1,7 @@
+"id","user_id","movement_id","rule_type","cadence","notes","rule_operator"
+1,1,70,HARD_YES,PER_MICROCYCLE,,eq
+2,1,1,HARD_YES,PER_MICROCYCLE,,eq
+3,1,13,HARD_YES,PER_MICROCYCLE,,eq
+4,1,22,HARD_YES,PER_MICROCYCLE,,eq
+5,1,13,HARD_YES,PER_MICROCYCLE,,eq
+6,1,73,HARD_YES,PER_MICROCYCLE,,eq

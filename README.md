@@ -4,6 +4,9 @@ An AI-enabled workout coach that creates adaptive 8-12 week strength/fitness pro
 
 ## Features
 
+- **JWT Authentication**: Production-ready authentication with bcrypt password hashing and secure token management
+- **User Registration & Login**: Email-based user accounts with secure password storage
+- **Token Verification**: JWT token validation with expiration and signature checking
 - **Program Generation**: Create personalized 8-12 week programs based on 3 weighted goals
 - **Multiple Split Templates**: Upper/Lower, PPL, Full Body, or custom Hybrid splits
 - **Daily Adaptation**: Real-time session adjustments based on constraints and recovery
@@ -140,6 +143,11 @@ Gainsly/
 
 ## API Endpoints
 
+### Authentication
+- `POST /auth/register` - User registration with JWT token issuance
+- `POST /auth/login` - User authentication with JWT token issuance
+- `GET /auth/verify-token` - Token verification and user info retrieval
+
 ### Program Lifecycle
 - `POST /programs` - Create new program with LLM-generated sessions
 - `GET /programs/{id}` - Get program details with sessions
@@ -179,6 +187,11 @@ DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
 
 # App
 DEBUG=true
+
+# Authentication
+SECRET_KEY=your-secret-key-here
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+ALGORITHM=HS256
 ```
 
 ## Goals (Ten-Dollar Method)
@@ -317,7 +330,6 @@ For detailed architecture decisions, development patterns, and implementation no
 - Biometrics tracking and user profiles
 
 ### Planned Features
-- [ ] JWT authentication for multi-user support
 - [ ] Cloud LLM providers (OpenAI, Anthropic)
 - [ ] Mobile native app (React Native)
 - [ ] Advanced analytics and progress visualization

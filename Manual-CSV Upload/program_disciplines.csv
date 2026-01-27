@@ -1,0 +1,223 @@
+"program_id","discipline_type","weight","created_at"
+1,crossfit,6,
+1,calisthenics,4,
+2,calisthenics,4,
+2,crossfit,5,
+2,olympic_lifting,1,
+3,calisthenics,4,
+3,crossfit,6,
+4,calisthenics,4,
+4,crossfit,6,
+5,calisthenics,4,
+5,crossfit,6,
+6,crossfit,5,
+6,calisthenics,4,
+6,powerlifting,1,
+7,crossfit,5,
+7,calisthenics,4,
+7,powerlifting,1,
+8,crossfit,5,
+8,calisthenics,4,
+8,powerlifting,1,
+43,bodybuilding,10,
+9,crossfit,5,
+9,calisthenics,4,
+9,powerlifting,1,
+11,crossfit,4,
+11,calisthenics,4,
+11,powerlifting,2,
+12,crossfit,4,
+12,calisthenics,4,
+12,powerlifting,2,
+114,calisthenics,3,2026-01-24 19:12:48.399621
+114,crossfit,3,2026-01-24 19:12:48.399631
+114,olympic_weightlifting,4,2026-01-24 19:12:48.399632
+115,calisthenics,3,2026-01-24 19:12:52.769585
+115,crossfit,3,2026-01-24 19:12:52.769593
+115,olympic_weightlifting,4,2026-01-24 19:12:52.769594
+120,mobility,2,2026-01-24 19:25:57.022258
+120,calisthenics,4,2026-01-24 19:25:57.022261
+22,crossfit,6,
+22,athletic_drills,2,
+22,olympic_lifting,2,
+120,olympic_lifts,5,2026-01-24 19:25:57.022262
+120,crossfit,7,2026-01-24 19:25:57.022263
+120,strength,1,2026-01-24 19:25:57.022264
+125,calisthenics,2,2026-01-24 19:33:11.577058
+125,crossfit,3,2026-01-24 19:33:11.577066
+125,olympic_weightlifting,5,2026-01-24 19:33:11.577067
+127,calisthenics,2,2026-01-24 19:33:48.853347
+127,crossfit,3,2026-01-24 19:33:48.853351
+38,mobility,7,
+38,calisthenics,5,
+38,olympic_lifts,2,
+38,crossfit,7,
+38,strength,10,
+127,olympic_weightlifting,5,2026-01-24 19:33:48.853353
+129,mobility,2,2026-01-24 19:34:51.400901
+129,calisthenics,4,2026-01-24 19:34:51.400907
+129,olympic_lifts,5,2026-01-24 19:34:51.400909
+129,crossfit,7,2026-01-24 19:34:51.400911
+129,strength,1,2026-01-24 19:34:51.400912
+130,crossfit,4,2026-01-24 19:38:15.867484
+130,olympic_weightlifting,4,2026-01-24 19:38:15.867489
+130,calisthenics,2,2026-01-24 19:38:15.867491
+133,mobility,2,2026-01-26 01:27:10.869003
+133,calisthenics,4,2026-01-26 01:27:10.869009
+133,olympic_lifts,5,2026-01-26 01:27:10.869011
+42,calisthenics,7,
+42,crossfit,3,
+47,mobility,7,
+47,calisthenics,5,
+47,olympic_lifts,2,
+47,crossfit,7,
+47,strength,10,
+133,crossfit,7,2026-01-26 01:27:10.869013
+133,strength,1,2026-01-26 01:27:10.869015
+56,powerlifting,5,
+56,bodybuilding,5,
+58,mobility,7,
+58,calisthenics,5,
+58,olympic_lifts,2,
+58,crossfit,7,
+58,strength,10,
+62,mobility,7,
+62,calisthenics,5,
+62,olympic_lifts,2,
+62,crossfit,7,
+62,strength,10,
+65,mobility,7,
+65,calisthenics,5,
+65,olympic_lifts,2,
+65,crossfit,7,
+65,strength,10,
+70,mobility,7,
+70,calisthenics,5,
+70,olympic_lifts,2,
+70,crossfit,7,
+70,strength,10,
+71,mobility,4,
+71,calisthenics,5,
+71,olympic_lifts,1,
+71,crossfit,7,
+71,strength,8,
+116,bodybuilding,10,2026-01-24 19:15:39.984482
+121,mobility,2,2026-01-24 19:26:39.96411
+121,calisthenics,4,2026-01-24 19:26:39.964113
+121,olympic_lifts,5,2026-01-24 19:26:39.964114
+121,crossfit,7,2026-01-24 19:26:39.964115
+121,strength,1,2026-01-24 19:26:39.964116
+122,mobility,2,2026-01-24 19:27:01.671236
+122,calisthenics,4,2026-01-24 19:27:01.671243
+122,olympic_lifts,5,2026-01-24 19:27:01.671244
+122,crossfit,7,2026-01-24 19:27:01.671245
+122,strength,1,2026-01-24 19:27:01.671246
+73,mobility,4,
+73,calisthenics,5,
+73,olympic_lifts,1,
+73,crossfit,7,
+73,strength,8,
+85,mobility,4,
+85,calisthenics,5,
+85,olympic_lifts,1,
+85,crossfit,7,
+85,strength,8,
+86,mobility,4,
+86,calisthenics,5,
+86,olympic_lifts,1,
+86,crossfit,7,
+86,strength,8,
+87,mobility,4,
+87,calisthenics,5,
+87,olympic_lifts,1,
+87,crossfit,7,
+87,strength,8,
+90,mobility,4,
+90,calisthenics,5,
+90,olympic_lifts,1,
+90,crossfit,7,
+90,strength,8,
+91,mobility,3,
+91,calisthenics,10,
+91,olympic_lifts,1,
+91,crossfit,7,
+91,strength,2,
+92,mobility,3,
+92,calisthenics,10,
+92,olympic_lifts,1,
+92,crossfit,7,
+92,strength,2,
+93,mobility,3,
+93,calisthenics,10,
+93,olympic_lifts,1,
+93,crossfit,7,
+93,strength,2,
+95,mobility,3,
+95,calisthenics,10,
+95,olympic_lifts,1,
+95,crossfit,7,
+95,strength,2,
+97,mobility,3,2026-01-23 17:44:16.543311
+97,calisthenics,10,2026-01-23 17:44:16.543313
+97,olympic_lifts,1,2026-01-23 17:44:16.543314
+97,crossfit,7,2026-01-23 17:44:16.543315
+97,strength,2,2026-01-23 17:44:16.543315
+98,mobility,3,2026-01-23 17:44:44.9729
+98,calisthenics,10,2026-01-23 17:44:44.972902
+98,olympic_lifts,1,2026-01-23 17:44:44.972903
+98,crossfit,7,2026-01-23 17:44:44.972903
+98,strength,2,2026-01-23 17:44:44.972904
+102,running,1,2026-01-23 18:02:06.392099
+102,crossfit,3,2026-01-23 18:02:06.392105
+102,powerlifting,3,2026-01-23 18:02:06.392107
+102,olympic_weightlifting,3,2026-01-23 18:02:06.392109
+103,running,1,2026-01-23 18:02:10.755928
+103,crossfit,3,2026-01-23 18:02:10.755934
+103,powerlifting,3,2026-01-23 18:02:10.755936
+103,olympic_weightlifting,3,2026-01-23 18:02:10.755938
+106,mobility,3,2026-01-23 18:33:20.532311
+106,calisthenics,10,2026-01-23 18:33:20.532315
+106,olympic_lifts,1,2026-01-23 18:33:20.532317
+106,crossfit,7,2026-01-23 18:33:20.532318
+106,strength,2,2026-01-23 18:33:20.532319
+108,mobility,3,2026-01-23 18:34:10.97401
+108,calisthenics,10,2026-01-23 18:34:10.974012
+108,olympic_lifts,1,2026-01-23 18:34:10.974013
+108,crossfit,7,2026-01-23 18:34:10.974014
+108,strength,2,2026-01-23 18:34:10.974015
+109,mobility,3,2026-01-23 18:37:07.41222
+109,calisthenics,10,2026-01-23 18:37:07.412225
+109,olympic_lifts,1,2026-01-23 18:37:07.412226
+109,crossfit,7,2026-01-23 18:37:07.412228
+109,strength,2,2026-01-23 18:37:07.412228
+117,calisthenics,3,2026-01-24 19:22:57.62733
+117,crossfit,3,2026-01-24 19:22:57.627336
+117,olympic_weightlifting,4,2026-01-24 19:22:57.627338
+113,calisthenics,2,2026-01-24 18:34:56.076543
+113,crossfit,4,2026-01-24 18:34:56.076551
+113,olympic_weightlifting,4,2026-01-24 18:34:56.076552
+118,calisthenics,3,2026-01-24 19:23:02.305706
+118,crossfit,3,2026-01-24 19:23:02.30571
+118,olympic_weightlifting,4,2026-01-24 19:23:02.305712
+119,mobility,2,2026-01-24 19:24:13.547216
+119,calisthenics,4,2026-01-24 19:24:13.547218
+119,olympic_lifts,5,2026-01-24 19:24:13.547219
+119,crossfit,7,2026-01-24 19:24:13.54722
+119,strength,1,2026-01-24 19:24:13.547221
+123,mobility,2,2026-01-24 19:30:07.915429
+123,calisthenics,4,2026-01-24 19:30:07.915432
+123,olympic_lifts,5,2026-01-24 19:30:07.915433
+123,crossfit,7,2026-01-24 19:30:07.915434
+123,strength,1,2026-01-24 19:30:07.915435
+124,strength,10,2026-01-24 19:31:38.186106
+126,calisthenics,2,2026-01-24 19:33:15.81148
+126,crossfit,3,2026-01-24 19:33:15.811485
+126,olympic_weightlifting,5,2026-01-24 19:33:15.811487
+128,calisthenics,2,2026-01-24 19:34:05.529092
+128,crossfit,3,2026-01-24 19:34:05.529095
+128,olympic_weightlifting,5,2026-01-24 19:34:05.529097
+131,crossfit,4,2026-01-24 19:38:46.531122
+131,olympic_weightlifting,4,2026-01-24 19:38:46.531126
+131,calisthenics,2,2026-01-24 19:38:46.531128
+132,strongman,4,2026-01-24 19:40:04.108747
+132,olympic_weightlifting,6,2026-01-24 19:40:04.108752

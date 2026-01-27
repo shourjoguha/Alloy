@@ -277,6 +277,9 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 │                         users                                     │
 │  Core user account with authentication and preferences            │
 │  - email, name, experience_level, persona_tone, persona_aggression│
+│  - hashed_password (String 255, nullable) - Bcrypt hash     │
+│  - is_active (Boolean, default True) - Account status       │
+│  - created_at (DateTime, default now) - Account timestamp   │
 └───────────────────────────────────────────────────────────────────┘
          │
          ├── 1:1 ────┬──────────────────┬──────────────────┬──────┐

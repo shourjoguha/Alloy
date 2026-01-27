@@ -1,7 +1,0 @@
-"id","user_id","movement_id","rule_type","cadence","notes"
-"1","1","70","HARD_YES","PER_MICROCYCLE",""
-"2","1","1","HARD_YES","PER_MICROCYCLE",""
-"3","1","13","HARD_YES","PER_MICROCYCLE",""
-"4","1","22","HARD_YES","PER_MICROCYCLE",""
-"5","1","13","HARD_YES","PER_MICROCYCLE",""
-"6","1","73","HARD_YES","PER_MICROCYCLE",""

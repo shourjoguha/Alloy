@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Goal, HeuristicConfig
+from app.models import Goal
+from app.config.heuristics import INTERFERENCE_RULES
 
 
 @dataclass
@@ -24,13 +25,13 @@ class InterferenceService:
     Manages goal interference rules and validations.
     
     Goals can have conflicting dose/frequency requirements. This service
-    loads heuristic configs and applies interference logic to adjust
+    uses code-based heuristic configs and applies interference logic to adjust
     program parameters.
     """
     
     def __init__(self):
-        """Initialize service with empty cache; load heuristics on demand."""
-        self._interference_rules: Optional[Dict] = None
+        """Initialize service with in-memory config."""
+        self._interference_rules = INTERFERENCE_RULES
     
     async def validate_goals(
         self,
@@ -62,9 +63,6 @@ class InterferenceService:
         if len(unique_goals) == 1:
             return True, []
         
-        # Load interference rules
-        rules = await self._load_interference_rules(db)
-        
         # Check pairwise conflicts (only between unique goals)
         n = len(unique_goals)
         for i in range(n):
@@ -85,16 +83,14 @@ class InterferenceService:
     
     async def get_conflicts(
         self,
-        db: AsyncSession,
         goal_1: Goal,
         goal_2: Goal,
         goal_3: Goal,
     ) -> List[GoalConflict]:
         """
-        Get all conflicts between the three goals.
+        Get all conflicts between three goals.
         
         Args:
-            db: Database session
             goal_1, goal_2, goal_3: The three program goals
         
         Returns:
@@ -102,7 +98,7 @@ class InterferenceService:
         """
         conflicts = []
         goal_list = [goal_1, goal_2, goal_3]
-        rules = await self._load_interference_rules(db)
+        rules = self._interference_rules
         
         for i in range(3):
             for j in range(i + 1, 3):
@@ -126,7 +122,6 @@ class InterferenceService:
     
     async def apply_dose_adjustments(
         self,
-        db: AsyncSession,
         goal_1: Goal,
         goal_2: Goal,
         goal_3: Goal,
@@ -136,7 +131,6 @@ class InterferenceService:
         Apply dose adjustments based on goal conflicts.
         
         Args:
-            db: Database session
             goal_1, goal_2, goal_3: Program goals
             base_frequency: Base sessions per week per pattern
         
@@ -144,7 +138,7 @@ class InterferenceService:
             Adjusted frequency dict
         """
         adjusted = base_frequency.copy()
-        conflicts = await self.get_conflicts(db, goal_1, goal_2, goal_3)
+        conflicts = await self.get_conflicts(goal_1, goal_2, goal_3)
         
         for conflict in conflicts:
             if conflict.adjustment:
@@ -155,31 +149,7 @@ class InterferenceService:
         
         return adjusted
     
-    async def _load_interference_rules(self, db: AsyncSession) -> Dict:
-        """
-        Load interference rules from HeuristicConfig table.
-        
-        Looks for config with name 'interference_rules'.
-        """
-        if self._interference_rules is not None:
-            return self._interference_rules
-        
-        result = await db.execute(
-            select(HeuristicConfig).where(HeuristicConfig.name == "interference_rules", HeuristicConfig.active == True).limit(1)
-        )
-        config = result.scalar_one_or_none()
-        
-        if config and config.json_blob:
-            self._interference_rules = config.json_blob
-        else:
-            # Default rules (empty, no conflicts)
-            self._interference_rules = {}
-        
-        return self._interference_rules
-    
-    def clear_cache(self):
-        """Clear cached interference rules."""
-        self._interference_rules = None
+
 
 
 # Singleton instance

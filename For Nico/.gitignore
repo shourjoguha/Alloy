@@ -1,7 +1,0 @@
-# Ignore CSV files (uncomment if you don't want to track data in git)
-# *.csv
-
-# Keep the scripts and README
-!export_database_to_csv.py
-!ingest_database_from_csv.py
-!README.md

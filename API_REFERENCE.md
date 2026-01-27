@@ -25,7 +25,7 @@
 - **Framework**: FastAPI with async/await support
 - **Database**: PostgreSQL with SQLAlchemy async ORM
 - **LLM Integration**: Ollama (local) with SSE streaming support
-- **Authentication**: MVP - hardcoded user ID (production TBD)
+- **Authentication**: Production-ready JWT authentication with bcrypt password hashing
 
 ### Application Lifecycle
 
@@ -1242,7 +1242,6 @@ User
 | `ollama_base_url` | "http://localhost:11434" | LLM endpoint |
 | `ollama_model` | "gemma3:4b" | LLM model |
 | `ollama_timeout` | 1100.0 | LLM timeout (seconds) |
-| `default_user_id` | 1 | MVP user ID (deprecated with JWT auth) |
 | `default_e1rm_formula` | "epley" | Default E1RM formula |
 | `soreness_decay_hours` | 10 | Hours for 1 point decay |
 | `admin_api_token` | "gainsly-admin-123" | Admin auth token |
@@ -1295,12 +1294,6 @@ CHECK (length_days >= 7 AND length_days <= 14)
    - **Issue**: In-memory mutation may mark SQLAlchemy objects as dirty
    - **Impact**: Changes are not persisted, but may cause unexpected behavior
    - **Status**: Documented, but not critical (read-only endpoints)
-
-4. **Authentication Implementation**
-   - **Location**: All endpoints using `get_current_user_id()`
-   - **Issue**: Hardcoded to return 1 (MVP)
-   - **Impact**: No multi-user support, no security
-   - **Status**: Needs production auth implementation
 
 ### Future Work
 

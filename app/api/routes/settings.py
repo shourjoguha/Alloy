@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.config.settings import get_settings
+from app.config import heuristics
 from app.models import (
     User,
     UserProfile,
@@ -377,53 +378,159 @@ async def delete_enjoyable_activity(
     return {"detail": "Activity deleted"}
 
 
-# Heuristic configs (read-only for MVP)
+# Heuristic configs (read-only for MVP - now from in-memory code config)
 @router.get("/heuristics", response_model=List[HeuristicConfigResponse])
 async def list_heuristic_configs(
     category: Optional[str] = None,
-    db: AsyncSession = Depends(get_db),
 ):
-    """List all heuristic configurations."""
-    query = select(HeuristicConfig)
+    """List all heuristic configurations from in-memory code config."""
+    configs = [
+        {
+            "name": "goal_dose_heuristics",
+            "category": "training",
+            "json_blob": heuristics.GOAL_DOSE_HEURISTICS,
+            "description": "Training parameters by goal (strength, hypertrophy, endurance, etc.)"
+        },
+        {
+            "name": "interference_rules",
+            "category": "training",
+            "json_blob": heuristics.INTERFERENCE_RULES,
+            "description": "Activity & training interference rules"
+        },
+        {
+            "name": "time_estimation",
+            "category": "session",
+            "json_blob": heuristics.TIME_ESTIMATION,
+            "description": "Session time estimation defaults"
+        },
+        {
+            "name": "cns_load_budget",
+            "category": "recovery",
+            "json_blob": heuristics.CNS_LOAD_BUDGET,
+            "description": "CNS load budgeting parameters"
+        },
+        {
+            "name": "deload_policy",
+            "category": "recovery",
+            "json_blob": heuristics.DELOAD_POLICY,
+            "description": "Deload timing and intensity rules"
+        },
+        {
+            "name": "psi_calculation",
+            "category": "performance",
+            "json_blob": heuristics.PSI_CALCULATION,
+            "description": "PSI calculation parameters"
+        },
+        {
+            "name": "split_templates",
+            "category": "programming",
+            "json_blob": heuristics.SPLIT_TEMPLATES,
+            "description": "Predefined split structures (upper_lower, ppl, full_body, hybrid)"
+        },
+        {
+            "name": "progression_rules",
+            "category": "training",
+            "json_blob": heuristics.PROGRESSION_RULES,
+            "description": "Progression style rules"
+        },
+        {
+            "name": "persona_definitions",
+            "category": "ai",
+            "json_blob": heuristics.PERSONA_DEFINITIONS,
+            "description": "Coach persona tones & aggression levels"
+        },
+        {
+            "name": "doms_attribution",
+            "category": "recovery",
+            "json_blob": heuristics.DOMS_ATTRIBUTION,
+            "description": "DOMS attribution rules"
+        }
+    ]
     
     if category:
-        query = query.where(HeuristicConfig.category == category)
-    
-    result = await db.execute(query)
-    configs = list(result.scalars().all())
+        configs = [c for c in configs if c["category"] == category]
     
     return [
         HeuristicConfigResponse(
-            id=cfg.id,
-            key=cfg.key,
-            category=cfg.category,
-            value=cfg.value_json,
-            description=cfg.description,
+            id=idx + 1,
+            key=config["name"],
+            category=config["category"],
+            value=config["json_blob"],
+            description=config["description"],
         )
-        for cfg in configs
+        for idx, config in enumerate(configs)
     ]
 
 
 @router.get("/heuristics/{key}", response_model=HeuristicConfigResponse)
 async def get_heuristic_config(
     key: str,
-    db: AsyncSession = Depends(get_db),
 ):
-    """Get a specific heuristic configuration by key."""
-    result = await db.execute(
-        select(HeuristicConfig).where(HeuristicConfig.key == key)
-    )
-    config = result.scalar_one_or_none()
+    """Get a specific heuristic configuration by key from in-memory code config."""
+    config_map = {
+        "goal_dose_heuristics": {
+            "category": "training",
+            "value": heuristics.GOAL_DOSE_HEURISTICS,
+            "description": "Training parameters by goal (strength, hypertrophy, endurance, etc.)"
+        },
+        "interference_rules": {
+            "category": "training",
+            "value": heuristics.INTERFERENCE_RULES,
+            "description": "Activity & training interference rules"
+        },
+        "time_estimation": {
+            "category": "session",
+            "value": heuristics.TIME_ESTIMATION,
+            "description": "Session time estimation defaults"
+        },
+        "cns_load_budget": {
+            "category": "recovery",
+            "value": heuristics.CNS_LOAD_BUDGET,
+            "description": "CNS load budgeting parameters"
+        },
+        "deload_policy": {
+            "category": "recovery",
+            "value": heuristics.DELOAD_POLICY,
+            "description": "Deload timing and intensity rules"
+        },
+        "psi_calculation": {
+            "category": "performance",
+            "value": heuristics.PSI_CALCULATION,
+            "description": "PSI calculation parameters"
+        },
+        "split_templates": {
+            "category": "programming",
+            "value": heuristics.SPLIT_TEMPLATES,
+            "description": "Predefined split structures (upper_lower, ppl, full_body, hybrid)"
+        },
+        "progression_rules": {
+            "category": "training",
+            "value": heuristics.PROGRESSION_RULES,
+            "description": "Progression style rules"
+        },
+        "persona_definitions": {
+            "category": "ai",
+            "value": heuristics.PERSONA_DEFINITIONS,
+            "description": "Coach persona tones & aggression levels"
+        },
+        "doms_attribution": {
+            "category": "recovery",
+            "value": heuristics.DOMS_ATTRIBUTION,
+            "description": "DOMS attribution rules"
+        }
+    }
     
-    if not config:
+    if key not in config_map:
         raise HTTPException(status_code=404, detail="Config not found")
     
+    config = config_map[key]
+    
     return HeuristicConfigResponse(
-        id=config.id,
-        key=config.key,
-        category=config.category,
-        value=config.value_json,
-        description=config.description,
+        id=1,
+        key=key,
+        category=config["category"],
+        value=config["value"],
+        description=config["description"],
     )
 
 

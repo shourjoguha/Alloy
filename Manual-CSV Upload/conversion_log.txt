@@ -1,0 +1,187 @@
+SQL to CSV Conversion Log
+============================================================
+
+Source SQL File: /Users/shourjosmac/Documents/alloy/cleaned_dump.sql
+Output Directory: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload
+
+Summary:
+  Total tables converted: 29
+  Total rows extracted: 13861
+
+============================================================
+
+Detailed Results by Table:
+
+Table: activity_definitions
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/activity_definitions.csv
+  Columns: 7
+  Rows: 19
+  JSON Columns: default_equipment_tags, id
+
+Table: alembic_version
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/alembic_version.csv
+  Columns: 1
+  Rows: 1
+
+Table: circuit_templates
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/circuit_templates.csv
+  Columns: 18
+  Rows: 27
+  JSON Columns: bucket_stress, default_rounds, difficulty_tier, effective_work_volume, estimated_work_seconds, exercises_json, fatigue_factor, id, min_recovery_hours, muscle_fatigue, muscle_volume, stimulus_factor, tags, total_reps
+
+Table: equipment
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/equipment.csv
+  Columns: 2
+  Rows: 28
+  JSON Columns: id
+
+Table: favorites
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/favorites.csv
+  Columns: 5
+  Rows: 2
+  JSON Columns: id, movement_id, user_id
+
+Table: heuristic_configs
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/heuristic_configs.csv
+  Columns: 7
+  Rows: 10
+  JSON Columns: active, id, json_blob, version
+
+Table: microcycles
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/microcycles.csv
+  Columns: 7
+  Rows: 462
+  JSON Columns: id, is_deload, length_days, program_id, sequence_number
+
+Table: movement_coaching_cues
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movement_coaching_cues.csv
+  Columns: 4
+  Rows: 1082
+  JSON Columns: id, movement_id, order
+
+Table: movement_disciplines
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movement_disciplines.csv
+  Columns: 2
+  Rows: 235
+  JSON Columns: movement_id
+
+Table: movement_equipment
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movement_equipment.csv
+  Columns: 2
+  Rows: 432
+  JSON Columns: equipment_id, movement_id
+
+Table: movement_muscle_map
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movement_muscle_map.csv
+  Columns: 5
+  Rows: 612
+  JSON Columns: id, magnitude, movement_id, muscle_id
+
+Table: movement_relationships
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movement_relationships.csv
+  Columns: 5
+  Rows: 21
+  JSON Columns: id, source_movement_id, target_movement_id
+
+Table: movement_tags
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movement_tags.csv
+  Columns: 2
+  Rows: 466
+  JSON Columns: movement_id, tag_id
+
+Table: movements
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movements.csv
+  Columns: 24
+  Rows: 439
+  JSON Columns: compound, embedding_vector, fatigue_factor, id, injury_risk_factor, is_complex_lift, is_unilateral, min_recovery_hours, stimulus_factor
+
+Table: movements_legacy
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/movements_legacy.csv
+  Columns: 26
+  Rows: 389
+  JSON Columns: coaching_cues, compound, discipline_tags, equipment_tags, fatigue_factor, id, injury_risk_factor, is_complex_lift, is_unilateral, min_recovery_hours, secondary_muscles, stimulus_factor, tags
+
+Table: muscle_recovery_states
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/muscle_recovery_states.csv
+  Columns: 6
+  Rows: 1
+  JSON Columns: id, recovery_level, user_id
+
+Table: muscles
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/muscles.csv
+  Columns: 6
+  Rows: 19
+  JSON Columns: fatigue_coefficient, id, stimulus_coefficient
+
+Table: program_disciplines
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/program_disciplines.csv
+  Columns: 4
+  Rows: 222
+  JSON Columns: program_id, weight
+
+Table: programs
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/programs.csv
+  Columns: 24
+  Rows: 58
+  JSON Columns: days_per_week, deload_every_n_microcycles, duration_weeks, goal_weight_1, goal_weight_2, goal_weight_3, id, is_active, is_template, max_session_duration, user_id
+
+Table: session_exercises
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/session_exercises.csv
+  Columns: 20
+  Rows: 174
+  JSON Columns: default_rest_seconds, id, is_complex_lift, movement_id, order_in_session, session_id, substitution_allowed, target_duration_seconds, target_rep_range_max, target_rep_range_min, target_rpe, target_sets, user_id
+
+Table: sessions
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/sessions.csv
+  Columns: 20
+  Rows: 4620
+  JSON Columns: cns_fatigue, day_number, estimated_duration_minutes, id, intent_tags, microcycle_id, muscle_volume_json, total_fatigue, total_stimulus, user_id
+
+Table: sessions_legacy_temp
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/sessions_legacy_temp.csv
+  Columns: 25
+  Rows: 4480
+  JSON Columns: accessory_json, cooldown_json, day_number, finisher_json, id, intent_tags, main_json, microcycle_id, muscle_volume_json, warmup_json
+
+Table: soreness_logs
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/soreness_logs.csv
+  Columns: 8
+  Rows: 7
+  JSON Columns: id, soreness_1_5, user_id
+
+Table: tags
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/tags.csv
+  Columns: 2
+  Rows: 30
+  JSON Columns: id
+
+Table: user_enjoyable_activities
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/user_enjoyable_activities.csv
+  Columns: 7
+  Rows: 9
+  JSON Columns: enabled, id, recommend_every_days, user_id
+
+Table: user_movement_rules
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/user_movement_rules.csv
+  Columns: 7
+  Rows: 6
+  JSON Columns: id, movement_id, user_id
+
+Table: user_profiles
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/user_profiles.csv
+  Columns: 11
+  Rows: 1
+  JSON Columns: discipline_experience, discipline_preferences, height_cm, scheduling_preferences, user_id
+
+Table: user_settings
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/user_settings.csv
+  Columns: 4
+  Rows: 1
+  JSON Columns: id, use_metric, user_id
+
+Table: users
+  CSV File: /Users/shourjosmac/Documents/alloy/Manual-CSV Upload/users.csv
+  Columns: 9
+  Rows: 8
+  JSON Columns: id, is_active
+

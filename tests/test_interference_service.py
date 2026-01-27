@@ -12,35 +12,33 @@ from app.models.enums import Goal
 
 
 @pytest.mark.asyncio
-async def test_detect_conflicts_no_conflicts(async_db_session: AsyncSession, test_user):
+async def test_detect_conflicts_no_conflicts(test_user):
     """Test detection with compatible goals."""
     goals = [Goal.STRENGTH, Goal.HYPERTROPHY, Goal.ENDURANCE]
     
-    is_valid, warnings = await interference_service.validate_goals(async_db_session, goals[0], goals[1], goals[2])
+    is_valid, warnings = await interference_service.validate_goals(goals[0], goals[1], goals[2])
     
     assert is_valid == True
     assert isinstance(warnings, list)
 
-
 @pytest.mark.asyncio
-async def test_get_conflicts(async_db_session: AsyncSession, test_user):
+async def test_get_conflicts(test_user):
     """Test getting conflicts between goals."""
     goals = [Goal.STRENGTH, Goal.FAT_LOSS, Goal.ENDURANCE]
     
-    conflicts = await interference_service.get_conflicts(async_db_session, goals[0], goals[1], goals[2])
+    conflicts = await interference_service.get_conflicts(goals[0], goals[1], goals[2])
     
     # Should return list of conflicts (may be empty)
     assert isinstance(conflicts, list)
 
-
 @pytest.mark.asyncio
-async def test_apply_dose_adjustments(async_db_session: AsyncSession, test_user):
+async def test_apply_dose_adjustments(test_user):
     """Test dose adjustment based on conflicts."""
     goals = [Goal.STRENGTH, Goal.FAT_LOSS, Goal.ENDURANCE]
     
     base_freq = {"squat": 3, "bench": 3, "deadlift": 2}
     adjusted = await interference_service.apply_dose_adjustments(
-        async_db_session, goals[0], goals[1], goals[2], base_freq
+        goals[0], goals[1], goals[2], base_freq
     )
     
     # Should return adjusted frequencies

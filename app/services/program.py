@@ -17,7 +17,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    Program, Microcycle, Session, HeuristicConfig, User, Movement, UserProfile, UserMovementRule, SessionExercise, ProgramDiscipline
+    Program, Microcycle, Session, User, Movement, UserProfile, UserMovementRule, SessionExercise, ProgramDiscipline
 )
 from app.schemas.program import ProgramCreate
 from app.models.enums import (

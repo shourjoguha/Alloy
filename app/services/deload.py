@@ -8,7 +8,6 @@ Responsible for:
 - Recommending deload microcycles when triggered
 - Managing deload recovery patterns
 """
-
 from datetime import datetime, timedelta
 from typing import Optional, Tuple, List
 from sqlalchemy import select, and_, desc
@@ -23,6 +22,7 @@ from app.models.logging import (
 from app.models.enums import (
     MicrocycleStatus
 )
+from app.config.heuristics import DELOAD_POLICY
 
 
 class DeloadService:
@@ -69,7 +69,9 @@ class DeloadService:
         
         # Check time since last deload
         time_since_deload = await self._days_since_last_deload(db, program_id)
-        if time_since_deload > 28:  # More than 4 weeks without deload
+        deload_every_microcycles = DELOAD_POLICY["default_deload_every_microcycles"]
+        microcycle_days = deload_every_microcycles * 7
+        if time_since_deload > microcycle_days:
             reasons.append("time-based (4+ weeks)")
         
         should_deload = len(reasons) >= 1

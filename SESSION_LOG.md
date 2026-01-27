@@ -796,3 +796,61 @@ Verify: Bearer token → Decode JWT → Validate signature/expiry → Extract us
 - Token expiration limits exposure if tokens are compromised
 - Account activation status allows account disabling without password changes
 - Email uniqueness enforced at application level
+
+---
+
+## Session 11: 2026-01-27
+
+**Objective**: Prepare data migration to Supabase without vector embeddings and extend circuit representation
+
+**Key Accomplishments**:
+
+1. **Movements Migration Without Vector Embeddings**:
+   - Exported 439 movements from local PostgreSQL database
+   - Created CSV export with full movement metadata (name, pattern, skill_level, equipment, muscles, tags, disciplines)
+   - Excluded `embedding_vector` column from export - movements uploaded without vector embeddings
+   - Preserved all JSONB columns (coaching_cues, movement_rules_json) in properly formatted JSON strings
+   - Maintained foreign key relationships (equipment, muscles, tags, disciplines)
+
+2. **Circuit Data Extension**:
+   - Extended circuits to represent data without JSON storage
+   - Created `circuit_templates` table with normalized relational structure
+   - Fields include: id, name, type, description, duration, difficulty, equipment_needed, movements (as structured text), created_at, updated_at
+   - Migrated from JSON-based circuit storage to proper relational model
+   - Created Supabase SQL script: `scripts/supabase_create_circuit_templates_table.sql`
+   - Exported 27 circuit templates to CSV format for manual upload
+
+3. **Manual CSV Upload Documentation**:
+   - Created comprehensive migration guide: `Manual-CSV Upload/MANUAL_CSV_UPLOAD_GUIDE.md`
+   - Documented 29 CSV files totaling 13,861 rows
+   - Provided step-by-step import instructions respecting foreign key dependencies
+   - Included troubleshooting guide and verification steps
+   - Established import order: core tables → programs → movements → relationships → sessions → user data → system tables
+
+4. **Data Export Statistics**:
+   - 29 CSV files created for Supabase migration
+   - Total rows exported: 13,861
+   - Largest table: sessions (4,620 rows)
+   - Movement relationships: 1,846 rows across 4 relationship tables (tags, equipment, muscles, disciplines)
+
+**Technical Details**:
+- Movements exported with primary discipline tags (CrossFit, Powerlifting, Weightlifting, etc.)
+- Circuit templates use structured text for movements instead of JSON arrays
+- CSV files use standard comma delimiter, UTF-8 encoding, Unix line endings
+- JSON columns properly formatted with double quotes and arrays
+- NULL values converted to empty strings for CSV compatibility
+
+**Migration Strategy**:
+- Manual CSV upload via Supabase Dashboard for reliability
+- Import tables in dependency order to respect foreign keys
+- Clear existing tables before import via SQL Editor
+- Verify row counts and foreign key integrity after import
+- Estimated total time: 25-35 minutes for complete migration
+
+**Status**:
+- All CSV files ready for Supabase upload
+- Circuit templates table structure defined
+- Movements ready without vector embeddings (embedding generation to be done in Supabase post-migration)
+- Complete documentation for manual migration process
+
+---
