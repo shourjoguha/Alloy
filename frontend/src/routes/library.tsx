@@ -29,9 +29,7 @@ type ColumnId =
   | 'primary_region'
   | 'primary_muscle'
   | 'secondary_muscles'
-  | 'default_equipment'
   | 'equipment_tags'
-  | 'complexity'
   | 'skill_level'
   | 'is_compound'
   | 'cns_load'
@@ -93,19 +91,9 @@ const ALL_COLUMNS: ColumnConfig[] = [
     ),
   },
   {
-    id: 'default_equipment',
-    label: 'Equipment',
-    render: (m) => m.default_equipment ?? '',
-  },
-  {
     id: 'equipment_tags',
     label: 'Equipment Tags',
     render: (m) => (m.equipment_tags && m.equipment_tags.length > 0 ? m.equipment_tags.join(', ') : ''),
-  },
-  {
-    id: 'complexity',
-    label: 'Complexity',
-    render: (m) => m.complexity ?? '',
   },
   {
     id: 'skill_level',
@@ -133,8 +121,7 @@ const DEFAULT_VISIBLE_COLUMNS: ColumnId[] = [
   'name',
   'primary_pattern',
   'primary_region',
-  'default_equipment',
-  'complexity',
+  'equipment_tags',
   'is_compound',
 ];
 
@@ -578,7 +565,13 @@ function MovementsTab() {
   const [selectedPattern, setSelectedPattern] = useState<MovementPattern | 'all'>('all');
   const [selectedEquipment, setSelectedEquipment] = useState<string | 'all'>('all');
   const [visibleColumns, setVisibleColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE_COLUMNS);
-  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showMultiFilters, setShowMultiFilters] = useState(false);
+  const [selectedRegions, setSelectedRegions] = useState<PrimaryRegion[]>([]);
+  const [selectedMuscles, setSelectedMuscles] = useState<PrimaryMuscle[]>([]);
+  const [selectedSkillLevels, setSelectedSkillLevels] = useState<SkillLevel[]>([]);
+  const [selectedCNSLoads, setSelectedCNSLoads] = useState<CNSLoad[]>([]);
+  const [selectedMetricTypes, setSelectedMetricTypes] = useState<MetricType[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
@@ -639,7 +632,27 @@ function MovementsTab() {
         movement.default_equipment === selectedEquipment ||
         (movement.equipment_tags && movement.equipment_tags.includes(selectedEquipment));
 
-      return matchesSearch && matchesPattern && matchesEquipment;
+      const matchesRegion =
+        selectedRegions.length === 0 ||
+        (movement.primary_region && selectedRegions.includes(movement.primary_region));
+
+      const matchesMuscle =
+        selectedMuscles.length === 0 ||
+        (movement.primary_muscles && movement.primary_muscles.some(m => selectedMuscles.includes(m)));
+
+      const matchesSkillLevel =
+        selectedSkillLevels.length === 0 ||
+        (movement.skill_level && selectedSkillLevels.includes(movement.skill_level));
+
+      const matchesCNSLoad =
+        selectedCNSLoads.length === 0 ||
+        (movement.cns_load && selectedCNSLoads.includes(movement.cns_load));
+
+      const matchesMetricType =
+        selectedMetricTypes.length === 0 ||
+        (movement.metric_type && selectedMetricTypes.includes(movement.metric_type));
+
+      return matchesSearch && matchesPattern && matchesEquipment && matchesRegion && matchesMuscle && matchesSkillLevel && matchesCNSLoad && matchesMetricType;
     });
 
     if (sortConfig) {
@@ -665,7 +678,7 @@ function MovementsTab() {
     }
 
     return result;
-  }, [movements, search, selectedPattern, selectedEquipment, sortConfig]);
+  }, [movements, search, selectedPattern, selectedEquipment, selectedRegions, selectedMuscles, selectedSkillLevels, selectedCNSLoads, selectedMetricTypes, sortConfig]);
 
   const toggleColumn = (id: ColumnId) => {
     setVisibleColumns((current) =>
@@ -696,10 +709,10 @@ function MovementsTab() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-cta px-4 py-2 text-sm font-medium text-white hover:bg-cta/90 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-cta px-3 py-1.5 text-xs font-medium text-white hover:bg-cta/90 transition-colors"
         >
-          <Plus className="h-6 w-6" />
-          Add Custom Movement
+          <Plus className="h-4 w-4" />
+          Add
         </button>
       </div>
 
@@ -758,19 +771,27 @@ function MovementsTab() {
         <div className="text-xs text-foreground-muted">
           Showing {filteredMovements.length} of {movements.length} movements
         </div>
-        <button
-          type="button"
-          onClick={() => setShowColumnPicker((v) => !v)}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-background-secondary"
-        >
-          <Settings2 className="h-4 w-4" />
-          Columns
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowMultiFilters((v) => !v)}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-background-secondary"
+          >
+            <Filter className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAdvancedFilters((v) => !v)}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-background-secondary"
+          >
+            <Settings2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      {showColumnPicker && (
+      {showAdvancedFilters && (
         <div className="mb-4 rounded-lg border border-border bg-background-input p-4">
-          <h3 className="mb-3 text-sm font-medium text-foreground">Select Columns to Display</h3>
+          <h3 className="mb-3 text-sm font-medium text-foreground">Pick your Poison</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {ALL_COLUMNS.map((col) => (
               <label key={col.id} className="flex items-center gap-2 cursor-pointer">
@@ -783,6 +804,203 @@ function MovementsTab() {
                 <span className="text-xs text-foreground">{col.label}</span>
               </label>
             ))}
+          </div>
+        </div>
+      )}
+
+      {showMultiFilters && (
+        <div className="mb-4 rounded-lg border border-border bg-background-input p-4">
+          <h3 className="mb-3 text-sm font-medium text-foreground">Some Assembly Required</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <label className="mb-2 block text-xs font-medium text-foreground">Region</label>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg bg-background p-2">
+                <label className="flex items-center gap-2 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedRegions.length === Object.values(PrimaryRegion).length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRegions(Object.values(PrimaryRegion));
+                      } else {
+                        setSelectedRegions([]);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                  />
+                  <span className="text-xs text-foreground">Select All</span>
+                </label>
+                {Object.values(PrimaryRegion).map((region) => (
+                  <label key={region} className="flex items-center gap-2 cursor-pointer py-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedRegions.includes(region)}
+                      onChange={() => {
+                        setSelectedRegions((current) =>
+                          current.includes(region)
+                            ? current.filter((r) => r !== region)
+                            : [...current, region]
+                        );
+                      }}
+                      className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                    />
+                    <span className="text-xs text-foreground capitalize">{region.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-medium text-foreground">Primary Muscle</label>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg bg-background p-2">
+                <label className="flex items-center gap-2 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedMuscles.length === Object.values(PrimaryMuscle).length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMuscles(Object.values(PrimaryMuscle));
+                      } else {
+                        setSelectedMuscles([]);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                  />
+                  <span className="text-xs text-foreground">Select All</span>
+                </label>
+                {Object.values(PrimaryMuscle).map((muscle) => (
+                  <label key={muscle} className="flex items-center gap-2 cursor-pointer py-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedMuscles.includes(muscle)}
+                      onChange={() => {
+                        setSelectedMuscles((current) =>
+                          current.includes(muscle)
+                            ? current.filter((m) => m !== muscle)
+                            : [...current, muscle]
+                        );
+                      }}
+                      className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                    />
+                    <span className="text-xs text-foreground capitalize">{muscle.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-medium text-foreground">Skill Level</label>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg bg-background p-2">
+                <label className="flex items-center gap-2 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedSkillLevels.length === Object.values(SkillLevel).length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedSkillLevels(Object.values(SkillLevel));
+                      } else {
+                        setSelectedSkillLevels([]);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                  />
+                  <span className="text-xs text-foreground">Select All</span>
+                </label>
+                {Object.values(SkillLevel).map((level) => (
+                  <label key={level} className="flex items-center gap-2 cursor-pointer py-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedSkillLevels.includes(level)}
+                      onChange={() => {
+                        setSelectedSkillLevels((current) =>
+                          current.includes(level)
+                            ? current.filter((l) => l !== level)
+                            : [...current, level]
+                        );
+                      }}
+                      className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                    />
+                    <span className="text-xs text-foreground capitalize">{level}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-medium text-foreground">CNS Load</label>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg bg-background p-2">
+                <label className="flex items-center gap-2 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedCNSLoads.length === Object.values(CNSLoad).length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedCNSLoads(Object.values(CNSLoad));
+                      } else {
+                        setSelectedCNSLoads([]);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                  />
+                  <span className="text-xs text-foreground">Select All</span>
+                </label>
+                {Object.values(CNSLoad).map((load) => (
+                  <label key={load} className="flex items-center gap-2 cursor-pointer py-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedCNSLoads.includes(load)}
+                      onChange={() => {
+                        setSelectedCNSLoads((current) =>
+                          current.includes(load)
+                            ? current.filter((l) => l !== load)
+                            : [...current, load]
+                        );
+                      }}
+                      className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                    />
+                    <span className="text-xs text-foreground capitalize">{load.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-medium text-foreground">Metric Type</label>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg bg-background p-2">
+                <label className="flex items-center gap-2 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedMetricTypes.length === Object.values(MetricType).length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMetricTypes(Object.values(MetricType));
+                      } else {
+                        setSelectedMetricTypes([]);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                  />
+                  <span className="text-xs text-foreground">Select All</span>
+                </label>
+                {Object.values(MetricType).map((type) => (
+                  <label key={type} className="flex items-center gap-2 cursor-pointer py-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedMetricTypes.includes(type)}
+                      onChange={() => {
+                        setSelectedMetricTypes((current) =>
+                          current.includes(type)
+                            ? current.filter((t) => t !== type)
+                            : [...current, type]
+                        );
+                      }}
+                      className="h-4 w-4 rounded border-border bg-background text-primary accent-primary"
+                    />
+                    <span className="text-xs text-foreground capitalize">{type.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

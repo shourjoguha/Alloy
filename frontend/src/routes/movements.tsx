@@ -128,6 +128,7 @@ const DEFAULT_VISIBLE_COLUMNS: ColumnId[] = [
   'name',
   'primary_pattern',
   'primary_region',
+  'equipment_tags',
   'default_equipment',
   'complexity',
   'is_compound',
@@ -366,7 +367,7 @@ function MovementsPage() {
   const [selectedPattern, setSelectedPattern] = useState<MovementPattern | 'all'>('all');
   const [selectedEquipment, setSelectedEquipment] = useState<string | 'all'>('all');
   const [visibleColumns, setVisibleColumns] = useState<ColumnId[]>(DEFAULT_VISIBLE_COLUMNS);
-  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
@@ -448,12 +449,6 @@ function MovementsPage() {
     return result;
   }, [movements, search, selectedPattern, selectedEquipment, sortConfig]);
 
-  const toggleColumn = (id: ColumnId) => {
-    setVisibleColumns((current) =>
-      current.includes(id) ? current.filter((col) => col !== id) : [...current, id],
-    );
-  };
-
   const handleSort = (key: ColumnId) => {
     setSortConfig((current) => {
       if (current?.key === key) {
@@ -477,10 +472,10 @@ function MovementsPage() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-cta px-4 py-2 text-sm font-medium text-white hover:bg-cta/90 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-cta px-3 py-1.5 text-xs font-medium text-white hover:bg-cta/90 transition-colors"
         >
-          <Plus className="h-6 w-6" />
-          Add Custom Movement
+          <Plus className="h-4 w-4" />
+          Add
         </button>
       </div>
 
@@ -496,78 +491,82 @@ function MovementsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-foreground-muted" />
-          <select
-            value={selectedPattern}
-            onChange={(e) =>
-              setSelectedPattern(
-                e.target.value === 'all'
-                  ? 'all'
-                  : (e.target.value as MovementPattern),
-              )
-            }
-            className="h-9 flex-1 rounded-lg border-0 bg-background-input px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvancedFilters((prev) => !prev)}
+            className={cn(
+              'inline-flex items-center rounded-lg border border-border bg-background-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background-secondary',
+            )}
           >
-            {patternOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <Settings2 className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-foreground-muted" />
-          <select
-            value={selectedEquipment}
-            onChange={(e) =>
-              setSelectedEquipment(e.target.value as typeof selectedEquipment)
-            }
-            className="h-9 flex-1 rounded-lg border-0 bg-background-input px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            {equipmentOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt === 'all' ? 'All Equipment' : opt}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="text-xs text-foreground-muted">
+        <div className="text-xs text-foreground-muted flex items-center">
           Showing {filteredMovements.length} of {movements.length} movements
         </div>
-        <button
-          type="button"
-          onClick={() => setShowColumnPicker((prev) => !prev)}
-          className={cn(
-            'inline-flex items-center gap-2 rounded-lg border border-border bg-background-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background-secondary',
-          )}
-        >
-          <Settings2 className="h-4 w-4" />
-          Columns
-        </button>
       </div>
 
-      {showColumnPicker && (
-        <div className="mb-4 rounded-lg border border-border bg-background-input p-3">
-          <p className="mb-2 text-xs font-medium text-foreground-muted">
-            Select columns to display:
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {ALL_COLUMNS.map((col) => (
-              <label key={col.id} className="flex items-center gap-2 text-xs text-foreground">
-                <input
-                  type="checkbox"
-                  checked={visibleColumns.includes(col.id)}
-                  onChange={() => toggleColumn(col.id)}
-                  className="h-3 w-3 rounded border-border bg-background text-primary accent-primary"
-                />
-                <span>{col.label}</span>
-              </label>
-            ))}
+      {showAdvancedFilters && (
+        <div className="mb-4 rounded-lg border border-border bg-background-input p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-foreground-muted" />
+            <select
+              value={selectedPattern}
+              onChange={(e) =>
+                setSelectedPattern(
+                  e.target.value === 'all'
+                    ? 'all'
+                    : (e.target.value as MovementPattern),
+                )
+              }
+              className="flex-1 h-9 rounded-lg border-0 bg-background-input px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {patternOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-foreground-muted" />
+            <select
+              value={selectedEquipment}
+              onChange={(e) =>
+                setSelectedEquipment(e.target.value as typeof selectedEquipment)
+              }
+              className="flex-1 h-9 rounded-lg border-0 bg-background-input px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {equipmentOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt === 'all' ? 'All Equipment' : opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-medium text-foreground-muted">
+              Select columns to display:
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {ALL_COLUMNS.map((col) => (
+                <label key={col.id} className="flex items-center gap-2 text-xs text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={visibleColumns.includes(col.id)}
+                    onChange={() => setVisibleColumns((current) =>
+                      current.includes(col.id) ? current.filter((c) => c !== col.id) : [...current, col.id],
+                    )}
+                    className="h-3 w-3 rounded border-border bg-background text-primary accent-primary"
+                  />
+                  <span>{col.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
       )}
