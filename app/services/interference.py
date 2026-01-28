@@ -71,7 +71,7 @@ class InterferenceService:
                 conflict_key = f"{g1.value}_{g2.value}"
                 reverse_key = f"{g2.value}_{g1.value}"
                 
-                conflict_rule = rules.get(conflict_key) or rules.get(reverse_key)
+                conflict_rule = self._interference_rules.get(conflict_key) or self._interference_rules.get(reverse_key)
                 if conflict_rule:
                     if conflict_rule.get("severity", 0) > 0.8:
                         # Hard conflict

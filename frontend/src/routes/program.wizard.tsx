@@ -20,6 +20,14 @@ import {
 } from '@/types';
 import { useUIStore } from '@/stores/ui-store';
 
+const PUSH_INTENSITY_TO_AGGRESSION: Record<number, PersonaAggression> = {
+  1: PersonaAggression.CONSERVATIVE,
+  2: PersonaAggression.MODERATE_CONSERVATIVE,
+  3: PersonaAggression.BALANCED,
+  4: PersonaAggression.MODERATE_AGGRESSIVE,
+  5: PersonaAggression.AGGRESSIVE,
+};
+
 export const Route = createFileRoute('/program/wizard')({
   component: ProgramWizardPage,
 });
@@ -141,7 +149,7 @@ function ProgramWizardPage() {
       max_session_duration: maxDuration,
       disciplines: disciplines.length > 0 ? disciplines : undefined,
       persona_tone: TONE_MAP[communicationStyle] || PersonaTone.SUPPORTIVE,
-      persona_aggression: pushIntensity as PersonaAggression,
+      persona_aggression: PUSH_INTENSITY_TO_AGGRESSION[pushIntensity] || PersonaAggression.BALANCED,
       movement_rules: movementRules.length > 0 ? movementRules : undefined,
       enjoyable_activities: enjoyableActivities.length > 0 ? enjoyableActivities : undefined,
     };

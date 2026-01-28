@@ -298,6 +298,7 @@ class ProgramService:
             
             microcycle = await self._create_microcycle(
                 db,
+                user_id=program.user_id,
                 program_id=program.id,
                 mc_index=mc_idx,
                 start_date=current_date,
@@ -741,6 +742,7 @@ class ProgramService:
     async def _create_microcycle(
         self,
         db: AsyncSession,
+        user_id: int,
         program_id: int,
         mc_index: int,
         start_date: date,
@@ -752,6 +754,7 @@ class ProgramService:
         
         Args:
             db: Database session
+            user_id: User ID who owns the program
             program_id: Parent program ID
             mc_index: Microcycle index (0-based)
             start_date: Microcycle start date
@@ -792,7 +795,7 @@ class ProgramService:
             
             # Create session (even for rest days - they can have recovery activities)
             session = Session(
-                user_id=program.user_id,
+                user_id=user_id,
                 microcycle_id=microcycle.id,
                 date=session_date,
                 day_number=day_num,
