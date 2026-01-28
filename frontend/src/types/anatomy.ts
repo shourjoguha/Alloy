@@ -28,7 +28,9 @@ export type BodyZone =
   | 'posterior lower'
   | 'anterior lower'
   | 'upper body'
-  | 'lower body';
+  | 'lower body'
+  | 'front'
+  | 'back';
 
 export const ZONE_MAPPING: Record<BodyZone, MuscleGroup[]> = {
   'posterior upper': ['upper_back', 'lats', 'rear_delts'],
@@ -59,6 +61,30 @@ export const ZONE_MAPPING: Record<BodyZone, MuscleGroup[]> = {
   ],
   'upper body': ['chest', 'lats', 'upper_back', 'rear_delts', 'front_delts', 'side_delts', 'biceps', 'triceps', 'forearms'],
   'lower body': ['quadriceps', 'hamstrings', 'glutes', 'calves', 'hip_flexors', 'adductors'],
+  front: [
+    'chest',
+    'front_delts',
+    'biceps',
+    'forearms',
+    'core',
+    'obliques',
+    'quadriceps',
+    'hip_flexors',
+    'adductors',
+    'calves',
+  ],
+  back: [
+    'upper_back',
+    'lats',
+    'rear_delts',
+    'side_delts',
+    'triceps',
+    'forearms',
+    'lower_back',
+    'hamstrings',
+    'glutes',
+    'calves',
+  ],
 };
 
 export const BODY_ZONE_LABELS: Record<BodyZone, string> = {
@@ -71,6 +97,8 @@ export const BODY_ZONE_LABELS: Record<BodyZone, string> = {
   'anterior lower': 'Anterior Lower',
   'upper body': 'Upper Body',
   'lower body': 'Lower Body',
+  front: 'Front View',
+  back: 'Back View',
 };
 
 export const MUSCLE_DISPLAY_NAMES: Record<MuscleGroup, string> = {

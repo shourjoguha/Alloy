@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from sqlalchemy import (
     Boolean, Column, Integer, String, Date, DateTime,
-    ForeignKey, Text, Float, Enum as SQLEnum, JSON
+    ForeignKey, Text, Float, Enum as SQLEnum, JSON, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 
@@ -182,12 +182,15 @@ class RecoverySignal(Base):
 class MuscleRecoveryState(Base):
     """Current muscle recovery state for each muscle (not historic)."""
     __tablename__ = "muscle_recovery_states"
+    __table_args__ = (
+        UniqueConstraint('user_id', 'muscle', name='uq_user_muscle'),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     
     # Muscle identification
-    muscle = Column(String(50), nullable=False, unique=True, index=True)
+    muscle = Column(String(50), nullable=False, index=True)
     
     # Recovery level (0-5, where 0 = fully recovered, 5 = severe soreness)
     recovery_level = Column(Integer, nullable=False, default=0)

@@ -1,3 +1,4 @@
 export { HumanBodyMap } from './HumanBodyMap';
-export { MuscleList } from './MuscleList';
+export { RegionSelector } from './RegionSelector';
+export { LoggedMuscles } from './LoggedMuscles';
 export { SorenessTracker } from './SorenessTracker';
