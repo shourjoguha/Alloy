@@ -72,7 +72,7 @@ export function ProfileTab() {
       if (data.persona_tone !== undefined) payload.persona_tone = data.persona_tone;
       if (data.persona_aggression !== undefined) payload.persona_aggression = data.persona_aggression;
       if (data.date_of_birth !== undefined && data.date_of_birth !== '' && data.date_of_birth !== null) payload.date_of_birth = data.date_of_birth;
-      if (data.sex !== undefined && data.sex !== '' && data.sex !== null) payload.sex = data.sex;
+      if (data.sex !== undefined && data.sex !== null) payload.sex = data.sex;
       if (data.height_cm !== undefined) payload.height_cm = Number(data.height_cm);
       
       if (data.discipline_preferences) {

@@ -799,7 +799,7 @@ Verify: Bearer token → Decode JWT → Validate signature/expiry → Extract us
 
 ---
 
-## Session 11: 2026-01-27
+## Session 18: 2026-01-27
 
 **Objective**: Prepare data migration to Supabase without vector embeddings and extend circuit representation
 
