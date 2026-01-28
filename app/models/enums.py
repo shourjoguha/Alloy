@@ -273,13 +273,13 @@ class StressBucket(str, Enum):
     CNS = "cns"                   # Central nervous system fatigue
 
 
-class PersonaAggression(int, Enum):
-    """Programming aggressiveness level (1-5)."""
-    CONSERVATIVE = 1
-    MODERATE_CONSERVATIVE = 2
-    BALANCED = 3
-    MODERATE_AGGRESSIVE = 4
-    AGGRESSIVE = 5
+class PersonaAggression(str, Enum):
+    """Programming aggressiveness level."""
+    CONSERVATIVE = "CONSERVATIVE"
+    MODERATE_CONSERVATIVE = "MODERATE_CONSERVATIVE"
+    BALANCED = "BALANCED"
+    MODERATE_AGGRESSIVE = "MODERATE_AGGRESSIVE"
+    AGGRESSIVE = "AGGRESSIVE"
 
 
 class ExperienceLevel(str, Enum):

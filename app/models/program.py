@@ -62,8 +62,8 @@ class Program(Base):
     deload_every_n_microcycles = Column(Integer, nullable=False, default=4)
     
     # Persona snapshot (copied from user at program creation)
-    persona_tone = Column(SQLEnum('drill_sergeant', 'supportive', 'analytical', 'motivational', 'minimalist', name='personatone'), nullable=False)
-    persona_aggression = Column(SQLEnum(PersonaAggression), nullable=False)
+    persona_tone = Column(SQLEnum(PersonaTone, values_callable=lambda obj: [e.value for e in obj]), nullable=False, default='supportive')
+    persona_aggression = Column(SQLEnum(PersonaAggression, values_callable=lambda obj: [e.value for e in obj]), nullable=False, default='BALANCED')
     
     # Status
     is_active = Column(Boolean, default=True)

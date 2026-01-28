@@ -132,7 +132,8 @@ export enum ExperienceLevel {
 export enum Sex {
   MALE = 'male',
   FEMALE = 'female',
-  OTHER = 'other',
+  INTERSEX = 'intersex',
+  UNSPECIFIED = 'unspecified',
 }
 
 export enum MovementRuleType {
@@ -160,11 +161,11 @@ export enum PersonaTone {
 }
 
 export enum PersonaAggression {
-  CONSERVATIVE = 1,
-  MODERATE_CONSERVATIVE = 2,
-  BALANCED = 3,
-  MODERATE_AGGRESSIVE = 4,
-  AGGRESSIVE = 5,
+  CONSERVATIVE = 'CONSERVATIVE',
+  MODERATE_CONSERVATIVE = 'MODERATE_CONSERVATIVE',
+  BALANCED = 'BALANCED',
+  MODERATE_AGGRESSIVE = 'MODERATE_AGGRESSIVE',
+  AGGRESSIVE = 'AGGRESSIVE',
 }
 
 export enum RecoverySource {

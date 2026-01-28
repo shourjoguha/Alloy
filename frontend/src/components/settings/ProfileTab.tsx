@@ -10,7 +10,7 @@ import type { UserProfileUpdate } from '@/types';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export function ProfileTab() {
-  const { data: profile, isLoading } = useUserProfile();
+  const { data: profile, isLoading, error: profileError } = useUserProfile();
   const updateMutation = useUpdateUserProfile();
   const { addToast } = useUIStore();
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -20,6 +20,8 @@ export function ProfileTab() {
   const disciplinePrefs = useWatch({ control, name: 'discipline_preferences' });
 
   useEffect(() => {
+    console.log('Profile data:', profile);
+    console.log('Profile error:', profileError);
     if (profile) {
       reset({
         name: profile.name,
@@ -48,7 +50,7 @@ export function ProfileTab() {
         long_term_goal_description: profile.long_term_goal_description || '',
       });
     }
-  }, [profile, reset]);
+  }, [profile, reset, profileError]);
 
   const onSubmit = async (data: UserProfileUpdate) => {
     try {
@@ -63,30 +65,65 @@ export function ProfileTab() {
         }
       }
 
-      // Ensure number types
-      const payload = {
-        ...data,
-        height_cm: data.height_cm ? Number(data.height_cm) : undefined,
-        persona_aggression: data.persona_aggression ? Number(data.persona_aggression) : undefined,
-        discipline_preferences: data.discipline_preferences ? {
+      const payload: any = {};
+      
+      if (data.name !== undefined && data.name !== '') payload.name = data.name;
+      if (data.experience_level !== undefined) payload.experience_level = data.experience_level;
+      if (data.persona_tone !== undefined) payload.persona_tone = data.persona_tone;
+      if (data.persona_aggression !== undefined) payload.persona_aggression = data.persona_aggression;
+      if (data.date_of_birth !== undefined && data.date_of_birth !== '' && data.date_of_birth !== null) payload.date_of_birth = data.date_of_birth;
+      if (data.sex !== undefined && data.sex !== '' && data.sex !== null) payload.sex = data.sex;
+      if (data.height_cm !== undefined) payload.height_cm = Number(data.height_cm);
+      
+      if (data.discipline_preferences) {
+        payload.discipline_preferences = {
           mobility: Number(data.discipline_preferences.mobility),
           calisthenics: Number(data.discipline_preferences.calisthenics),
           olympic_lifts: Number(data.discipline_preferences.olympic_lifts),
           crossfit: Number(data.discipline_preferences.crossfit),
           strength: Number(data.discipline_preferences.strength),
-        } : undefined,
-        scheduling_preferences,
-      };
+        };
+      }
       
+      if (data.scheduling_preferences) {
+        payload.scheduling_preferences = scheduling_preferences;
+      }
+      
+      if (data.discipline_experience) {
+        payload.discipline_experience = data.discipline_experience;
+      }
+      
+      if (data.long_term_goal_category !== undefined) payload.long_term_goal_category = data.long_term_goal_category;
+      if (data.long_term_goal_description !== undefined) payload.long_term_goal_description = data.long_term_goal_description;
+      
+      console.log('Submitting profile update:', payload);
       await updateMutation.mutateAsync(payload);
       addToast({
         type: 'success',
         message: 'Profile updated successfully',
       });
-    } catch {
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error data:', error.response?.data);
+      
+      let errorMessage = 'Failed to update profile';
+      
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+        } else if (typeof error.response.data.detail === 'object') {
+          errorMessage = JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       addToast({
         type: 'error',
-        message: 'Failed to update profile',
+        message: errorMessage,
       });
     }
   };
@@ -177,24 +214,17 @@ export function ProfileTab() {
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium">Coach Aggression (1-5)</label>
-            <div className="flex items-center gap-4">
-              <input
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                {...register('persona_aggression')}
-                className="flex-1 h-2 bg-background-input rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-              <span className="text-sm font-medium w-8 text-center">
-                {/* We rely on form state but range input is tricky to display value without watching */}
-              </span>
-            </div>
-             <div className="flex justify-between text-xs text-foreground-muted">
-                <span>Conservative</span>
-                <span>Aggressive</span>
-              </div>
+            <label className="text-sm font-medium">Coach Aggression</label>
+            <select
+              {...register('persona_aggression')}
+              className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+            >
+              <option value="CONSERVATIVE">Conservative</option>
+              <option value="MODERATE_CONSERVATIVE">Moderate Conservative</option>
+              <option value="BALANCED">Balanced</option>
+              <option value="MODERATE_AGGRESSIVE">Moderate Aggressive</option>
+              <option value="AGGRESSIVE">Aggressive</option>
+            </select>
           </div>
 
           {/* Long Term Goals */}

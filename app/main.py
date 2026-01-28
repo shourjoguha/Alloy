@@ -87,6 +87,18 @@ def create_app() -> FastAPI:
     app.include_router(activities_router, prefix="/activities", tags=["Activities"])
     app.include_router(favorites_router.router, prefix="/favorites", tags=["Favorites"])
     
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request, exc):
+        import traceback
+        import logging
+        logging.error(f"Unhandled exception: {exc}", exc_info=True)
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(exc)}
+        )
+    
     return app
 
 

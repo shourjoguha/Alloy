@@ -183,22 +183,6 @@ class UserProfileResponse(BaseModel):
     long_term_goal_category: str | None = None
     long_term_goal_description: str | None = None
     
-    @field_validator('persona_aggression', mode='before')
-    @classmethod
-    def convert_persona_aggression(cls, v):
-        if isinstance(v, int):
-            return v
-        if isinstance(v, str):
-            aggression_map = {
-                'CONSERVATIVE': 1,
-                'MODERATE_CONSERVATIVE': 2,
-                'BALANCED': 3,
-                'MODERATE_AGGRESSIVE': 4,
-                'AGGRESSIVE': 5,
-            }
-            return aggression_map.get(v.upper(), 3)
-        return 3
-    
     class Config:
         from_attributes = True
 

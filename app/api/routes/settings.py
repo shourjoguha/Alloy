@@ -1,5 +1,6 @@
 """API routes for user settings and configuration."""
 from typing import List, Optional
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from sqlalchemy import select
@@ -51,6 +52,7 @@ from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 # User settings
@@ -98,6 +100,14 @@ async def get_user_profile(
     # Let's check if we need to explicitly query it.
     profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
     
+    # Create profile if it doesn't exist
+    if not profile:
+        logger.info("Creating new profile for user_id=%s", user_id)
+        profile = UserProfile(user_id=user_id)
+        db.add(profile)
+        await db.commit()
+        await db.refresh(profile)
+    
     return UserProfileResponse(
         id=user.id,
         name=user.name,
@@ -105,14 +115,14 @@ async def get_user_profile(
         experience_level=user.experience_level,
         persona_tone=user.persona_tone,
         persona_aggression=user.persona_aggression,
-        date_of_birth=profile.date_of_birth if profile else None,
-        sex=profile.sex if profile else None,
-        height_cm=profile.height_cm if profile else None,
-        discipline_preferences=profile.discipline_preferences if profile else None,
-        discipline_experience=profile.discipline_experience if profile else None,
-        scheduling_preferences=profile.scheduling_preferences if profile else None,
-        long_term_goal_category=profile.long_term_goal_category if profile else None,
-        long_term_goal_description=profile.long_term_goal_description if profile else None,
+        date_of_birth=profile.date_of_birth,
+        sex=profile.sex,
+        height_cm=profile.height_cm,
+        discipline_preferences=profile.discipline_preferences,
+        discipline_experience=profile.discipline_experience,
+        scheduling_preferences=profile.scheduling_preferences,
+        long_term_goal_category=profile.long_term_goal_category,
+        long_term_goal_description=profile.long_term_goal_description,
     )
 
 
@@ -123,6 +133,8 @@ async def update_user_profile(
     user_id: int = Depends(get_current_user_id),
 ):
     """Update user profile."""
+    logger.info("Updating user profile for user_id=%s, update_data=%s", user_id, update.model_dump())
+    
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -141,10 +153,14 @@ async def update_user_profile(
         "long_term_goal_category", "long_term_goal_description"
     }
     
+    logger.info("Fields to update: %s", update_data.keys())
+    
     for field, value in update_data.items():
         if field in user_fields:
+            logger.info("Setting user field %s = %s (type: %s)", field, value, type(value))
             setattr(user, field, value)
         elif field in profile_fields:
+            logger.info("Setting profile field %s = %s (type: %s)", field, value, type(value))
             setattr(profile, field, value)
             
     await db.commit()

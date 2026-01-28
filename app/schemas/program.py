@@ -160,7 +160,7 @@ class ProgramResponse(BaseModel):
     is_active: bool = True
     created_at: DatetimeType | None = None
     program_disciplines: list[DisciplineWeight] = []
-    
+
     class Config:
         from_attributes = True
 

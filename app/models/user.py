@@ -44,12 +44,12 @@ class User(Base):
     
     # Global persona settings
     persona_tone = Column(
-        SQLEnum('drill_sergeant', 'supportive', 'analytical', 'motivational', 'minimalist', name='personatone'),
+        SQLEnum(PersonaTone, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
         default='supportive'
     )
     persona_aggression = Column(
-        SQLEnum('CONSERVATIVE', 'MODERATE_CONSERVATIVE', 'BALANCED', 'MODERATE_AGGRESSIVE', 'AGGRESSIVE', name='personaaggression'),
+        SQLEnum(PersonaAggression, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
         default='BALANCED'
     )

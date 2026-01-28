@@ -149,7 +149,14 @@ class ProgramService:
         persona_tone = request.persona_tone or (user.persona_tone if user else PersonaTone.SUPPORTIVE)
         persona_aggression = request.persona_aggression or (user.persona_aggression if user else PersonaAggression.BALANCED)
         logger.info("Persona settings: tone=%s, aggression=%s", persona_tone, persona_aggression)
-        
+
+        # If user changed persona settings during program creation, update their profile
+        if user:
+            if request.persona_tone:
+                user.persona_tone = request.persona_tone
+            if request.persona_aggression:
+                user.persona_aggression = request.persona_aggression
+
         # Create program
         start_date = request.program_start_date or date.today()
         
