@@ -88,7 +88,7 @@ class UserMovementRule(Base):
     rule_type = Column(SQLEnum(MovementRuleType), nullable=False)
     rule_operator = Column(SQLEnum(RuleOperator, values_callable=lambda obj: [e.value for e in obj]), nullable=False, default=RuleOperator.EQ)
     cadence = Column(SQLEnum(RuleCadence), nullable=False, default=RuleCadence.PER_MICROCYCLE)
-    # notes = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="movement_rules")

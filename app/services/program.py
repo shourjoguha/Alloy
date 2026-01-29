@@ -537,6 +537,15 @@ class ProgramService:
                         await self._update_movement_group_usage(
                             db, session_movements, used_movement_groups
                         )
+        
+        # Generate Jerome notes for all sessions in microcycle after content is complete
+        logger.info(f"[_generate_session_content_async] All sessions generated, starting batched Jerome notes generation")
+        try:
+            await self._generate_microcycle_jerome_notes(program, microcycle, sessions)
+        except Exception as e:
+            logger.error(
+                f"[_generate_session_content_async] Failed to generate Jerome notes: {e}"
+            )
     
     async def _apply_pattern_interference_rules(
         self,
@@ -708,6 +717,185 @@ class ProgramService:
                     return pattern
         
         return None
+    
+    async def _generate_microcycle_jerome_notes(
+        self,
+        program: Program,
+        microcycle: Microcycle,
+        sessions: list[Session],
+    ) -> None:
+        """
+        Generate coach notes for all sessions in a microcycle in a single batched operation.
+        
+        This method is called after all sessions in a microcycle have been generated,
+        allowing for more efficient batched LLM calls instead of per-session generation.
+        
+        Args:
+            program: Parent program with goals and settings
+            microcycle: Parent microcycle with deload status
+            sessions: List of all sessions in the microcycle
+        """
+        from app.db.database import async_session_maker
+        from app.llm import get_llm_provider, LLMConfig, Message
+        from app.config.settings import get_settings
+        
+        logger.info(f"[_generate_microcycle_jerome_notes] START - microcycle_id={microcycle.id}, sessions={len(sessions)}")
+        
+        # Filter out recovery sessions (they get default notes)
+        training_sessions = [s for s in sessions if s.session_type != SessionType.RECOVERY]
+        
+        if not training_sessions:
+            logger.info(f"[_generate_microcycle_jerome_notes] No training sessions to generate notes for")
+            return
+        
+        # Build goal weights
+        goal_weights = {
+            "strength": 0,
+            "hypertrophy": 0,
+            "endurance": 0,
+            "fat_loss": 0,
+            "mobility": 0,
+        }
+        for goal, weight in [
+            (program.goal_1.value, program.goal_weight_1),
+            (program.goal_2.value, program.goal_weight_2),
+            (program.goal_3.value, program.goal_weight_3),
+        ]:
+            if goal in goal_weights:
+                goal_weights[goal] += weight
+        
+        # Generate notes in batches for efficiency
+        # We'll process sessions in groups to avoid overly large prompts
+        batch_size = 3
+        settings = get_settings()
+        
+        for batch_start in range(0, len(training_sessions), batch_size):
+            batch = training_sessions[batch_start:batch_start + batch_size]
+            
+            # Build batch prompt for LLM
+            batch_summaries = []
+            for session in batch:
+                # Get session content to extract exercise information
+                async with async_session_maker() as db:
+                    session_with_exercises = await db.get(
+                        Session, 
+                        session.id,
+                        options=[selectinload(Session.exercises)]
+                    )
+                    
+                    if not session_with_exercises:
+                        continue
+                    
+                    # Extract exercise names from session
+                    main_moves = []
+                    accessory_moves = []
+                    
+                    if session_with_exercises.exercises:
+                        for ex in session_with_exercises.exercises:
+                            if ex.movement:
+                                if ex.exercise_role == ExerciseRole.MAIN:
+                                    main_moves.append(ex.movement.name)
+                                elif ex.exercise_role == ExerciseRole.ACCESSORY:
+                                    accessory_moves.append(ex.movement.name)
+                    
+                    goals_summary = ", ".join([f"{k}:{v}" for k, v in goal_weights.items() if v > 0])
+                    intent_tags = session.intent_tags or []
+                    summary = (
+                        f"Session {session.day_number} ({session.session_type.value}): "
+                        f"Patterns: {', '.join(intent_tags)}. "
+                        f"Goals: {goals_summary}. "
+                        f"Main: {', '.join(main_moves[:4])}. "
+                    )
+                    if accessory_moves:
+                        summary += f"Accessories: {', '.join(accessory_moves[:4])}. "
+                    if microcycle.is_deload:
+                        summary += "Deload week. "
+                    
+                    batch_summaries.append(summary)
+            
+            # Generate batch notes
+            batch_prompt = (
+                "Write 1-2 sentences in Jerome's voice for each session explaining "
+                "why it fits the user's goals and recovery. "
+                "Format your response as a JSON object with session day numbers as keys "
+                "and the notes as values. Example: {\"1\": \"Your note here\", \"2\": \"Your note here\"}\n\n"
+            )
+            batch_prompt += "\n".join(batch_summaries)
+            
+            try:
+                provider = get_llm_provider()
+                config = LLMConfig(
+                    model=settings.ollama_model,
+                    temperature=0.2,
+                    max_tokens=2000
+                )
+                messages = [Message(role="user", content=batch_prompt)]
+                
+                # Use the session_generator's retry logic via import
+                response = await session_generator._call_llm_with_retry(
+                    provider,
+                    messages,
+                    config,
+                    session_type="batch",
+                )
+                
+                if response and isinstance(response, dict):
+                    # Update sessions with generated notes
+                    async with async_session_maker() as db:
+                        for session in batch:
+                            day_num_str = str(session.day_number)
+                            if day_num_str in response:
+                                note = str(response[day_num_str])[:1100].rstrip()
+                                session_to_update = await db.get(Session, session.id)
+                                if session_to_update:
+                                    session_to_update.coach_notes = note
+                                    db.add(session_to_update)
+                        await db.commit()
+                    
+                    logger.info(
+                        f"[_generate_microcycle_jerome_notes] Generated notes for batch "
+                        f"{batch_start//batch_size + 1}: {len(batch)} sessions"
+                    )
+                else:
+                    # Fallback to default notes for this batch
+                    logger.warning(
+                        f"[_generate_microcycle_jerome_notes] Failed to parse batch response, using fallback notes"
+                    )
+                    await self._apply_fallback_notes(batch, microcycle.is_deload)
+                    
+            except Exception as e:
+                logger.error(
+                    f"[_generate_microcycle_jerome_notes] Failed to generate batch notes: {e}, using fallback"
+                )
+                await self._apply_fallback_notes(batch, microcycle.is_deload)
+        
+        logger.info(f"[_generate_microcycle_jerome_notes] COMPLETED - microcycle_id={microcycle.id}")
+    
+    async def _apply_fallback_notes(
+        self,
+        sessions: list[Session],
+        is_deload: bool,
+    ) -> None:
+        """
+        Apply fallback coach notes when LLM generation fails.
+        
+        Args:
+            sessions: List of sessions to update with fallback notes
+            is_deload: Whether this is a deload microcycle
+        """
+        from app.db.database import async_session_maker
+        
+        async with async_session_maker() as db:
+            for session in sessions:
+                session_to_update = await db.get(Session, session.id)
+                if session_to_update:
+                    if is_deload:
+                        note = "Optimization-first deload session focused on recovery and quality."
+                    else:
+                        note = "Optimization-first session aligned to your goals and recovery."
+                    session_to_update.coach_notes = note[:1100].rstrip()
+                    db.add(session_to_update)
+            await db.commit()
     
     async def _update_movement_group_usage(
         self,
@@ -929,6 +1117,23 @@ class ProgramService:
                 push_idx += 1
                 pull_idx += 1
 
+            # Check if patterns qualify as FULL_BODY
+            # Condition 1: BOTH push AND pull patterns (horizontal_push AND horizontal_pull, OR vertical_push AND vertical_pull)
+            has_horizontal_push = "horizontal_push" in patterns
+            has_horizontal_pull = "horizontal_pull" in patterns
+            has_vertical_push = "vertical_push" in patterns
+            has_vertical_pull = "vertical_pull" in patterns
+            has_both_push_pull = (has_horizontal_push and has_horizontal_pull) or (has_vertical_push and has_vertical_pull)
+            
+            # Condition 2: BOTH upper AND lower movements
+            has_lower = any(p in lower_cycle for p in patterns)
+            has_upper = any(p in push_cycle + pull_cycle for p in patterns)
+            has_both_upper_lower = has_upper and has_lower
+            
+            # Update day_type to FULL_BODY if either condition is met
+            if has_both_push_pull or has_both_upper_lower:
+                day_type = "full_body"
+
             structure[i]["type"] = day_type
             structure[i]["focus"] = patterns + tags
 
@@ -1069,14 +1274,19 @@ class ProgramService:
         if dedicated_day_mode and preferred_dedicated_type == "cardio" and desired_cardio_days == 0 and max_convertible > 0 and len(convert_candidates) > 0:
             desired_cardio_days = 1
         if allow_cardio_only and desired_cardio_days > 0:
-            for _ in range(desired_cardio_days):
-                idx = convert_candidates.pop(0)
-                structure[idx]["type"] = "cardio"
-                cardio_focus = ["cardio"]
-                cardio_focus.append("endurance" if goal_weights["endurance"] >= goal_weights["fat_loss"] else "fat_loss")
-                structure[idx]["focus"] = cardio_focus
-                cardio_days += 1
-                max_convertible -= 1
+            # Use evenly spaced distribution for cardio days
+            cardio_day_positions = self._pick_evenly_spaced_days(len(training_indexes), desired_cardio_days)
+            cardio_day_indexes = sorted([training_indexes[pos - 1] for pos in cardio_day_positions if pos <= len(training_indexes)])
+            
+            for idx in cardio_day_indexes:
+                if idx in convert_candidates:
+                    structure[idx]["type"] = "cardio"
+                    cardio_focus = ["cardio"]
+                    cardio_focus.append("endurance" if goal_weights["endurance"] >= goal_weights["fat_loss"] else "fat_loss")
+                    structure[idx]["focus"] = cardio_focus
+                    cardio_days += 1
+                    convert_candidates.remove(idx)
+                    max_convertible -= 1
 
         lifting_after = [i for i, d in enumerate(structure) if not is_rest_day(d) and (d.get("type") or "") not in {"cardio", "mobility", "conditioning"}]
         if lifting_after:

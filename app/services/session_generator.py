@@ -219,13 +219,7 @@ class SessionGeneratorService:
                     content["finisher"] = finisher
 
         content = self._normalize_session_content(content, session.session_type, session.intent_tags or [], goal_weights)
-        content["reasoning"] = await self._generate_jerome_notes(
-            session.session_type,
-            session.intent_tags or [],
-            goal_weights,
-            content,
-            microcycle.is_deload,
-        )
+        # Jerome notes generation moved to batched microcycle-level generation in program.py
         return content
     
     async def populate_session_by_id(
@@ -264,7 +258,7 @@ class SessionGeneratorService:
             
             # Fetch supporting data
             movements_by_pattern = await self._load_movements_by_pattern(db)
-            movement_rules = await self._load_user_movement_rules(db, program.user_id)
+            movement_rules = await self._load_user_movement_rules_dict(db, program.user_id)
             user_profile = await db.get(UserProfile, program.user_id)
             all_movements = await self._load_all_movements(db)
             
@@ -354,7 +348,7 @@ class SessionGeneratorService:
                 # session.finisher_json = content.get("finisher") # DEPRECATED
                 # session.cooldown_json = content.get("cooldown") # DEPRECATED
                 session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
-                session.coach_notes = content.get("reasoning")
+                # coach_notes will be generated in batches at microcycle level via _generate_microcycle_jerome_notes()
                 
                 # Create movement map from context for ID lookup
                 all_movements = context_data.get("all_movements", [])
@@ -402,21 +396,35 @@ class SessionGeneratorService:
             
         movements_by_pattern = context["movements_by_pattern"]
         goal_weights = self._get_goal_weights_for_program_info(context["program"])
-        movement_rules = context.get("movement_rules") or []
+        
+        # Extract movement rule IDs from dict format
+        # movement_rules dict has keys: "avoid", "must_include", "prefer" containing movement names
+        movement_rules_dict = context.get("movement_rules") or {}
         preferred_ids: list[int] = []
         hard_no_ids: list[int] = []
         hard_yes_ids: list[int] = []
-        for rule in movement_rules:
-            rule_type = getattr(getattr(rule, "rule_type", None), "value", None) or str(getattr(rule, "rule_type", ""))
-            movement_id = getattr(rule, "movement_id", None)
-            if not isinstance(movement_id, int):
-                continue
-            if rule_type == "preferred":
-                preferred_ids.append(movement_id)
-            elif rule_type == "hard_no":
-                hard_no_ids.append(movement_id)
-            elif rule_type == "hard_yes":
-                hard_yes_ids.append(movement_id)
+        
+        # Build name to ID mapping from all_movements
+        all_movements = context.get("all_movements", [])
+        name_to_id = {}
+        for m in all_movements:
+            m_name = getattr(m, "name", None) or m.get("name")
+            m_id = getattr(m, "id", None) or m.get("id")
+            if m_name and m_id:
+                name_to_id[m_name] = m_id
+        
+        # Extract IDs from movement rule names
+        for name in movement_rules_dict.get("prefer", []):
+            if name in name_to_id:
+                preferred_ids.append(name_to_id[name])
+        
+        for name in movement_rules_dict.get("avoid", []):
+            if name in name_to_id:
+                hard_no_ids.append(name_to_id[name])
+        
+        for name in movement_rules_dict.get("must_include", []):
+            if name in name_to_id:
+                hard_yes_ids.append(name_to_id[name])
         
         # Generate optimal draft
         draft_context = ""
@@ -462,13 +470,7 @@ class SessionGeneratorService:
                     content["finisher"] = finisher
 
         content = self._normalize_session_content(content, session_type, context["session"]["intent_tags"] or [], goal_weights)
-        content["reasoning"] = await self._generate_jerome_notes(
-            session_type,
-            context["session"]["intent_tags"] or [],
-            goal_weights,
-            content,
-            context["microcycle"]["is_deload"],
-        )
+        # Jerome notes generation moved to batched microcycle-level generation in program.py
         return content
 
     async def _save_session_exercises(
@@ -781,7 +783,7 @@ class SessionGeneratorService:
         
         # Update session fields
         session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
-        session.coach_notes = content.get("reasoning")
+        # coach_notes will be generated in batches at microcycle level via _generate_microcycle_jerome_notes()
         
         # Populate SessionExercises
         all_movement_names = set()
@@ -831,14 +833,30 @@ class SessionGeneratorService:
         self,
         db: AsyncSession,
         user_id: int,
-    ) -> dict[str, list[str]]:
-        """Load user's movement preferences (avoid, must, prefer)."""
+    ) -> list[tuple[UserMovementRule, Movement]]:
+        """Load user's movement preferences (HARD_NO, HARD_YES, PREFERRED).
+        
+        Returns:
+            List of tuples (UserMovementRule, Movement) for all rules for this user.
+        """
         result = await db.execute(
             select(UserMovementRule, Movement)
             .join(Movement, UserMovementRule.movement_id == Movement.id)
             .where(UserMovementRule.user_id == user_id)
         )
-        rules = result.all()
+        return result.all()
+    
+    async def _load_user_movement_rules_dict(
+        self,
+        db: AsyncSession,
+        user_id: int,
+    ) -> dict[str, list[str]]:
+        """Load user's movement preferences as a dict of movement names.
+        
+        Returns:
+            Dict with keys: "avoid", "must_include", "prefer" containing lists of movement names.
+        """
+        rules = await self._load_user_movement_rules(db, user_id)
         
         by_rule_type: dict[str, list[str]] = {
             "avoid": [],
@@ -1959,6 +1977,19 @@ class SessionGeneratorService:
         # Load all circuits (if available)
         all_circuits = await self._load_all_circuits(db)
         
+        # Load user movement rules (HARD_NO, HARD_YES, PREFERRED)
+        movement_rules = await self._load_user_movement_rules(db, session.program.user_id)
+        preferred_ids: list[int] = []
+        hard_no_ids: list[int] = []
+        hard_yes_ids: list[int] = []
+        for rule, movement in movement_rules:
+            if rule.rule_type == MovementRuleType.PREFERRED:
+                preferred_ids.append(movement.id)
+            elif rule.rule_type == MovementRuleType.HARD_NO:
+                hard_no_ids.append(movement.id)
+            elif rule.rule_type == MovementRuleType.HARD_YES:
+                hard_yes_ids.append(movement.id)
+        
         # Filter movements based on session type
         filtered_movements = self._filter_movements_for_session_type(all_movements, session.session_type)
         
@@ -1973,7 +2004,7 @@ class SessionGeneratorService:
         targets = self._get_muscle_targets_for_session(session.session_type)
         
         # Map used_movements (names) to excluded_movement_ids for Variety
-        excluded_ids = []
+        excluded_ids = list(hard_no_ids)  # Start with HARD_NO movements
         if used_movements:
             name_to_id = {m.name: m.id for m in all_movements}
             for name in used_movements:
@@ -1989,11 +2020,12 @@ class SessionGeneratorService:
             min_stimulus=2.0,
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
-            required_movement_ids=[],
+            required_movement_ids=hard_yes_ids,
             session_duration_minutes=60,
             allow_complex_lifts=True,
             allow_circuits=True,
             goal_weights=goal_weights,
+            preferred_movement_ids=preferred_ids,
         )
         
         # Solve in a separate thread to avoid blocking the event loop
