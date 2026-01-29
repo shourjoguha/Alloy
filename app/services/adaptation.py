@@ -78,6 +78,13 @@ class AdaptationService:
         if not session:
             raise ValueError(f"Session {session_id} not found")
         
+        # Check if session has circuits (mutually exclusive with accessories)
+        has_circuit = session.main_circuit_id or session.finisher_circuit_id
+        
+        if has_circuit:
+            return await self._adapt_circuit_session(db, session, user_id, request)
+        
+        # Fall back to existing accessory adaptation logic
         patterns_result = await db.execute(
             select(SessionExercise).options(joinedload(SessionExercise.movement)).where(
                 SessionExercise.session_id == session_id
@@ -123,6 +130,126 @@ class AdaptationService:
             "added_sections": added_sections,
             "recovery_score": recovery.get("recovery_score"),
             "notes": f"Adapted {len(adapted)} patterns, removed {len(removed)}, added {len(added_sections)} sections",
+        }
+    
+    async def _adapt_circuit_session(
+        self,
+        db: AsyncSession,
+        session: Session,
+        user_id: int,
+        request: AdaptationRequest,
+    ) -> Dict[str, Any]:
+        """
+        Adapt a session that contains circuits.
+        
+        Circuits are treated as atomic units - entire circuit is removed/replaced, 
+        not individual exercises.
+        
+        Args:
+            db: Database session
+            session: Session model
+            user_id: User ID
+            request: Adaptation request
+        
+        Returns:
+            Dict with adaptation results
+        """
+        from app.models.circuit import CircuitTemplate
+        
+        # Get circuit IDs
+        circuit_ids = []
+        if session.main_circuit_id:
+            circuit_ids.append(session.main_circuit_id)
+        if session.finisher_circuit_id:
+            circuit_ids.append(session.finisher_circuit_id)
+        
+        # Load circuits
+        circuits = []
+        for circuit_id in circuit_ids:
+            result = await db.execute(
+                select(CircuitTemplate).where(CircuitTemplate.id == circuit_id)
+            )
+            circuit = result.scalar_one_or_none()
+            if circuit:
+                circuits.append(circuit)
+        
+        # Load constraints
+        rules = await self._get_movement_rules(db, user_id)
+        recovery = await self._assess_recovery(db, user_id, request)
+        
+        # Check if circuits conflict with soreness or movement rules
+        removed_circuits = []
+        kept_circuits = []
+        
+        soreness_dict = {s.body_part: s.level for s in request.soreness or []}
+        
+        for circuit in circuits:
+            # Check if any movement in circuit is forbidden
+            from app.models.circuit_extended import CircuitMelted
+            melted_result = await db.execute(
+                select(CircuitMelted).where(CircuitMelted.circuit_id == circuit.id)
+            )
+            melted_exercises = melted_result.scalars().all()
+            
+            circuit_conflict = False
+            conflict_reason = ""
+            
+            for melted in melted_exercises:
+                if melted.movement:
+                    forbidden = self._is_movement_forbidden(melted.movement.name, rules)
+                    if forbidden:
+                        circuit_conflict = True
+                        conflict_reason = f"Contains forbidden movement: {forbidden}"
+                        break
+                    
+                    # Check soreness conflict
+                    affected = self._check_soreness_conflict(
+                        melted.movement, soreness_dict
+                    )
+                    if affected:
+                        circuit_conflict = True
+                        conflict_reason = f"Conflicts with soreness: {affected}"
+                        break
+            
+            if circuit_conflict:
+                removed_circuits.append({
+                    "circuit_id": circuit.id,
+                    "circuit_name": circuit.name,
+                    "reason": conflict_reason
+                })
+            else:
+                kept_circuits.append(circuit)
+        
+        # Suggest alternative circuits if any were removed
+        suggested_alternatives = []
+        if removed_circuits:
+            from app.models.circuit_extended import CircuitMacro
+            alternatives_result = await db.execute(
+                select(CircuitTemplate)
+                .join(CircuitMacro, CircuitMacro.circuit_id == CircuitTemplate.id)
+                .where(
+                    and_(
+                        CircuitTemplate.id.notin_(circuit_ids),
+                        CircuitTemplate.circuit_type == circuits[0].circuit_type if circuits else None
+                    )
+                )
+                .limit(5)
+            )
+            suggested_alternatives = alternatives_result.scalars().all()
+        
+        return {
+            "adapted_circuits": kept_circuits,
+            "removed_circuits": removed_circuits,
+            "suggested_alternatives": [
+                {
+                    "circuit_id": c.id,
+                    "circuit_name": c.name,
+                    "circuit_type": c.circuit_type.value
+                }
+                for c in suggested_alternatives
+            ],
+            "recovery_score": recovery.get("recovery_score"),
+            "notes": f"Adapted {len(kept_circuits)} circuits, removed {len(removed_circuits)} circuits",
         }
     
     async def suggest_exercise_substitution(

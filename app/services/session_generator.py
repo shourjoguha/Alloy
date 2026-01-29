@@ -956,10 +956,19 @@ class SessionGeneratorService:
         if is_middle_piece_only:
             normalized["accessory"] = None
             normalized["finisher"] = None
+            normalized["circuit"] = None
             return normalized
         
+        normalized = self._validate_mutual_exclusivity(normalized)
+        
         has_accessory = bool(normalized.get("accessory")) and len(normalized.get("accessory", [])) > 0
+        has_circuit = normalized.get("circuit") is not None
         has_finisher = normalized.get("finisher") is not None
+        
+        if has_circuit:
+            normalized["accessory"] = None
+            normalized["finisher"] = None
+            return normalized
         
         if has_accessory and has_finisher:
             if self._prefer_finisher(goal_weights, tags):
@@ -987,6 +996,16 @@ class SessionGeneratorService:
             normalized["finisher"] = None
             return normalized
         
+        block_type = self._decide_session_block_type(session_type, tags, goal_weights)
+        
+        if block_type == "circuit":
+            circuit = self._generate_circuit_block(session_type, tags, goal_weights)
+            if circuit:
+                normalized["circuit"] = circuit
+                normalized["accessory"] = None
+                normalized["finisher"] = None
+                return normalized
+        
         finisher = self._build_goal_finisher(goal_weights)
         if finisher:
             normalized["finisher"] = finisher
@@ -1009,6 +1028,54 @@ class SessionGeneratorService:
         finisher_pressure = fat_loss + endurance
         accessory_pressure = strength + hypertrophy
         return finisher_pressure > accessory_pressure or "conditioning" in tags or "cardio" in tags
+    
+    def _decide_session_block_type(self, session_type: SessionType, intent_tags: set[str], goal_weights: dict[str, int]) -> str:
+        """
+        Decide whether a session should have a circuit block or accessory block.
+        
+        Returns:
+            "circuit" if session should use circuits, "accessory" otherwise
+        """
+        if "prefer_circuit" in intent_tags:
+            return "circuit"
+        if "prefer_accessory" in intent_tags:
+            return "accessory"
+        
+        is_conditioning_session = session_type in {SessionType.CARDIO, SessionType.CUSTOM}
+        if is_conditioning_session and "conditioning" in intent_tags:
+            return "circuit"
+        
+        fat_loss = goal_weights.get("fat_loss", 0)
+        endurance = goal_weights.get("endurance", 0)
+        strength = goal_weights.get("strength", 0)
+        hypertrophy = goal_weights.get("hypertrophy", 0)
+        
+        circuit_pressure = fat_loss + endurance
+        accessory_pressure = strength + hypertrophy
+        
+        if circuit_pressure > accessory_pressure:
+            return "circuit"
+        
+        return "accessory"
+    
+    def _validate_mutual_exclusivity(self, content: dict[str, Any]) -> dict[str, Any]:
+        """
+        Ensure session doesn't have both accessories and circuits.
+        
+        Enforces XOR logic: either accessories OR circuits, never both.
+        Prioritizes circuits over accessories if both are present.
+        
+        Returns:
+            Normalized content with only accessories or only circuits
+        """
+        has_accessories = bool(content.get("accessory")) and len(content.get("accessory", [])) > 0
+        has_circuit = content.get("circuit") is not None
+        
+        if has_accessories and has_circuit:
+            logger.warning("Session has both accessories AND circuit - removing accessories to enforce mutual exclusivity")
+            content["accessory"] = None
+        
+        return content
 
     def _get_goal_weights_for_program(self, program: Program) -> dict[str, int]:
         goal_weights = {
@@ -1095,6 +1162,122 @@ class SessionGeneratorService:
         if goal_weights.get("endurance", 0) >= int(thresholds.get("endurance_min_weight", 999)):
             return dict(presets.get("endurance", {}))
         return None
+    
+    def _generate_circuit_block(
+        self,
+        session_type: SessionType,
+        intent_tags: set[str],
+        goal_weights: dict[str, int],
+    ) -> dict[str, Any] | None:
+        """
+        Generate a circuit block for the session.
+        
+        Uses relaxed constraints for circuit selection (no region limits, no pattern diversity limits).
+        Circuits are selected atomically - all movements in the circuit are included together.
+        
+        Returns:
+            Circuit block dict with circuit metadata and exercises, or None if no suitable circuit found
+        """
+        try:
+            from app.services.circuit_comparison import CircuitComparisonService
+            from app.models.circuit_extended import CircuitMacro
+            from app.db.database import get_db
+            
+            circuit_service = CircuitComparisonService()
+            
+            filters = {
+                "circuit_type": None,
+                "difficulty_tier": None,
+                "primary_region": self._get_primary_region_for_session_type(session_type),
+                "max_duration_minutes": 30,
+                "limit": 10
+            }
+            
+            recommendations = circuit_service.recommend_circuits_for_session(
+                session_type=session_type,
+                intent_tags=list(intent_tags),
+                goal_weights=goal_weights,
+                **filters
+            )
+            
+            if not recommendations or len(recommendations) == 0:
+                logger.info(f"No circuit recommendations found for {session_type} session")
+                return None
+            
+            selected_circuit = recommendations[0]
+            circuit_id = selected_circuit["id"]
+            
+            circuit_data = {
+                "circuit_id": circuit_id,
+                "name": selected_circuit["name"],
+                "circuit_type": selected_circuit["circuit_type"],
+                "difficulty_tier": selected_circuit.get("difficulty_tier", 2),
+                "estimated_duration_seconds": selected_circuit.get("estimated_duration_seconds", 1500),
+                "default_rounds": selected_circuit.get("default_rounds", 3),
+                "primary_region": selected_circuit.get("primary_region", "full_body"),
+                "primary_muscles": selected_circuit.get("primary_muscles", []),
+                "fatigue_factor": selected_circuit.get("fatigue_factor", 1.0),
+                "stimulus_factor": selected_circuit.get("stimulus_factor", 1.0),
+                "exercises": []
+            }
+            
+            melted_exercises = self._get_circuit_melted_exercises(circuit_id)
+            for melted in melted_exercises:
+                exercise_data = {
+                    "movement": melted.movement_name,
+                    "movement_id": melted.movement_id,
+                    "sequence": melted.exercise_sequence,
+                    "metric_type": melted.metric_type.value,
+                    "reps": melted.reps,
+                    "distance_meters": melted.distance_meters,
+                    "duration_seconds": melted.duration_seconds,
+                    "calories": melted.calories,
+                    "rest_seconds": melted.rest_seconds,
+                    "notes": melted.notes
+                }
+                circuit_data["exercises"].append(exercise_data)
+            
+            circuit_data["exercises"].sort(key=lambda x: x["sequence"])
+            
+            logger.info(f"Selected circuit '{selected_circuit['name']}' for {session_type} session")
+            return circuit_data
+            
+        except Exception as e:
+            logger.error(f"Error generating circuit block: {e}")
+            return None
+    
+    def _get_primary_region_for_session_type(self, session_type: SessionType) -> str:
+        """Map session type to primary circuit region."""
+        region_map = {
+            SessionType.UPPER: "upper_body",
+            SessionType.LOWER: "lower_body",
+            SessionType.PUSH: "upper_body",
+            SessionType.PULL: "upper_body",
+            SessionType.FULL_BODY: "full_body",
+            SessionType.CARDIO: "full_body",
+            SessionType.CUSTOM: "full_body",
+        }
+        return region_map.get(session_type, "full_body")
+    
+    def _get_circuit_melted_exercises(self, circuit_id: int):
+        """Get melted exercises for a circuit."""
+        try:
+            from app.db.database import get_db
+            from app.models.circuit_extended import CircuitMelted
+            
+            db_gen = get_db()
+            db = next(db_gen)
+            
+            try:
+                melted = db.query(CircuitMelted).filter(
+                    CircuitMelted.circuit_id == circuit_id
+                ).order_by(CircuitMelted.exercise_sequence).all()
+                return melted
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Error getting circuit melted exercises: {e}")
+            return []
 
     def _get_fast_special_session_content(
         self,
@@ -1844,9 +2027,14 @@ class SessionGeneratorService:
         """Load all circuits and convert to SolverCircuit format."""
         from app.services.optimization import SolverCircuit
         from app.models.circuit import CircuitTemplate
+        from app.models.circuit_extended import CircuitMacro
         
-        result = await db.execute(select(CircuitTemplate))
-        circuits = list(result.scalars().all())
+        # Load circuits with macro data
+        stmt = select(CircuitTemplate, CircuitMacro).join(
+            CircuitMacro, CircuitTemplate.id == CircuitMacro.circuit_id
+        )
+        result = await db.execute(stmt)
+        rows = result.all()
         
         return [
             SolverCircuit(
@@ -1857,9 +2045,12 @@ class SessionGeneratorService:
                 stimulus_factor=c.stimulus_factor if c.stimulus_factor else 1.0,
                 effective_work_volume=c.effective_work_volume if c.effective_work_volume else 0.0,
                 circuit_type=c.circuit_type,
-                duration_seconds=c.estimated_work_seconds if c.estimated_work_seconds else 600
+                duration_seconds=c.estimated_work_seconds if c.estimated_work_seconds else 600,
+                primary_region=m.primary_region.value if m else None,
+                pattern_diversity_score=m.pattern_diversity_score if m else 0.0,
+                equipment_complexity=m.equipment_complexity if m else 0
             )
-            for c in circuits
+            for c, m in rows
         ]
     
     def _get_circuit_primary_muscle(self, circuit: CircuitTemplate) -> str:

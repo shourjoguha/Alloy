@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from app.db.database import Base
 from app.models.enums import CircuitType
+from app.models.circuit_extended import CircuitMelted, CircuitMacro
 
 
 class CircuitTemplate(Base):
@@ -32,6 +33,20 @@ class CircuitTemplate(Base):
     total_reps = Column(Integer, nullable=True)
     estimated_work_seconds = Column(Integer, nullable=True)
     effective_work_volume = Column(Float, nullable=True)
+    
+    # Relationships to melted and macro tables
+    melted_exercises = relationship(
+        "CircuitMelted", 
+        back_populates="circuit", 
+        cascade="all, delete-orphan",
+        order_by="CircuitMelted.exercise_sequence"
+    )
+    macro_metrics = relationship(
+        "CircuitMacro", 
+        back_populates="circuit", 
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<CircuitTemplate(id={self.id}, name='{self.name}', type={self.circuit_type})>"

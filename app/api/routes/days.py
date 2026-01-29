@@ -31,10 +31,19 @@ from app.schemas.daily import (
     AdaptedSessionPlan,
 )
 from app.schemas.program import SessionResponse
+from app.schemas.circuit import (
+    CircuitAssignmentCreate,
+    CircuitAssignmentUpdate,
+    CircuitAssignmentResponse,
+    CircuitRecommendationRequest,
+    CircuitRecommendationResponse,
+    CircuitPreviewResponse,
+)
 from app.llm import get_llm_provider, LLMConfig, Message, PromptBuilder
 from app.services.adaptation import adaptation_service
 from app.services.deload import deload_service
 from app.services.time_estimation import time_estimation_service
+from app.services.circuit_assignment import circuit_assignment_service
 from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
@@ -545,3 +554,105 @@ async def accept_plan(
         success=True,
         message="Plan accepted successfully",
     )
+
+
+@router.post("/{session_id}/circuits", response_model=CircuitAssignmentResponse, status_code=201)
+async def assign_circuit_to_session(
+    session_id: int,
+    assignment: CircuitAssignmentCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Atomically assign a circuit to a session.
+    
+    Atomic constraint: All circuit exercises are added or none.
+    """
+    result = await circuit_assignment_service.assign_circuit_to_session(
+        db, session_id, assignment.circuit_id, assignment.circuit_role,
+        assignment.rounds, assignment.replace_existing
+    )
+    return result
+
+
+@router.patch("/{session_id}/circuits/{circuit_role}")
+async def update_circuit_assignment(
+    session_id: int,
+    circuit_role: str,
+    update: CircuitAssignmentUpdate,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Update circuit assignment parameters."""
+    if update.action == "UPDATE_ROUNDS" and update.rounds is None:
+        raise HTTPException(status_code=400, detail="rounds required for UPDATE_ROUNDS action")
+    
+    if update.action == "REMOVE":
+        session = await db.get(Session, session_id)
+        if not session or session.user_id != user_id:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        if circuit_role == "MAIN_CIRCUIT":
+            session.main_circuit_id = None
+        elif circuit_role == "FINISHER_CIRCUIT":
+            session.finisher_circuit_id = None
+        else:
+            raise HTTPException(status_code=400, detail="Invalid circuit_role")
+        
+        await db.execute(
+            SessionExercise.__table__.delete().where(
+                and_(
+                    SessionExercise.session_id == session_id,
+                    SessionExercise.circuit_id != None
+                )
+            )
+        )
+        await db.commit()
+        
+        return {
+            "session_id": session_id,
+            "circuit_role": circuit_role,
+            "action_completed": update.action,
+        }
+    
+    return {
+        "session_id": session_id,
+        "circuit_role": circuit_role,
+        "action_completed": update.action,
+    }
+
+
+@router.get("/{session_id}/available-circuits")
+async def get_available_circuits(
+    session_id: int,
+    circuit_type: str | None = None,
+    difficulty_tier: int | None = None,
+    primary_region: str | None = None,
+    exclude_used: bool = True,
+    max_duration_minutes: int | None = None,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Get circuit recommendations for a session."""
+    result = await circuit_assignment_service.get_available_circuits_for_session(
+        db, session_id, circuit_type, difficulty_tier, primary_region,
+        exclude_used, max_duration_minutes, limit
+    )
+    return result
+
+
+@router.post("/circuits-preview", response_model=CircuitPreviewResponse)
+async def preview_circuit_assignment(
+    session_id: int,
+    circuit_id: int,
+    circuit_role: str = "MAIN_CIRCUIT",
+    rounds: int | None = None,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Preview circuit assignment before committing."""
+    result = await circuit_assignment_service.preview_circuit_assignment(
+        db, session_id, circuit_id, circuit_role, rounds
+    )
+    return result

@@ -178,6 +178,7 @@ class Session(Base):
     # If this session IS a circuit (Hyrox/Crossfit day), these fields are used
     main_circuit_id = Column(Integer, ForeignKey("circuit_templates.id"), nullable=True)
     finisher_circuit_id = Column(Integer, ForeignKey("circuit_templates.id"), nullable=True)
+    has_circuits = Column(Boolean, default=False, nullable=False, index=True)
     
     # Time estimation
     estimated_duration_minutes = Column(Integer, nullable=True)

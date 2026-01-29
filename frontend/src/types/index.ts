@@ -289,6 +289,7 @@ export interface Session {
   warmup?: ExerciseBlock[];
   main?: ExerciseBlock[];
   accessory?: ExerciseBlock[];
+  circuit?: CircuitBlock;
   finisher?: FinisherBlock;
   cooldown?: ExerciseBlock[];
   estimated_duration_minutes?: number;
@@ -298,6 +299,9 @@ export interface Session {
   finisher_duration_minutes?: number;
   cooldown_duration_minutes?: number;
   coach_notes?: string;
+  has_circuits?: boolean;
+  main_circuit_id?: number;
+  finisher_circuit_id?: number;
 }
 
 export interface ExerciseBlock {
@@ -321,6 +325,33 @@ export interface FinisherBlock {
   duration_minutes?: number;
   rounds?: string | number; // Support text like "Max Rounds"
   exercises?: ExerciseBlock[];
+  notes?: string;
+}
+
+export interface CircuitBlock {
+  circuit_id: number;
+  name: string;
+  circuit_type: string;
+  difficulty_tier: number;
+  estimated_duration_seconds: number;
+  default_rounds: number;
+  primary_region: string;
+  primary_muscles: string[];
+  fatigue_factor: number;
+  stimulus_factor: number;
+  exercises: CircuitExercise[];
+}
+
+export interface CircuitExercise {
+  movement: string;
+  movement_id: number;
+  sequence: number;
+  metric_type: string;
+  reps?: number;
+  distance_meters?: number;
+  duration_seconds?: number;
+  calories?: number;
+  rest_seconds?: number;
   notes?: string;
 }
 

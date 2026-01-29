@@ -31,6 +31,9 @@ class SolverCircuit:
     effective_work_volume: float
     circuit_type: CircuitType
     duration_seconds: int
+    primary_region: str | None = None
+    pattern_diversity_score: float = 0.0
+    equipment_complexity: int = 0
 
 @dataclass
 class OptimizationRequest:
@@ -186,6 +189,36 @@ class ConstraintSolver:
         
         duration_expr = movement_duration + circuit_duration
         model.Add(duration_expr <= request.session_duration_minutes)
+        
+        # E. Circuit Diversity Constraints
+        # NOTE: Relaxed circuit selection - no region limits, no pattern diversity limits
+        # Circuits are selected atomically (all-or-nothing) with only fatigue/duration constraints
+        # Original diversity constraints commented out for more flexible circuit selection:
+        #
+        # if request.allow_circuits and request.available_circuits and len(request.available_circuits) > 1:
+        #     # Constraint: Max 1 circuit per body region to promote variety
+        #     region_vars = {}
+        #     for c in request.available_circuits:
+        #         if c.id not in circuit_vars:
+        #             continue
+        #         if c.primary_region not in region_vars:
+        #             region_vars[c.primary_region] = []
+        #         region_vars[c.primary_region].append(circuit_vars[c.id])
+        #     
+        #     # At most one circuit per region
+        #     for region, c_vars in region_vars.items():
+        #         if len(c_vars) > 1:
+        #             model.Add(sum(c_vars) <= 1)
+        #     
+        #     # Constraint: Promote pattern diversity (max 1 low-diversity circuit)
+        #     low_diversity_threshold = 0.3
+        #     low_diversity_circuits = [
+        #         c.id for c in request.available_circuits
+        #         if c.id in circuit_vars and c.pattern_diversity_score < low_diversity_threshold
+        #     ]
+        #     if len(low_diversity_circuits) > 0:
+        #         low_diversity_vars = [circuit_vars[cid] for cid in low_diversity_circuits]
+        #         model.Add(sum(low_diversity_vars) <= 1)
         
         goal_weights = request.goal_weights or {}
         strength_pressure = goal_weights.get("strength", 0) + goal_weights.get("hypertrophy", 0)

@@ -64,6 +64,67 @@ function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null 
   );
 }
 
+function CircuitDisplay({ circuit }: { circuit: any }) {
+  if (!circuit) return null;
+
+  return (
+    <div className="mt-3">
+      <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
+        <Flame className="h-3 w-3 text-orange-500" />
+        Circuit Block
+      </h4>
+      <div className="p-3 bg-background-input rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-medium text-foreground">{circuit.name}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded font-medium">
+              {circuit.circuit_type}
+            </span>
+            <span className="text-xs text-foreground-muted bg-background-input px-2 py-0.5 rounded">
+              {Math.round(circuit.estimated_duration_seconds / 60)} min
+            </span>
+            <span className="text-xs text-foreground-muted bg-background-input px-2 py-0.5 rounded">
+              {circuit.default_rounds} rounds
+            </span>
+          </div>
+        </div>
+        
+        {circuit.primary_muscles && circuit.primary_muscles.length > 0 && (
+          <div className="flex gap-1 flex-wrap mb-2">
+            {circuit.primary_muscles.map((muscle: string, idx: number) => (
+              <span key={idx} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded">
+                {muscle}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {circuit.exercises && circuit.exercises.length > 0 && (
+          <div className="border-t border-border/50 pt-2">
+            <div className="text-xs text-foreground-muted mb-2">Exercises:</div>
+            <div className="space-y-1">
+              {circuit.exercises.map((ex: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between text-sm">
+                  <span className="text-foreground">{ex.movement}</span>
+                  <span className="text-foreground-muted text-xs">
+                    {ex.reps && `${ex.reps} reps`}
+                    {ex.duration_seconds && `${ex.duration_seconds}s`}
+                    {ex.metric_type && (
+                      <span className="ml-1 text-foreground-muted">
+                        ({ex.metric_type})
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SessionCard({ session, defaultExpanded = false }: SessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -73,6 +134,8 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
   const isRestDay = session.session_type === 'recovery';
   const isGenerating = !isRestDay && !hasContent;
   const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
+  const hasCircuit = session.circuit !== undefined && session.circuit !== null;
+  const hasAccessories = session.accessory && session.accessory.length > 0;
 
   return (
     <Card variant="grouped"
@@ -159,7 +222,10 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
           {/* Exercise sections */}
           <ExerciseList exercises={session.warmup} title="Warmup" />
           <ExerciseList exercises={session.main} title="Main" />
-          <ExerciseList exercises={session.accessory} title="Accessory" />
+          
+          {/* Mutually exclusive: Either circuit block OR accessory block, never both */}
+          <CircuitDisplay circuit={session.circuit} />
+          {!hasCircuit && <ExerciseList exercises={session.accessory} title="Accessory" />}
           
           {/* Finisher */}
           {session.finisher && (

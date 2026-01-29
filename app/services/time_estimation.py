@@ -9,6 +9,7 @@ class SessionTimeBreakdown:
     warmup_minutes: int
     main_minutes: int
     accessory_minutes: int
+    circuit_minutes: int
     finisher_minutes: int
     cooldown_minutes: int
     total_minutes: int
@@ -268,6 +269,7 @@ class TimeEstimationService:
         warmup: list[dict] | None = None,
         main: list[dict] | None = None,
         accessory: list[dict] | None = None,
+        circuit: dict | None = None,
         finisher: dict | None = None,
         cooldown: list[dict] | None = None,
         intent: str = "hypertrophy"
@@ -278,7 +280,8 @@ class TimeEstimationService:
         Args:
             warmup: Warmup exercises
             main: Main exercises
-            accessory: Accessory exercises
+            accessory: Accessory exercises (mutually exclusive with circuit)
+            circuit: Circuit block (mutually exclusive with accessory)
             finisher: Finisher block
             cooldown: Cooldown stretches
             intent: Training intent
@@ -288,20 +291,51 @@ class TimeEstimationService:
         """
         warmup_time = self.estimate_warmup_time(warmup or [])
         main_time = self.estimate_block_time(main or [], "main", intent)
-        accessory_time = self.estimate_block_time(accessory or [], "accessory", intent)
+        
+        # Mutually exclusive: either circuit OR accessory, never both
+        if circuit:
+            circuit_time = self.estimate_circuit_time(circuit)
+            accessory_time = 0
+        else:
+            accessory_time = self.estimate_block_time(accessory or [], "accessory", intent)
+            circuit_time = 0
+        
         finisher_time = self.estimate_finisher_time(finisher)
         cooldown_time = self.estimate_cooldown_time(cooldown or [])
         
-        total = warmup_time + main_time + accessory_time + finisher_time + cooldown_time
+        total = warmup_time + main_time + circuit_time + accessory_time + finisher_time + cooldown_time
         
         return SessionTimeBreakdown(
             warmup_minutes=warmup_time,
             main_minutes=main_time,
             accessory_minutes=accessory_time,
+            circuit_minutes=circuit_time,
             finisher_minutes=finisher_time,
             cooldown_minutes=cooldown_time,
             total_minutes=total
         )
+    
+    def estimate_circuit_time(self, circuit: dict | None) -> int:
+        """
+        Estimate duration for a circuit block.
+        
+        Uses the circuit's estimated_duration_seconds for accurate time calculation.
+        
+        Args:
+            circuit: Circuit block dict with circuit metadata
+            
+        Returns:
+            Duration in minutes
+        """
+        if not circuit:
+            return 0
+        
+        duration_seconds = circuit.get("estimated_duration_seconds")
+        if duration_seconds:
+            return int(duration_seconds / 60)
+        
+        default_duration = circuit.get("default_duration_seconds", 1500)
+        return int(default_duration / 60)
 
     def calculate_session_duration(self, session) -> SessionTimeBreakdown:
         """
@@ -403,9 +437,10 @@ class TimeEstimationService:
             warmup=session.warmup_json,
             main=session.main_json,
             accessory=session.accessory_json,
+            circuit=None,
             finisher=session.finisher_json,
             cooldown=session.cooldown_json,
-            intent="hypertrophy" # Default or derive from session type/program
+            intent="hypertrophy"
         )
         
         return {

@@ -62,6 +62,7 @@ class MetricType(str, Enum):
     TIME = "time"
     TIME_UNDER_TENSION = "time_under_tension"
     DISTANCE = "distance"
+    CALORIES = "calories"
 
 
 class SkillLevel(str, Enum):
