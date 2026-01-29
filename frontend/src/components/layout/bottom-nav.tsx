@@ -8,9 +8,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// Flexible nav items - can add up to 5
 const navItems: NavItem[] = [
-  { to: '/', label: 'Personal', icon: User },
+  { to: '/dashboard', label: 'Personal', icon: User },
   { to: '/teams', label: 'Teams', icon: Users },
 ];
 

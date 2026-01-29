@@ -5,11 +5,12 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
 import { login } from '@/api/auth';
 import { useUIStore } from '@/stores/ui-store';
 import { useState } from 'react';
+import { AuthBackground } from '@/components/auth/AuthBackground';
+import '@/styles/landing.css';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -42,13 +43,7 @@ function LoginPage() {
       const response = await login(data.email, data.password);
       setToken(response.access_token);
       setAuthenticated(true);
-      // We also need to get user details, but login returns user_id. 
-      // We can verify token to get full user details or just fetch it.
-      // For now, we'll verify the token to get user data.
-      // Actually, let's just navigate and let the app handle fetching user if needed,
-      // or do a quick verify.
       
-      // Let's verify to get user object
       try {
         const { verifyToken } = await import('@/api/auth');
         const user = await verifyToken(response.access_token);
@@ -61,7 +56,7 @@ function LoginPage() {
         type: 'success',
         message: 'Logged in successfully',
       });
-      navigate({ to: '/' });
+      navigate({ to: '/dashboard' });
     } catch (error: any) {
       addToast({
         type: 'error',
@@ -73,55 +68,59 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
-          <CardDescription>
-            Enter your email and password to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+    <AuthBackground>
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1 className="auth-title">Welcome Back</h1>
+            <p className="auth-subtitle">Enter your credentials to access Alloy</p>
+          </div>
+
+          <form onSubmit={form.handleSubmit(onSubmit)} className="auth-form">
+            <div className="form-group">
+              <Label htmlFor="email" className="auth-label">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="your@email.com"
                 error={!!form.formState.errors.email}
                 {...form.register('email')}
+                className="auth-input"
               />
               {form.formState.errors.email && (
-                <p className="text-xs text-error">{form.formState.errors.email.message}</p>
+                <p className="auth-error">{form.formState.errors.email.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+
+            <div className="form-group">
+              <Label htmlFor="password" className="auth-label">Password</Label>
               <Input
                 id="password"
                 type="password"
                 error={!!form.formState.errors.password}
                 {...form.register('password')}
+                className="auth-input"
               />
               {form.formState.errors.password && (
-                <p className="text-xs text-error">{form.formState.errors.password.message}</p>
+                <p className="auth-error">{form.formState.errors.password.message}</p>
               )}
             </div>
-            <Button type="submit" className="w-full" isLoading={isLoading}>
+
+            <Button type="submit" className="auth-button" isLoading={isLoading}>
               Login
             </Button>
           </form>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-2">
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              Register
-            </Link>
+
+          <div className="auth-footer">
+            <p className="auth-footer-text">
+              Don't have an account?{' '}
+              <Link to="/register" className="auth-link">
+                Register
+              </Link>
+            </p>
           </div>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </AuthBackground>
   );
 }

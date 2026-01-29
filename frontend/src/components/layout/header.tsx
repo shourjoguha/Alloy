@@ -1,10 +1,12 @@
 import { Link, useRouter } from '@tanstack/react-router';
 import { Bell, Menu, ArrowLeft } from 'lucide-react';
 import { useUIStore } from '@/stores/ui-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 export function Header() {
   const router = useRouter();
   const { toggleMenu } = useUIStore();
+  const { isAuthenticated } = useAuthStore();
   
   const canGoBack = router.history.length > 1;
   const isRootPath = router.state.location.pathname === '/';
@@ -23,7 +25,7 @@ export function Header() {
               <ArrowLeft className="h-5 w-5" />
             </button>
           ) : (
-            <Link to="/" className="flex items-center gap-2">
+            <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <span className="text-sm font-bold text-white">G</span>
               </div>

@@ -14,19 +14,24 @@ function RootComponent() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const isAuthRoute = ['/login', '/register'].includes(location.pathname);
-  const isPublicRoute = isAuthRoute || location.pathname === '/';
+  const isLandingRoute = location.pathname === '/';
+  const isPublicRoute = isAuthRoute || isLandingRoute;
   
   useAuthInitialization();
 
   useEffect(() => {
     if (!isAuthenticated && !isPublicRoute && !isAuthRoute) {
       navigate({ to: '/login' } as any);
+    } else if (isAuthenticated && (isLandingRoute || isAuthRoute)) {
+      navigate({ to: '/dashboard' } as any);
     }
-  }, [isAuthenticated, isPublicRoute, isAuthRoute, navigate]);
+  }, [isAuthenticated, isPublicRoute, isAuthRoute, isLandingRoute, navigate]);
 
   return (
     <>
-      {isAuthRoute ? (
+      {isLandingRoute ? (
+        <Outlet />
+      ) : isAuthRoute ? (
         <main className="min-h-dvh bg-background">
           <Outlet />
         </main>

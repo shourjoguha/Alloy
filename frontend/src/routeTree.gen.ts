@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CircuitsRouteImport } from './routes/circuits'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProgramWizardRouteImport } from './routes/program.wizard'
@@ -73,6 +74,11 @@ const FriendsRoute = FriendsRouteImport.update({
 const FavoritesRoute = FavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CircuitsRoute = CircuitsRouteImport.update({
@@ -134,6 +140,7 @@ const AdminCircuitsCircuitIdRoute = AdminCircuitsCircuitIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/circuits': typeof CircuitsRoute
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/circuits': typeof CircuitsRoute
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/circuits': typeof CircuitsRoute
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/circuits'
+    | '/dashboard'
     | '/favorites'
     | '/friends'
     | '/library'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/circuits'
+    | '/dashboard'
     | '/favorites'
     | '/friends'
     | '/library'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/circuits'
+    | '/dashboard'
     | '/favorites'
     | '/friends'
     | '/library'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CircuitsRoute: typeof CircuitsRoute
+  DashboardRoute: typeof DashboardRoute
   FavoritesRoute: typeof FavoritesRoute
   FriendsRoute: typeof FriendsRoute
   LibraryRoute: typeof LibraryRoute
@@ -355,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/circuits': {
       id: '/circuits'
       path: '/circuits'
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CircuitsRoute: CircuitsRoute,
+  DashboardRoute: DashboardRoute,
   FavoritesRoute: FavoritesRoute,
   FriendsRoute: FriendsRoute,
   LibraryRoute: LibraryRoute,
