@@ -34,7 +34,7 @@ export function WizardContainer({
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-border">
+      <header className="sticky top-0 z-10 bg-background-card/95 backdrop-blur border-b border-border">
         <div className="container-app py-3">
           <div className="flex items-center justify-between mb-3">
             <Link to="/program/new" className="text-foreground-muted hover:text-foreground">
@@ -67,7 +67,7 @@ export function WizardContainer({
       </main>
 
       {/* Footer navigation */}
-      <footer className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-border">
+      <footer className="sticky bottom-0 bg-background-card/95 backdrop-blur border-t border-border">
         <div className="container-app py-4">
           <div className="flex gap-3">
             {!isFirstStep && (
