@@ -6,7 +6,16 @@ import {
   ProgressionStyle,
   MovementRuleCreate,
   EnjoyableActivityCreate,
+  MovementRuleType,
 } from '@/types';
+
+export interface MovementPreference {
+  id: number;
+  movement_id: number;
+  rule_type: string;
+  cadence: string | null;
+  notes: string | null;
+}
 
 // Discipline types for step 3
 export interface DisciplineWeight {
@@ -85,6 +94,10 @@ interface ProgramWizardState {
   getTotalDisciplineWeight: () => number;
   isGoalsValid: () => boolean;
   isDisciplinesValid: () => boolean;
+
+  // User Preferences Sync
+  initializeFromUserPreferences: (userPreferences: MovementPreference[]) => void;
+  exportToUserPreferences: () => MovementPreference[];
 }
 
 const initialState = {
@@ -200,5 +213,26 @@ export const useProgramWizardStore = create<ProgramWizardState>()((set, get) => 
   isDisciplinesValid: () => {
     const total = get().getTotalDisciplineWeight();
     return total === 10;
+  },
+
+  // User Preferences Sync
+  initializeFromUserPreferences: (userPreferences) => {
+    const movementRules: MovementRuleCreate[] = userPreferences.map((pref) => ({
+      movement_id: pref.movement_id,
+      rule_type: pref.rule_type as MovementRuleType,
+      cadence: pref.cadence || undefined,
+      notes: pref.notes || undefined,
+    }));
+    set({ movementRules });
+  },
+  exportToUserPreferences: () => {
+    const { movementRules } = get();
+    return movementRules.map((rule, index) => ({
+      id: index,
+      movement_id: rule.movement_id,
+      rule_type: rule.rule_type,
+      cadence: rule.cadence || null,
+      notes: rule.notes || null,
+    }));
   },
 }));

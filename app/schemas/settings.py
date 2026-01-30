@@ -417,6 +417,8 @@ class MovementRuleResponse(BaseModel):
     cadence: str | None = None
     reason: str | None = None
     notes: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
     
     class Config:
         from_attributes = True

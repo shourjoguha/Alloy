@@ -1,12 +1,18 @@
-import { useState, useMemo } from 'react'; 
-import { MovementPattern, MovementRuleType, type Movement } from '@/types'; 
-import { useProgramWizardStore } from '@/stores/program-wizard-store'; 
-import { useMovements, useMovementFilters } from '@/api/settings'; 
-import { Card } from '@/components/ui/card'; 
-import { cn } from '@/lib/utils'; 
-import { Search, ThumbsUp, ThumbsDown, X } from 'lucide-react'; 
- 
-export function MovementsStep() { 
+import { useState, useMemo } from 'react';
+import { MovementPattern, MovementRuleType, type Movement } from '@/types';
+import { useProgramWizardStore } from '@/stores/program-wizard-store';
+import { useMovements, useMovementFilters } from '@/api/settings';
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { Search, ThumbsUp, ThumbsDown, X } from 'lucide-react';
+
+interface MovementsStepProps {
+  onAddRule?: (rule: { movement_id: number; rule_type: string; cadence?: string; notes?: string }) => void | Promise<void>;
+  onRemoveRule?: (movementId: number) => void | Promise<void>;
+  showMessaging?: boolean;
+}
+
+export function MovementsStep({ onAddRule, onRemoveRule, showMessaging = true }: MovementsStepProps) {
   const { movementRules, addMovementRule, removeMovementRule } = useProgramWizardStore(); 
   const [search, setSearch] = useState(''); 
   const [selectedPattern, setSelectedPattern] = useState<MovementPattern | 'all'>('all'); 
@@ -52,13 +58,20 @@ export function MovementsStep() {
     return movementRules.find((r) => r.movement_id === movementId); 
   }; 
  
-  const handleSetRule = (movementId: number, ruleType: MovementRuleType) => { 
-    const existing = getRule(movementId); 
-    if (existing?.rule_type === ruleType) { 
-      removeMovementRule(movementId); 
-    } else { 
-      addMovementRule({ movement_id: movementId, rule_type: ruleType }); 
-    } 
+  const handleSetRule = async (movementId: number, ruleType: MovementRuleType) => {
+    const existing = getRule(movementId);
+    if (existing?.rule_type === ruleType) {
+      removeMovementRule(movementId);
+      if (onRemoveRule) {
+        await onRemoveRule(movementId);
+      }
+    } else {
+      const rule = { movement_id: movementId, rule_type: ruleType };
+      addMovementRule(rule);
+      if (onAddRule) {
+        await onAddRule(rule);
+      }
+    }
   }; 
  
   const hardNos = movementRules.filter((r) => r.rule_type === MovementRuleType.HARD_NO); 
@@ -148,9 +161,9 @@ export function MovementsStep() {
                       <ThumbsUp className="h-3 w-3 -ml-1" /> 
                     </span> 
                     Movement #{rule.movement_id} 
-                    <button onClick={() => removeMovementRule(rule.movement_id)}> 
+                    <button onClick={() => handleSetRule(rule.movement_id, MovementRuleType.HARD_YES)}> 
                       <X className="h-3 w-3" /> 
-                    </button> 
+                    </button>
                   </span> 
                 ))} 
               </div> 
@@ -165,9 +178,9 @@ export function MovementsStep() {
                   > 
                     <ThumbsUp className="h-3 w-3" /> 
                     Movement #{rule.movement_id} 
-                    <button onClick={() => removeMovementRule(rule.movement_id)}> 
+                    <button onClick={() => handleSetRule(rule.movement_id, MovementRuleType.PREFERRED)}> 
                       <X className="h-3 w-3" /> 
-                    </button> 
+                    </button>
                   </span> 
                 ))} 
               </div> 
@@ -182,9 +195,9 @@ export function MovementsStep() {
                   > 
                     <ThumbsDown className="h-3 w-3" /> 
                     Movement #{rule.movement_id} 
-                    <button onClick={() => removeMovementRule(rule.movement_id)}> 
+                    <button onClick={() => handleSetRule(rule.movement_id, MovementRuleType.HARD_NO)}> 
                       <X className="h-3 w-3" /> 
-                    </button> 
+                    </button>
                   </span> 
                 ))} 
               </div> 
@@ -264,9 +277,11 @@ export function MovementsStep() {
         )} 
       </div> 
  
-      <p className="text-center text-xs text-foreground-subtle"> 
-        💡 This is optional. Jerome will select appropriate exercises based on your goals. 
-      </p> 
+      {showMessaging && (
+        <p className="text-center text-xs text-foreground-subtle">
+          💡 This is optional. Jerome will select appropriate exercises based on your goals.
+        </p>
+      )} 
     </div> 
   ); 
 }

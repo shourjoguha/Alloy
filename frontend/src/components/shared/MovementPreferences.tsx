@@ -175,13 +175,13 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
               return (
                 <div
                   key={rule.id}
-                  className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg p-2 text-sm"
+                  className="flex items-center gap-2 bg-background-card rounded-lg p-2 text-sm"
                 >
-                  <span className="text-blue-600 dark:text-blue-400 font-medium">
+                  <span className="text-primary font-medium">
                     {rule.rule_type === 'HARD_YES' && '👍👍'}
                     {rule.rule_type === 'PREFERRED' && '👍'}
                   </span>
-                  <span className="text-gray-900 dark:text-gray-100 truncate">
+                  <span className="text-foreground truncate">
                     {movement.name}
                   </span>
                 </div>
@@ -194,19 +194,19 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground-muted" />
             <input
               type="text"
               placeholder="Search movements..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              className="pl-10 pr-4 py-2 w-full border border-border rounded-lg focus:ring-2 focus:ring-primary bg-background-input text-foreground"
             />
           </div>
           
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
+            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-background-secondary text-foreground"
           >
             <Filter className="h-4 w-4" />
             Filters
@@ -216,17 +216,17 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
       </div>
 
       {showFilters && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+        <div className="bg-background-card rounded-lg p-4 space-y-3">
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pattern:</span>
+            <span className="text-sm font-medium text-foreground">Pattern:</span>
             {Object.values(MovementPattern).map(pattern => (
               <button
                 key={pattern}
                 onClick={() => setSelectedPattern(selectedPattern === pattern ? null : pattern)}
                 className={`px-3 py-1 rounded-full text-sm ${
                   selectedPattern === pattern
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    ? 'bg-primary text-background'
+                    : 'bg-background-input text-foreground hover:bg-background-secondary'
                 }`}
               >
                 {pattern.replace('_', ' ')}
@@ -235,15 +235,15 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Region:</span>
+            <span className="text-sm font-medium text-foreground">Region:</span>
             {Object.values(PrimaryRegion).map(region => (
               <button
                 key={region}
                 onClick={() => setSelectedRegion(selectedRegion === region ? null : region)}
                 className={`px-3 py-1 rounded-full text-sm ${
                   selectedRegion === region
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    ? 'bg-primary text-background'
+                    : 'bg-background-input text-foreground hover:bg-background-secondary'
                 }`}
               >
                 {region.replace('_', ' ')}
@@ -252,7 +252,7 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</span>
+            <span className="text-sm font-medium text-foreground">Type:</span>
             {[
               { value: 'compound' as const, label: 'Compound' },
               { value: 'isolation' as const, label: 'Isolation' },
@@ -262,8 +262,8 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
                 onClick={() => setSelectedType(selectedType === type.value ? null : type.value)}
                 className={`px-3 py-1 rounded-full text-sm ${
                   selectedType === type.value
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    ? 'bg-primary text-background'
+                    : 'bg-background-input text-foreground hover:bg-background-secondary'
                 }`}
               >
                 {type.label}
@@ -281,13 +281,13 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
           return (
             <div
               key={movement.id}
-              className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+              className="flex items-center justify-between p-4 bg-background-card rounded-lg border border-border hover:border-primary transition-colors"
             >
               <div className="flex-1">
-                <div className="font-medium text-gray-900 dark:text-white">
+                <div className="font-medium text-foreground">
                   {movement.name}
                 </div>
-                <div className="flex items-center gap-2 mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 mt-1 text-sm text-foreground-muted">
                   <span>{movement.primary_pattern?.replace('_', ' ')}</span>
                   <span>•</span>
                   <span>{movement.primary_region?.replace('_', ' ')}</span>

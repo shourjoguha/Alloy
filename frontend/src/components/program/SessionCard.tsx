@@ -125,12 +125,16 @@ function CircuitDisplay({ circuit, title = "Circuit Block" }: { circuit: any; ti
             <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded font-medium">
               {circuit.circuit_type}
             </span>
+            {circuit.estimated_duration_seconds && typeof circuit.estimated_duration_seconds === 'number' && circuit.estimated_duration_seconds > 0 && (
             <span className="text-xs text-foreground-muted bg-background-input px-2 py-0.5 rounded">
               {Math.round(circuit.estimated_duration_seconds / 60)} min
             </span>
+          )}
+          {circuit.default_rounds && typeof circuit.default_rounds === 'number' && circuit.default_rounds > 0 && (
             <span className="text-xs text-foreground-muted bg-background-input px-2 py-0.5 rounded">
               {circuit.default_rounds} rounds
             </span>
+          )}
           </div>
         </div>
         

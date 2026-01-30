@@ -14,12 +14,12 @@ interface LoggedMusclesProps {
 type SorenessLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 const SORENESS_LEVELS: Record<number, { label: string; color: string; bgColor: string; borderColor: string }> = {
-  0: { label: 'None', color: 'text-slate-800', bgColor: 'bg-slate-100', borderColor: 'border-slate-200' },
-  1: { label: 'Minimal', color: 'text-emerald-800', bgColor: 'bg-emerald-100', borderColor: 'border-emerald-200' },
-  2: { label: 'Mild', color: 'text-teal-800', bgColor: 'bg-teal-100', borderColor: 'border-teal-200' },
-  3: { label: 'Moderate', color: 'text-yellow-800', bgColor: 'bg-yellow-100', borderColor: 'border-yellow-200' },
-  4: { label: 'Significant', color: 'text-orange-800', bgColor: 'bg-orange-100', borderColor: 'border-orange-200' },
-  5: { label: 'Severe', color: 'text-red-800', bgColor: 'bg-red-100', borderColor: 'border-red-200' },
+  0: { label: 'None', color: 'text-slate-200', bgColor: 'bg-slate-800/50', borderColor: 'border-slate-700' },
+  1: { label: 'Minimal', color: 'text-emerald-200', bgColor: 'bg-emerald-900/50', borderColor: 'border-emerald-700' },
+  2: { label: 'Mild', color: 'text-teal-200', bgColor: 'bg-teal-900/50', borderColor: 'border-teal-700' },
+  3: { label: 'Moderate', color: 'text-yellow-200', bgColor: 'bg-yellow-900/50', borderColor: 'border-yellow-700' },
+  4: { label: 'Significant', color: 'text-orange-200', bgColor: 'bg-orange-900/50', borderColor: 'border-orange-700' },
+  5: { label: 'Severe', color: 'text-red-200', bgColor: 'bg-red-900/50', borderColor: 'border-red-700' },
 };
 
 function NumberControl({ value, onChange }: { value: SorenessLevel; onChange: (newLevel: SorenessLevel) => void }) {
@@ -39,14 +39,14 @@ function NumberControl({ value, onChange }: { value: SorenessLevel; onChange: (n
         disabled={value === 0}
         className={cn(
           'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
-          'bg-white/50 hover:bg-white/80 border border-black/10',
+          'bg-background-input hover:bg-background-secondary border border-border',
           'disabled:opacity-30 disabled:cursor-not-allowed'
         )}
         aria-label="Decrease level"
       >
         <ChevronLeft className="w-4 h-4 text-foreground/70" />
       </button>
-      <div className="w-10 h-8 rounded-lg bg-white/80 border border-black/10 flex items-center justify-center">
+      <div className="w-10 h-8 rounded-lg bg-background-elevated border border-border flex items-center justify-center">
         <span className="text-lg font-bold text-foreground">{value}</span>
       </div>
       <button
@@ -55,7 +55,7 @@ function NumberControl({ value, onChange }: { value: SorenessLevel; onChange: (n
         disabled={value === 5}
         className={cn(
           'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
-          'bg-white/50 hover:bg-white/80 border border-black/10',
+          'bg-background-input hover:bg-background-secondary border border-border',
           'disabled:opacity-30 disabled:cursor-not-allowed'
         )}
         aria-label="Increase level"

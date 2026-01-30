@@ -20,12 +20,12 @@ interface SorenessTrackerProps {
 type SorenessLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 const SORENESS_LEVELS: Array<{ value: SorenessLevel; label: string; color: string }> = [
-  { value: 0, label: 'None', color: 'bg-slate-100 text-slate-800 border-slate-200' },
-  { value: 1, label: 'Minimal', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  { value: 2, label: 'Mild', color: 'bg-teal-100 text-teal-800 border-teal-200' },
-  { value: 3, label: 'Moderate', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  { value: 4, label: 'Significant', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  { value: 5, label: 'Severe', color: 'bg-red-100 text-red-800 border-red-200' },
+  { value: 0, label: 'None', color: 'bg-slate-800/50 text-slate-200 border-slate-700' },
+  { value: 1, label: 'Minimal', color: 'bg-emerald-900/50 text-emerald-200 border-emerald-700' },
+  { value: 2, label: 'Mild', color: 'bg-teal-900/50 text-teal-200 border-teal-700' },
+  { value: 3, label: 'Moderate', color: 'bg-yellow-900/50 text-yellow-200 border-yellow-700' },
+  { value: 4, label: 'Significant', color: 'bg-orange-900/50 text-orange-200 border-orange-700' },
+  { value: 5, label: 'Severe', color: 'bg-red-900/50 text-red-200 border-red-700' },
 ];
 
 function NumberControl({ value, onChange }: { value: SorenessLevel; onChange: (newLevel: SorenessLevel) => void }) {
@@ -72,9 +72,13 @@ function NumberControl({ value, onChange }: { value: SorenessLevel; onChange: (n
   );
 }
 
+type OverrideLevel = 'none' | 'full-body' | 'front-back' | 'region' | 'manual';
+
 export function SorenessTracker({ logDate, onSuccess, onCancel, className }: SorenessTrackerProps) {
   const [selectedMuscles, setSelectedMuscles] = useState<MuscleGroup[]>([]);
   const [sorenessLevels, setSorenessLevels] = useState<Record<MuscleGroup, SorenessLevel>>({} as Record<MuscleGroup, SorenessLevel>);
+  const [overrideLevels, setOverrideLevels] = useState<Record<MuscleGroup, OverrideLevel>>({} as Record<MuscleGroup, OverrideLevel>);
+  const [regionLevels, setRegionLevels] = useState<Record<BodyZone, SorenessLevel>>({} as Record<BodyZone, SorenessLevel>);
   const [fullBodyDefaultLevel, setFullBodyDefaultLevel] = useState<SorenessLevel>(1);
   const [notes, setNotes] = useState('');
   const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
@@ -91,9 +95,44 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
         const newLevels = { ...sorenessLevels };
         delete newLevels[muscle];
         setSorenessLevels(newLevels);
+        setOverrideLevels((prev) => {
+          const newOverrides = { ...prev };
+          delete newOverrides[muscle];
+          return newOverrides;
+        });
         return next;
       } else {
-        setSorenessLevels((prevLevels) => ({ ...prevLevels, [muscle]: fullBodyDefaultLevel }));
+        let inheritedLevel = fullBodyDefaultLevel;
+        let inheritedOverride: OverrideLevel = 'full-body';
+
+        const frontMuscles = ZONE_MAPPING['front'];
+        const backMuscles = ZONE_MAPPING['back'];
+
+        const regions: BodyZone[] = ['shoulder', 'anterior upper', 'posterior upper', 'core', 'anterior lower', 'posterior lower'];
+        let muscleRegion: BodyZone | null = null;
+
+        for (const region of regions) {
+          if (ZONE_MAPPING[region]?.includes(muscle)) {
+            muscleRegion = region;
+            break;
+          }
+        }
+
+        if (frontMuscles.includes(muscle)) {
+          inheritedLevel = frontLevel;
+          inheritedOverride = 'front-back';
+        } else if (backMuscles.includes(muscle)) {
+          inheritedLevel = backLevel;
+          inheritedOverride = 'front-back';
+        }
+
+        if (muscleRegion && regionLevels[muscleRegion] !== undefined) {
+          inheritedLevel = regionLevels[muscleRegion];
+          inheritedOverride = 'region';
+        }
+
+        setSorenessLevels((prevLevels) => ({ ...prevLevels, [muscle]: inheritedLevel }));
+        setOverrideLevels((prev) => ({ ...prev, [muscle]: inheritedOverride }));
         return [...prev, muscle];
       }
     });
@@ -106,17 +145,22 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
     if (isAllSelected) {
       setSelectedMuscles([]);
       setSorenessLevels({} as Record<MuscleGroup, SorenessLevel>);
+      setOverrideLevels({} as Record<MuscleGroup, OverrideLevel>);
+      setRegionLevels({} as Record<BodyZone, SorenessLevel>);
     } else {
       setSelectedMuscles(allMuscles);
       const newLevels = { ...sorenessLevels };
+      const newOverrides = { ...overrideLevels };
       allMuscles.forEach((m: MuscleGroup) => {
         newLevels[m] = fullBodyDefaultLevel;
+        newOverrides[m] = 'full-body';
       });
       setSorenessLevels(newLevels as Record<MuscleGroup, SorenessLevel>);
+      setOverrideLevels(newOverrides);
       setFrontLevel(fullBodyDefaultLevel);
       setBackLevel(fullBodyDefaultLevel);
     }
-  }, [selectedMuscles, sorenessLevels, fullBodyDefaultLevel]);
+  }, [selectedMuscles, sorenessLevels, fullBodyDefaultLevel, overrideLevels]);
 
   const handleViewChange = useCallback((newView: 'front' | 'back') => {
     setCurrentView(newView);
@@ -127,15 +171,23 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
       ...prev,
       [muscle]: level as SorenessLevel,
     }));
+    setOverrideLevels((prev) => ({ ...prev, [muscle]: 'manual' }));
   };
 
   const setRegionSorenessLevel = (zone: BodyZone, level: number) => {
     const muscles = ZONE_MAPPING[zone];
     const newLevels = { ...sorenessLevels };
+    const newOverrides = { ...overrideLevels };
     muscles.forEach((m: MuscleGroup) => {
-      newLevels[m] = level as SorenessLevel;
+      const currentOverride = overrideLevels[m];
+      if (currentOverride !== 'manual') {
+        newLevels[m] = level as SorenessLevel;
+        newOverrides[m] = 'region';
+      }
     });
     setSorenessLevels(newLevels as Record<MuscleGroup, SorenessLevel>);
+    setOverrideLevels(newOverrides);
+    setRegionLevels((prev) => ({ ...prev, [zone]: level as SorenessLevel }));
   };
 
   const toggleFront = () => {
@@ -149,14 +201,22 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
         frontMuscles.forEach((m) => delete newLevels[m]);
         return newLevels;
       });
+      setOverrideLevels((prev) => {
+        const newOverrides = { ...prev };
+        frontMuscles.forEach((m) => delete newOverrides[m]);
+        return newOverrides;
+      });
     } else {
       setSelectedMuscles((prev) => {
         const filtered = prev.filter((m) => !frontMuscles.includes(m));
         const newLevels = { ...sorenessLevels };
+        const newOverrides = { ...overrideLevels };
         frontMuscles.forEach((m) => {
           newLevels[m] = frontLevel;
+          newOverrides[m] = 'front-back';
         });
         setSorenessLevels(newLevels);
+        setOverrideLevels(newOverrides);
         return [...filtered, ...frontMuscles];
       });
     }
@@ -173,14 +233,22 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
         backMuscles.forEach((m) => delete newLevels[m]);
         return newLevels;
       });
+      setOverrideLevels((prev) => {
+        const newOverrides = { ...prev };
+        backMuscles.forEach((m) => delete newOverrides[m]);
+        return newOverrides;
+      });
     } else {
       setSelectedMuscles((prev) => {
         const filtered = prev.filter((m) => !backMuscles.includes(m));
         const newLevels = { ...sorenessLevels };
+        const newOverrides = { ...overrideLevels };
         backMuscles.forEach((m) => {
           newLevels[m] = backLevel;
+          newOverrides[m] = 'front-back';
         });
         setSorenessLevels(newLevels);
+        setOverrideLevels(newOverrides);
         return [...filtered, ...backMuscles];
       });
     }
@@ -190,24 +258,32 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
     setFrontLevel(level);
     const frontMuscles = ZONE_MAPPING['front'];
     const newLevels = { ...sorenessLevels };
+    const newOverrides = { ...overrideLevels };
     frontMuscles.forEach((m: MuscleGroup) => {
-      if (selectedMuscles.includes(m)) {
+      const currentOverride = overrideLevels[m];
+      if (selectedMuscles.includes(m) && currentOverride !== 'manual') {
         newLevels[m] = level;
+        newOverrides[m] = 'front-back';
       }
     });
     setSorenessLevels(newLevels as Record<MuscleGroup, SorenessLevel>);
+    setOverrideLevels(newOverrides);
   };
 
   const handleBackLevelChange = (level: SorenessLevel) => {
     setBackLevel(level);
     const backMuscles = ZONE_MAPPING['back'];
     const newLevels = { ...sorenessLevels };
+    const newOverrides = { ...overrideLevels };
     backMuscles.forEach((m: MuscleGroup) => {
-      if (selectedMuscles.includes(m)) {
+      const currentOverride = overrideLevels[m];
+      if (selectedMuscles.includes(m) && currentOverride !== 'manual') {
         newLevels[m] = level;
+        newOverrides[m] = 'front-back';
       }
     });
     setSorenessLevels(newLevels as Record<MuscleGroup, SorenessLevel>);
+    setOverrideLevels(newOverrides);
   };
 
   const removeMuscle = (muscle: MuscleGroup) => {
@@ -216,6 +292,11 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
       const newLevels = { ...sorenessLevels };
       delete newLevels[muscle];
       setSorenessLevels(newLevels);
+      setOverrideLevels((prev) => {
+        const newOverrides = { ...prev };
+        delete newOverrides[muscle];
+        return newOverrides;
+      });
       return next;
     });
   };
@@ -223,6 +304,8 @@ export function SorenessTracker({ logDate, onSuccess, onCancel, className }: Sor
   const clearAll = () => {
     setSelectedMuscles([]);
     setSorenessLevels({} as Record<MuscleGroup, SorenessLevel>);
+    setOverrideLevels({} as Record<MuscleGroup, OverrideLevel>);
+    setRegionLevels({} as Record<BodyZone, SorenessLevel>);
     setNotes('');
     setIsFullBodyExpanded(false);
   };

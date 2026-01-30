@@ -145,34 +145,42 @@ function formatExerciseMetric(ex: CircuitExercise): { value: string; type: strin
   return { value: '—', type: 'reps', icon: METRIC_COLORS.reps.icon };
 }
 
-// Format circuit-level metrics
+// Helper function to validate if a value is a valid number
+function isValidNumber(value: any): value is number {
+  return typeof value === 'number' &&
+    !Number.isNaN(value) &&
+    !Number.isFinite(value) === false &&
+    value !== null &&
+    value !== undefined;
+}
+
+// Format circuit-level metrics based on circuit type
 function formatCircuitMetrics(circuit: CircuitBlock): {
   timeCap?: string;
   rounds?: string;
   workRest?: string;
 } {
   const metrics: { timeCap?: string; rounds?: string; workRest?: string } = {};
+  const circuitType = circuit.circuit_type?.toUpperCase() || 'AMRAP';
 
-  // Time cap
-  if (circuit.estimated_duration_seconds) {
+  // AMRAP: Show time cap only
+  if (circuitType === 'AMRAP' && circuit.estimated_duration_seconds && circuit.estimated_duration_seconds > 0) {
     const minutes = Math.round(circuit.estimated_duration_seconds / 60);
     metrics.timeCap = `${minutes} min`;
   }
 
-  // Rounds
-  if (circuit.default_rounds) {
-    if (circuit.circuit_type === 'AMRAP') {
-      metrics.rounds = `${circuit.default_rounds} min cap`;
-    } else {
-      metrics.rounds = `${circuit.default_rounds} rounds`;
-    }
-  }
-
-  // Work/rest intervals for EMOM or interval-based circuits
-  if (circuit.circuit_type === 'EMOM' && circuit.exercises?.[0]) {
+  // EMOM: Show work/rest intervals
+  if (circuitType === 'EMOM' && circuit.exercises?.[0]) {
     const firstEx = circuit.exercises[0];
     if (firstEx.duration_seconds && firstEx.rest_seconds) {
       metrics.workRest = `${firstEx.duration_seconds}s work / ${firstEx.rest_seconds}s rest`;
+    }
+  }
+
+  // RFT, LADDER, CHIPPER, TABATA, STATION: Show rounds only
+  if (['RFT', 'LADDER', 'CHIPPER', 'TABATA', 'STATION'].includes(circuitType)) {
+    if (circuit.default_rounds && circuit.default_rounds > 0) {
+      metrics.rounds = `${circuit.default_rounds} rounds`;
     }
   }
 
@@ -408,7 +416,12 @@ export function CircuitDisplay({
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  <span>~{Math.round(circuit.estimated_duration_seconds / 60)} min</span>
+                  <span>
+                    {isValidNumber(circuit.estimated_duration_seconds) && circuit.estimated_duration_seconds > 0
+                      ? `~${Math.round(circuit.estimated_duration_seconds / 60)} min`
+                      : '— min'
+                    }
+                  </span>
                 </div>
               </div>
             </div>
@@ -458,9 +471,12 @@ export function CircuitDisplayCompact({
           </span>
           <span className="text-foreground-muted/40">•</span>
           <span className="text-xs text-foreground-muted">
-            {Math.round(circuit.estimated_duration_seconds / 60)} min
+            {isValidNumber(circuit.estimated_duration_seconds) && circuit.estimated_duration_seconds > 0
+              ? `${Math.round(circuit.estimated_duration_seconds / 60)} min`
+              : '— min'
+            }
           </span>
-          {circuit.default_rounds && (
+          {isValidNumber(circuit.default_rounds) && circuit.default_rounds > 0 && (
             <>
               <span className="text-foreground-muted/40">•</span>
               <span className="text-xs text-foreground-muted">

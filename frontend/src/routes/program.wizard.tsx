@@ -3,14 +3,12 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import type { AxiosError } from 'axios';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 import { useCreateProgram } from '@/api/programs';
+import { useUserMovementRules, usePersistWizardPreferences } from '@/api/movement-preferences';
 import { WizardContainer } from '@/components/wizard/WizardContainer';
 import {
   GoalsStep,
-  DisciplinesStep,
   SplitStep,
-  ProgressionStep,
-  MovementsStep,
-  ActivitiesStep,
+  ActivitiesAndMovementsStep,
   CoachStep,
 } from '@/components/wizard';
 import {
@@ -34,11 +32,8 @@ export const Route = createFileRoute('/program/wizard')({
 
 const STEP_LABELS = [
   'Set Your Goals',
-  'Training Style',
   'Choose Your Schedule',
-  'Progression Style',
-  'Exercise Preferences',
-  'Favorite Activities',
+  'Preferences',
   'Meet Your Coach',
 ];
 
@@ -55,13 +50,12 @@ function ProgramWizardPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const createProgram = useCreateProgram();
   const { addToast } = useUIStore();
+  const { data: userPreferences } = useUserMovementRules();
+  const persistWizardPreferences = usePersistWizardPreferences();
   
   const {
     goals,
     isGoalsValid,
-    disciplines,
-    isDisciplinesValid,
-    progressionStyle,
     daysPerWeek,
     maxDuration,
     movementRules,
@@ -70,28 +64,26 @@ function ProgramWizardPage() {
     pushIntensity,
     durationWeeks,
     reset,
+    initializeFromUserPreferences,
   } = useProgramWizardStore();
 
-  // Reset wizard state on mount
+  // Initialize wizard with user preferences on mount
   useEffect(() => {
     reset();
-  }, [reset]);
+    if (userPreferences && userPreferences.items) {
+      initializeFromUserPreferences(userPreferences.items);
+    }
+  }, [userPreferences, reset, initializeFromUserPreferences]);
 
   const canProceed = (): boolean => {
     switch (currentStep) {
       case 0: // Goals
         return isGoalsValid();
-      case 1: // Disciplines
-        return isDisciplinesValid();
-      case 2: // Split
+      case 1: // Split
         return true;
-      case 3: // Progression
-        return progressionStyle !== null;
-      case 4: // Movements (optional)
+      case 2: // ActivitiesAndMovements (optional)
         return true;
-      case 5: // Activities (optional)
-        return true;
-      case 6: // Coach
+      case 3: // Coach
         return true;
       default:
         return false;
@@ -126,7 +118,7 @@ function ProgramWizardPage() {
         type: 'error',
         message: 'Please select a program duration (8-12 weeks)',
       });
-      setCurrentStep(6);
+      setCurrentStep(3);
       return;
     }
 
@@ -135,8 +127,29 @@ function ProgramWizardPage() {
         type: 'error',
         message: 'Please select training frequency (2-7 days per week)',
       });
-      setCurrentStep(2);
+      setCurrentStep(1);
       return;
+    }
+
+    // First, sync wizard movement preferences to user preferences
+    if (movementRules.length > 0) {
+      const preferences = movementRules.map((rule) => ({
+        movement_id: rule.movement_id,
+        rule_type: rule.rule_type,
+        cadence: rule.cadence || undefined,
+        notes: rule.notes || undefined,
+      }));
+
+      try {
+        await persistWizardPreferences.mutateAsync({ preferences });
+      } catch (error) {
+        console.error('Failed to sync movement preferences:', error);
+        addToast({
+          type: 'error',
+          message: 'Failed to save your movement preferences. Please try again.',
+        });
+        return;
+      }
     }
 
     // Build the program create payload
@@ -145,9 +158,7 @@ function ProgramWizardPage() {
       duration_weeks: durationWeeks,
       days_per_week: daysPerWeek,
       split_template: useProgramWizardStore.getState().splitPreference || undefined,
-      progression_style: progressionStyle || undefined,
       max_session_duration: maxDuration,
-      disciplines: disciplines.length > 0 ? disciplines : undefined,
       persona_tone: TONE_MAP[communicationStyle] || PersonaTone.SUPPORTIVE,
       persona_aggression: PUSH_INTENSITY_TO_AGGRESSION[pushIntensity] || PersonaAggression.BALANCED,
       movement_rules: movementRules.length > 0 ? movementRules : undefined,
@@ -222,16 +233,10 @@ function ProgramWizardPage() {
       case 0:
         return <GoalsStep />;
       case 1:
-        return <DisciplinesStep />;
-      case 2:
         return <SplitStep />;
+      case 2:
+        return <ActivitiesAndMovementsStep />;
       case 3:
-        return <ProgressionStep />;
-      case 4:
-        return <MovementsStep />;
-      case 5:
-        return <ActivitiesStep />;
-      case 6:
         return <CoachStep />;
       default:
         return null;

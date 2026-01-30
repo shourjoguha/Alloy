@@ -1,6 +1,6 @@
 """User and user configuration models."""
 from datetime import datetime
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Enum as SQLEnum, Text, CheckConstraint
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Enum as SQLEnum, Text, CheckConstraint, UniqueConstraint
 from sqlalchemy import Date, DateTime, Float, JSON
 from sqlalchemy.orm import relationship
 
@@ -78,7 +78,11 @@ class User(Base):
 
 
 class UserMovementRule(Base):
-    """User preferences for specific movements."""
+    """User preferences for specific movements.
+    
+    One set of user-level preferences per user. Updated by both Settings
+    and Program Wizard. Most recent input wins.
+    """
     __tablename__ = "user_movement_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -90,12 +94,27 @@ class UserMovementRule(Base):
     cadence = Column(SQLEnum(RuleCadence), nullable=False, default=RuleCadence.PER_MICROCYCLE)
     notes = Column(Text, nullable=True)
     
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
     # Relationships
     user = relationship("User", back_populates="movement_rules")
     movement = relationship("Movement", back_populates="user_rules")
+    
+    # Unique constraint: One rule per type per movement per user
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "movement_id", "rule_type",
+            name="uq_user_movement_rule_type"
+        ),
+    )
 
     def __repr__(self):
         return f"<UserMovementRule(user_id={self.user_id}, movement_id={self.movement_id}, rule={self.rule_type})>"
+    
+    @property
+    def is_favorite(self) -> bool:
+        return self.rule_type == MovementRuleType.HARD_YES
 
 
 class UserEnjoyableActivity(Base):

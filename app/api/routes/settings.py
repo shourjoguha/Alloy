@@ -1,9 +1,10 @@
 """API routes for user settings and configuration."""
 from typing import List, Optional
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -251,7 +252,7 @@ async def create_movement_rule(
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ):
-    """Create a new movement rule (exclude, substitute, prefer)."""
+    """Create or update a movement rule (most recent wins)."""
     from app.models.enums import MovementRuleType, RuleCadence
     
     # Verify movement exists
@@ -273,15 +274,41 @@ async def create_movement_rule(
         except KeyError:
             pass  # Use default
     
-    movement_rule = UserMovementRule(
-        user_id=user_id,
-        movement_id=rule.movement_id,
-        rule_type=rule_type_enum,
-        cadence=cadence_enum,
-        notes=rule.notes,
+    # Check if rule already exists - most recent wins (update, not create duplicate)
+    existing_result = await db.execute(
+        select(UserMovementRule).where(
+            and_(
+                UserMovementRule.user_id == user_id,
+                UserMovementRule.movement_id == rule.movement_id,
+                UserMovementRule.rule_type == rule_type_enum
+            )
+        )
     )
-    db.add(movement_rule)
-    await db.commit()
+    existing = existing_result.scalar_one_or_none()
+    
+    if existing:
+        # Update existing rule (most recent wins)
+        existing.rule_type = rule_type_enum
+        existing.cadence = cadence_enum
+        existing.notes = rule.notes
+        existing.updated_at = datetime.utcnow()
+        await db.commit()
+        await db.refresh(existing)
+        logger.info("create_movement_rule: updated rule id=%s for user_id=%s", existing.id, user_id)
+        movement_rule = existing
+    else:
+        # Create new rule
+        movement_rule = UserMovementRule(
+            user_id=user_id,
+            movement_id=rule.movement_id,
+            rule_type=rule_type_enum,
+            cadence=cadence_enum,
+            notes=rule.notes,
+        )
+        db.add(movement_rule)
+        await db.commit()
+        await db.refresh(movement_rule)
+        logger.info("create_movement_rule: created rule id=%s for user_id=%s", movement_rule.id, user_id)
     
     return MovementRuleResponse(
         id=movement_rule.id,
@@ -290,6 +317,8 @@ async def create_movement_rule(
         rule_type=movement_rule.rule_type.value,
         cadence=movement_rule.cadence.value if movement_rule.cadence else None,
         notes=movement_rule.notes,
+        created_at=movement_rule.created_at.isoformat() if movement_rule.created_at else None,
+        updated_at=movement_rule.updated_at.isoformat() if movement_rule.updated_at else None,
     )
 
 

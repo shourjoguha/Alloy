@@ -21,31 +21,31 @@
 
 /* Circuit type-specific header backgrounds */
 .circuit-header.amrap {
-  @apply bg-amber-50;
+  @apply bg-amber-900/30;
 }
 
 .circuit-header.emom {
-  @apply bg-blue-50;
+  @apply bg-blue-900/30;
 }
 
 .circuit-header.rft {
-  @apply bg-green-50;
+  @apply bg-green-900/30;
 }
 
 .circuit-header.ladder {
-  @apply bg-purple-50;
+  @apply bg-purple-900/30;
 }
 
 .circuit-header.chipper {
-  @apply bg-orange-50;
+  @apply bg-orange-900/30;
 }
 
 .circuit-header.tabata {
-  @apply bg-rose-50;
+  @apply bg-rose-900/30;
 }
 
 .circuit-header.station {
-  @apply bg-teal-50;
+  @apply bg-teal-900/30;
 }
 
 /* Circuit type badge styles */
@@ -131,12 +131,12 @@
 }
 
 .circuit-metric-badge {
-  @apply flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 text-foreground text-xs font-medium;
+  @apply flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-background-elevated text-foreground text-xs font-medium;
   transition: all var(--transition-fast) ease;
 }
 
 .circuit-metric-badge:hover {
-  @apply bg-white;
+  @apply bg-background-card;
   transform: translateY(-1px);
 }
 
@@ -208,19 +208,19 @@
 }
 
 .circuit-metric-badge.reps {
-  @apply bg-blue-50 text-blue-700;
+  @apply bg-blue-900/40 text-blue-200;
 }
 
 .circuit-metric-badge.time {
-  @apply bg-amber-50 text-amber-700;
+  @apply bg-amber-900/40 text-amber-200;
 }
 
 .circuit-metric-badge.distance {
-  @apply bg-green-50 text-green-700;
+  @apply bg-green-900/40 text-green-200;
 }
 
 .circuit-metric-badge.calories {
-  @apply bg-orange-50 text-orange-700;
+  @apply bg-orange-900/40 text-orange-200;
 }
 
 /* Max effort tag */
@@ -234,19 +234,19 @@
 }
 
 .circuit-max-effort-tag.reps {
-  @apply bg-blue-50 text-blue-700;
+  @apply bg-blue-900/40 text-blue-200;
 }
 
 .circuit-max-effort-tag.time {
-  @apply bg-amber-50 text-amber-700;
+  @apply bg-amber-900/40 text-amber-200;
 }
 
 .circuit-max-effort-tag.distance {
-  @apply bg-green-50 text-green-700;
+  @apply bg-green-900/40 text-green-200;
 }
 
 .circuit-max-effort-tag.calories {
-  @apply bg-orange-50 text-orange-700;
+  @apply bg-orange-900/40 text-orange-200;
 }
 
 /* Circuit footer */
@@ -363,7 +363,7 @@
   }
 
   .circuit-header {
-    @apply bg-white;
+    @apply bg-background-card;
   }
 
   .circuit-exercise-row {

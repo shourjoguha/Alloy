@@ -85,16 +85,17 @@ function useProgramWithGeneration(programId: number) {
 
   const totalTraining = trainingSessions.length;
   const generatedCount = trainingSessions.filter(sessionHasContent).length;
+  const withCoachNotesCount = trainingSessions.filter((s) => s.coach_notes && s.coach_notes.length > 0).length;
 
   const isGenerating =
-    totalTraining > 0 && generatedCount < totalTraining;
+    totalTraining > 0 && (generatedCount < totalTraining || withCoachNotesCount < totalTraining);
 
   const shouldPoll =
     !!data &&
     !isLoading &&
     !error &&
     totalTraining > 0 &&
-    generatedCount < totalTraining;
+    (generatedCount < totalTraining || withCoachNotesCount < totalTraining);
 
   useEffect(() => {
     if (!shouldPoll) {

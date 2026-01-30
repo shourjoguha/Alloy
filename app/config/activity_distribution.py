@@ -30,31 +30,7 @@ goal_finisher_thresholds = {
     "endurance_min_weight": 3,
 }
 
-goal_finisher_presets = {
-    "fat_loss": {
-        "type": "circuit",
-        "circuit_type": "AMRAP",
-        "rounds": "Max Rounds",
-        "duration_minutes": 8,
-        "notes": "Metabolic finisher",
-        "exercises": [
-            {"movement": "Kettlebell Swing", "reps": 15},
-            {"movement": "Burpee", "reps": 10},
-            {"movement": "Mountain Climber", "duration_seconds": 40},
-        ],
-    },
-    "endurance": {
-        "type": "interval",
-        "circuit_type": "EMOM",
-        "rounds": "10 Rounds",
-        "duration_minutes": 10,
-        "notes": "Endurance intervals",
-        "exercises": [
-            {"movement": "Row", "duration_seconds": 60},
-            {"movement": "Easy Cardio", "duration_seconds": 30},
-        ],
-    },
-}
+goal_finisher_presets = {}
 
 goal_bucket_weights = {
     "strength": {"lifting": 1.0},

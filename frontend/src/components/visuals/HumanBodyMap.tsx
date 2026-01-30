@@ -12,9 +12,9 @@ interface HumanBodyMapProps {
 }
 
 const MUSCLE_COLORS = {
-  unselected: '#1E293B',
-  selected: '#F59E0B',
-  hover: '#D97706',
+  unselected: '#2dd4bf33',
+  selected: '#2dd4bf',
+  hover: '#5eead4',
 } as const;
 
 interface MusclePathProps {
@@ -41,7 +41,7 @@ const MusclePath = memo(({ id, pathData, isSelected, isFaded, onClick, ariaLabel
         strokeWidth="0.5"
         className="transition-all duration-300 ease-out cursor-pointer"
         style={{
-          filter: isSelected ? 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.4))' : 'none',
+          filter: isSelected ? 'drop-shadow(0 0 8px rgba(45, 212, 191, 0.4))' : 'none',
           touchAction: 'manipulation',
         }}
         onClick={(e) => {

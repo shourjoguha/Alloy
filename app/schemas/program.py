@@ -424,8 +424,9 @@ class SessionResponse(BaseModel):
                 "name": circuit_template.name,
                 "circuit_type": circuit_template.circuit_type.value if hasattr(circuit_template.circuit_type, 'value') else circuit_template.circuit_type,
                 "difficulty_tier": getattr(macro, 'difficulty_tier', 1) if macro else circuit_template.difficulty_tier,
-                "estimated_duration_seconds": getattr(macro, 'estimated_duration_seconds', circuit_template.default_duration_seconds) if macro else circuit_template.default_duration_seconds,
-                "default_rounds": getattr(macro, 'default_rounds', circuit_template.default_rounds) if macro else circuit_template.default_rounds,
+                # Provide safe defaults when values are None to prevent NaN in frontend
+                "estimated_duration_seconds": getattr(macro, 'estimated_duration_seconds', circuit_template.default_duration_seconds) if macro else (circuit_template.default_duration_seconds or 1500),  # Default to 25 min
+                "default_rounds": getattr(macro, 'default_rounds', circuit_template.default_rounds) if macro else (circuit_template.default_rounds or 1),  # Default to 1 round
                 "primary_region": getattr(macro, 'primary_region', "full_body").value if macro and hasattr(getattr(macro, 'primary_region', None), 'value') else "full_body",
                 "primary_muscles": getattr(macro, 'primary_muscles', []) if macro else [],
                 "fatigue_factor": getattr(macro, 'fatigue_factor', 1.0) if macro else 1.0,

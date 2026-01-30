@@ -27,7 +27,7 @@ export function Header() {
           ) : (
             <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-white">G</span>
+                <span className="text-sm font-bold text-background">G</span>
               </div>
               <span className="text-lg font-semibold text-foreground">Gainsly</span>
             </Link>

@@ -78,7 +78,7 @@ async def list_favorites(
                 UserMovementRule.rule_type == MovementRuleType.HARD_YES
             )
         )
-        .order_by(UserMovementRule.id)
+        .order_by(UserMovementRule.created_at.desc())
     )
     movement_favorites = list(movement_favorites_result.scalars().unique().all())
     
@@ -97,7 +97,7 @@ async def list_favorites(
                 pattern=pattern_value,
                 primary_muscle=primary_muscle_value,
                 primary_region=primary_region_value,
-                created_at=""  # UserMovementRule doesn't have created_at
+                created_at=rule.created_at.isoformat() if rule.created_at else ""
             ))
     
     logger.info("list_favorites: found %d movement favorites for user_id=%s", 
@@ -133,7 +133,15 @@ async def create_favorite(
             detail="Program favorites not supported with user_movement_rules"
         )
     
-    # Check if rule already exists for this movement
+    # Verify movement exists
+    movement_result = await db.execute(
+        select(Movement).where(Movement.id == favorite_data.movement_id)
+    )
+    movement = movement_result.scalar_one_or_none()
+    if not movement:
+        raise HTTPException(status_code=404, detail="Movement not found")
+    
+    # Check if rule already exists - most recent wins (update, not reject)
     existing_result = await db.execute(
         select(UserMovementRule).where(
             and_(
@@ -146,43 +154,31 @@ async def create_favorite(
     existing = existing_result.scalar_one_or_none()
     
     if existing:
-        raise HTTPException(
-            status_code=409,
-            detail="Favorite already exists for this movement"
+        logger.info("Updating existing favorite: user_id=%s, rule_id=%s", user_id, existing.id)
+        existing.updated_at = datetime.utcnow()
+        await db.commit()
+        await db.refresh(existing)
+        logger.info("create_favorite: updated movement_rule id=%s for user_id=%s", existing.id, user_id)
+    else:
+        # Create user_movement_rule with HARD_YES type
+        movement_rule = UserMovementRule(
+            user_id=user_id,
+            movement_id=favorite_data.movement_id,
+            rule_type=MovementRuleType.HARD_YES,
+            rule_operator=RuleOperator.EQ,
+            cadence=RuleCadence.PER_MICROCYCLE
         )
-    
-    # Verify movement exists
-    movement_result = await db.execute(
-        select(Movement).where(Movement.id == favorite_data.movement_id)
-    )
-    movement = movement_result.scalar_one_or_none()
-    if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
-    
-    # Create user_movement_rule with HARD_YES type
-    movement_rule = UserMovementRule(
-        user_id=user_id,
-        movement_id=favorite_data.movement_id,
-        rule_type=MovementRuleType.HARD_YES,
-        rule_operator=RuleOperator.EQ,
-        cadence=RuleCadence.PER_MICROCYCLE
-    )
-    db.add(movement_rule)
-    
-    try:
+        db.add(movement_rule)
         await db.commit()
         await db.refresh(movement_rule)
         logger.info("create_favorite: created movement_rule id=%s for user_id=%s", movement_rule.id, user_id)
-    except Exception as e:
-        await db.rollback()
-        logger.exception("Error creating favorite: %s", e)
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+        existing = movement_rule
     
     return FavoriteResponse(
-        id=movement_rule.id,
-        movement_id=movement_rule.movement_id,
+        id=existing.id,
+        movement_id=existing.movement_id,
         program_id=None,
-        created_at=""
+        created_at=existing.created_at.isoformat() if existing.created_at else ""
     )
 
 

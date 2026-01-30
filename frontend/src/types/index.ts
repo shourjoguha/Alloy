@@ -333,9 +333,9 @@ export interface CircuitBlock {
   circuit_id: number;
   name: string;
   circuit_type: string;
-  difficulty_tier: number;
-  estimated_duration_seconds: number;
-  default_rounds: number;
+  difficulty_tier: number | string | null;
+  estimated_duration_seconds: number | null;  // Can be null, frontend should handle
+  default_rounds: number | null;  // Can be null, frontend should handle
   primary_region: string;
   primary_muscles: string[];
   fatigue_factor: number;

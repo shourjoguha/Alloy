@@ -16,12 +16,12 @@ interface RegionSelectorProps {
 type SorenessLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 const SORENESS_LEVELS: Array<{ value: SorenessLevel; label: string; color: string }> = [
-  { value: 0, label: 'None', color: 'bg-slate-100 text-slate-800 border-slate-200' },
-  { value: 1, label: 'Minimal', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  { value: 2, label: 'Mild', color: 'bg-teal-100 text-teal-800 border-teal-200' },
-  { value: 3, label: 'Moderate', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  { value: 4, label: 'Significant', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  { value: 5, label: 'Severe', color: 'bg-red-100 text-red-800 border-red-200' },
+  { value: 0, label: 'None', color: 'bg-slate-800/50 text-slate-200 border-slate-700' },
+  { value: 1, label: 'Minimal', color: 'bg-emerald-900/50 text-emerald-200 border-emerald-700' },
+  { value: 2, label: 'Mild', color: 'bg-teal-900/50 text-teal-200 border-teal-700' },
+  { value: 3, label: 'Moderate', color: 'bg-yellow-900/50 text-yellow-200 border-yellow-700' },
+  { value: 4, label: 'Significant', color: 'bg-orange-900/50 text-orange-200 border-orange-700' },
+  { value: 5, label: 'Severe', color: 'bg-red-900/50 text-red-200 border-red-700' },
 ];
 
 function NumberControl({ value, onChange, label }: { value: SorenessLevel; onChange: (newLevel: SorenessLevel) => void; label?: string }) {
@@ -214,12 +214,12 @@ export function RegionSelector({
                         : 'bg-background-card border-border'
                     )}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <button
                         type="button"
                         onClick={() => handleMuscleToggle(muscle)}
                         className={cn(
-                          'flex-1 text-left flex items-center gap-2 px-3 py-2 rounded-md transition-colors',
+                          'flex-shrink-0 text-left flex items-center gap-2 px-3 py-2 rounded-md transition-colors',
                           isSelected
                             ? 'text-foreground'
                             : 'text-foreground-muted hover:text-foreground'
