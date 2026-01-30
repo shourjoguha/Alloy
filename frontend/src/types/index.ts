@@ -291,6 +291,7 @@ export interface Session {
   accessory?: ExerciseBlock[];
   circuit?: CircuitBlock;
   finisher?: FinisherBlock;
+  finisher_circuit?: CircuitBlock;
   cooldown?: ExerciseBlock[];
   estimated_duration_minutes?: number;
   warmup_duration_minutes?: number;
@@ -353,6 +354,8 @@ export interface CircuitExercise {
   calories?: number;
   rest_seconds?: number;
   notes?: string;
+  rx_weight_male?: number;
+  rx_weight_female?: number;
 }
 
 // ========================================

@@ -13,6 +13,10 @@ from app.models.enums import (
     MicrocycleStatus,
     SessionType,
     ExerciseRole,
+    MetricType,
+    CircuitType,
+    MovementTier,
+    PrimaryRegion,
 )
 
 
@@ -221,6 +225,48 @@ class MicrocycleWithSessionsResponse(MicrocycleResponse):
 
 # ============== Session Schemas ==============
 
+class CircuitExerciseBlock(BaseModel):
+    """Exercise within a circuit with full circuit-specific metrics."""
+    movement: str
+    movement_id: int | None = None
+    exercise_sequence: int | None = None  # Position within the circuit
+    
+    # Metric type and value (mutually exclusive based on metric_type)
+    metric_type: MetricType | None = None  # reps, time, distance, calories, time_under_tension
+    reps: int | None = None
+    distance_meters: float | None = None
+    duration_seconds: int | None = None
+    calories: int | None = None
+    
+    # Rest and notes
+    rest_seconds: int | None = None
+    notes: str | None = None
+    
+    # Prescribed weights for male/female
+    rx_weight_male: float | None = None
+    rx_weight_female: float | None = None
+
+
+class CircuitBlock(BaseModel):
+    """Circuit block schema with complete circuit metadata."""
+    id: int | None = None  # Circuit template ID
+    name: str | None = None
+    circuit_type: CircuitType | None = None
+    
+    # Circuit-level metrics
+    time_cap_seconds: int | None = None
+    number_of_rounds: int | None = None
+    work_rest_seconds: int | None = None  # For EMOM, work:rest ratio
+    
+    # All exercises in sequence
+    exercises: list[CircuitExerciseBlock] = []
+    
+    # Optional circuit metadata
+    notes: str | None = None
+    difficulty_tier: int | str | None = None  # Can be int (1-5) or string (bronze/silver/gold)
+    tags: list[str] = []
+
+
 class ExerciseBlock(BaseModel):
     """Exercise within a session block."""
     movement: str
@@ -237,7 +283,7 @@ class ExerciseBlock(BaseModel):
 
 
 class FinisherBlock(BaseModel):
-    """Finisher block schema."""
+    """Finisher block schema (circuit-based finisher)."""
     type: str  # EMOM, AMRAP, circuit, etc.
     circuit_type: str | None = None
     duration_minutes: int | None = None
@@ -246,6 +292,9 @@ class FinisherBlock(BaseModel):
     rest_seconds: int | None = None
     exercises: list[ExerciseBlock] | None = None
     notes: str | None = None
+    
+    # Full circuit data (when finisher is a circuit template)
+    circuit: CircuitBlock | None = None
 
 
 class SessionResponse(BaseModel):
@@ -256,6 +305,10 @@ class SessionResponse(BaseModel):
     day_number: int
     session_type: SessionType
     intent_tags: list[str] = []
+    
+    # Circuit blocks (populated from circuit relationships)
+    circuit: CircuitBlock | None = None
+    finisher_circuit: CircuitBlock | None = None
     
     # Sections (populated from exercises relationship)
     warmup: list[ExerciseBlock] | None = None
@@ -295,6 +348,10 @@ class SessionResponse(BaseModel):
         cooldown = []
         finisher = None
         
+        # Circuit blocks
+        circuit = None
+        finisher_circuit = None
+        
         # Helper to convert SessionExercise to ExerciseBlock
         def to_block(ex) -> dict:
             return {
@@ -309,6 +366,71 @@ class SessionResponse(BaseModel):
                 "rest_seconds": ex.default_rest_seconds,
                 "superset_with": None, # Logic for superset naming could be added here
                 "notes": ex.notes
+            }
+        
+        # Helper to convert circuit template to CircuitBlock with full exercise details
+        def circuit_to_block(circuit_template) -> dict:
+            """Convert a CircuitTemplate ORM object to CircuitBlock with complete exercise data."""
+            if not circuit_template:
+                return None
+            
+            # Get macro metrics if available for complete circuit data
+            macro = getattr(circuit_template, 'macro_metrics', None)
+            
+            # Prefer melted_exercises relationship (normalized data) over exercises_json
+            exercises = []
+            
+            # Check if melted_exercises relationship is loaded
+            melted_exercises = getattr(circuit_template, 'melted_exercises', None)
+            if melted_exercises is not None:
+                # Use normalized CircuitMelted data
+                for melted in melted_exercises:
+                    exercises.append({
+                        "movement": melted.movement_name or "Unknown Movement",
+                        "movement_id": melted.movement_id or 0,
+                        "sequence": melted.exercise_sequence,  # Frontend expects 'sequence' not 'exercise_sequence'
+                        "metric_type": melted.metric_type.value if hasattr(melted.metric_type, 'value') else melted.metric_type,
+                        "reps": melted.reps,
+                        "distance_meters": melted.distance_meters,
+                        "duration_seconds": melted.duration_seconds,
+                        "calories": melted.calories,
+                        "rest_seconds": melted.rest_seconds,
+                        "notes": melted.notes,
+                        "rx_weight_male": melted.rx_weight_male,
+                        "rx_weight_female": melted.rx_weight_female,
+                    })
+            else:
+                # Fallback to exercises_json (legacy format)
+                for idx, ex_data in enumerate(circuit_template.exercises_json or []):
+                    if isinstance(ex_data, dict):
+                        exercises.append({
+                            "movement": ex_data.get("movement_name") or ex_data.get("original", "Unknown Movement"),
+                            "movement_id": ex_data.get("movement_id") or 0,
+                            "sequence": idx + 1,  # Frontend expects 'sequence'
+                            "metric_type": ex_data.get("metric_type"),
+                            "reps": ex_data.get("reps"),
+                            "distance_meters": ex_data.get("distance_meters"),
+                            "duration_seconds": ex_data.get("duration_seconds"),
+                            "calories": ex_data.get("calories"),
+                            "rest_seconds": ex_data.get("rest_seconds"),
+                            "notes": ex_data.get("notes"),
+                            "rx_weight_male": ex_data.get("rx_weight_male"),
+                            "rx_weight_female": ex_data.get("rx_weight_female"),
+                        })
+            
+            # Return complete circuit data matching frontend CircuitBlock interface
+            return {
+                "circuit_id": circuit_template.id,
+                "name": circuit_template.name,
+                "circuit_type": circuit_template.circuit_type.value if hasattr(circuit_template.circuit_type, 'value') else circuit_template.circuit_type,
+                "difficulty_tier": getattr(macro, 'difficulty_tier', 1) if macro else circuit_template.difficulty_tier,
+                "estimated_duration_seconds": getattr(macro, 'estimated_duration_seconds', circuit_template.default_duration_seconds) if macro else circuit_template.default_duration_seconds,
+                "default_rounds": getattr(macro, 'default_rounds', circuit_template.default_rounds) if macro else circuit_template.default_rounds,
+                "primary_region": getattr(macro, 'primary_region', "full_body").value if macro and hasattr(getattr(macro, 'primary_region', None), 'value') else "full_body",
+                "primary_muscles": getattr(macro, 'primary_muscles', []) if macro else [],
+                "fatigue_factor": getattr(macro, 'fatigue_factor', 1.0) if macro else 1.0,
+                "stimulus_factor": getattr(macro, 'stimulus_factor', 1.0) if macro else 1.0,
+                "exercises": exercises,
             }
 
         # Sort exercises by order
@@ -339,34 +461,33 @@ class SessionResponse(BaseModel):
                 # This logic assumes simple mapping for now. 
                 pass
 
-        # Handle Finisher specifically if needed
-        finisher_exercises = [ex for ex in sorted_exercises if (ex.exercise_role.value if hasattr(ex.exercise_role, 'value') else ex.exercise_role) == ExerciseRole.FINISHER.value]
-        if finisher_exercises:
-             # Check if we have circuit details from the session object
-             circuit_type = "circuit"
-             rounds = 1
-             duration_minutes = None
-             
-             if hasattr(data, 'finisher_circuit') and data.finisher_circuit:
-                 fc = data.finisher_circuit
-                 circuit_type = fc.circuit_type.value if hasattr(fc.circuit_type, 'value') else fc.circuit_type
-                 rounds = fc.default_rounds or 1
-                 if fc.default_duration_seconds:
-                     duration_minutes = fc.default_duration_seconds // 60
-             
-             finisher = {
-                 "type": circuit_type,
-                 "rounds": rounds,
-                 "duration_minutes": duration_minutes,
-                 "exercises": [to_block(ex) for ex in finisher_exercises]
-             }
-
-        # Set attributes on the object (if it's a model instance, this might not work directly 
-        # without modifying the instance, but Pydantic 'from_attributes' reads attributes.
-        # However, we are in 'before' validator. 'data' is the ORM model instance.
-        # We can't easily modify the ORM instance here safely.
-        # Instead, we should convert to dict if possible, or return an object that proxies lookup.
+        # Extract main_circuit data with complete circuit information
+        if hasattr(data, 'main_circuit') and data.main_circuit:
+            circuit = circuit_to_block(data.main_circuit)
         
+        # Extract finisher_circuit data with complete circuit information
+        # When finisher_circuit exists, it provides complete circuit data with proper metric values
+        if hasattr(data, 'finisher_circuit') and data.finisher_circuit:
+            finisher_circuit = circuit_to_block(data.finisher_circuit)
+            # Create simple finisher block that references circuit
+            # Frontend will use finisher_circuit for display
+            finisher = {
+                "type": finisher_circuit.get("circuit_type", "circuit"),
+                "rounds": finisher_circuit.get("default_rounds", 1),
+                "duration_minutes": finisher_circuit.get("estimated_duration_seconds", 0) // 60 if finisher_circuit.get("estimated_duration_seconds") else None,
+            }
+        # Legacy finisher: Only create if no finisher_circuit exists (fallback for old finisher exercises)
+        else:
+            finisher_exercises = [ex for ex in sorted_exercises if (ex.exercise_role.value if hasattr(ex.exercise_role, 'value') else ex.exercise_role) == ExerciseRole.FINISHER.value]
+            if finisher_exercises:
+                 # Legacy finisher without circuit - use simple type
+                 finisher = {
+                     "type": "circuit",
+                     "rounds": 1,
+                     "duration_minutes": None,
+                     "exercises": [to_block(ex) for ex in finisher_exercises]
+                 }
+
         # Better approach: Return a dict with all fields populated
         result = {
             "id": data.id,
@@ -375,6 +496,8 @@ class SessionResponse(BaseModel):
             "day_number": data.day_number,
             "session_type": data.session_type,
             "intent_tags": data.intent_tags,
+            "circuit": circuit,
+            "finisher_circuit": finisher_circuit,
             "warmup": warmup,
             "main": main,
             "accessory": accessory,

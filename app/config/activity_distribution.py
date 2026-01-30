@@ -26,8 +26,8 @@ default_finisher_minutes: int = 8
 max_finisher_minutes: int = 15
 
 goal_finisher_thresholds = {
-    "fat_loss_min_weight": 5,
-    "endurance_min_weight": 6,
+    "fat_loss_min_weight": 3,
+    "endurance_min_weight": 3,
 }
 
 goal_finisher_presets = {

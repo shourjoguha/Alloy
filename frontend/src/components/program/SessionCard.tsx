@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Clock, Flame, Coffee } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, Flame, Coffee, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Session, ExerciseBlock } from '@/types';
+import type { Session, ExerciseBlock, CircuitExercise } from '@/types';
 
 interface SessionCardProps {
   session: Session;
@@ -23,6 +23,49 @@ const SESSION_TYPE_CONFIG: Record<string, { label: string; icon: string; color: 
   skill: { label: 'Skill', icon: '🎯', color: 'bg-orange-500' },
   custom: { label: 'Custom', icon: '⚙️', color: 'bg-gray-500' },
 };
+
+// Format circuit exercise metrics
+function formatCircuitExercise(ex: CircuitExercise): string {
+  const metric = ex.metric_type?.toLowerCase() || '';
+
+  // Check for max reps pattern
+  if (ex.reps === 999 && ex.notes && ex.notes.toLowerCase().includes('max')) {
+    if (metric === 'calories') {
+      return 'max cals';
+    }
+    return 'max reps';
+  }
+
+  // Time-based metrics
+  if (metric === 'time' && ex.duration_seconds) {
+    const total = ex.duration_seconds;
+    if (total % 60 === 0) {
+      return `${total / 60} min`;
+    }
+    return `${total}s`;
+  }
+
+  // Distance-based metrics
+  if (metric === 'distance' && ex.distance_meters) {
+    const meters = ex.distance_meters;
+    if (meters >= 1000 && meters % 1000 === 0) {
+      return `${meters / 1000} km`;
+    }
+    return `${meters} m`;
+  }
+
+  // Calories-based metrics
+  if (metric === 'calories' && ex.reps) {
+    return `${ex.reps} cal`;
+  }
+
+  // Rep-based metrics (default)
+  if (ex.reps) {
+    return `${ex.reps} reps`;
+  }
+
+  return '';
+}
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
@@ -46,7 +89,9 @@ function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null 
               {exercise.sets && (
                 <>
                   {exercise.sets}×
-                  {exercise.rep_range_min && exercise.rep_range_max
+                  {exercise.reps
+                    ? `${exercise.reps} reps`
+                    : exercise.rep_range_min && exercise.rep_range_max
                     ? `${exercise.rep_range_min}-${exercise.rep_range_max}`
                     : exercise.duration_seconds
                     ? `${exercise.duration_seconds}s`
@@ -64,14 +109,14 @@ function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null 
   );
 }
 
-function CircuitDisplay({ circuit }: { circuit: any }) {
+function CircuitDisplay({ circuit, title = "Circuit Block" }: { circuit: any; title?: string }) {
   if (!circuit) return null;
 
   return (
     <div className="mt-3">
       <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
         <Flame className="h-3 w-3 text-orange-500" />
-        Circuit Block
+        {title}
       </h4>
       <div className="p-3 bg-background-input rounded-lg">
         <div className="flex items-center justify-between mb-2">
@@ -103,18 +148,34 @@ function CircuitDisplay({ circuit }: { circuit: any }) {
           <div className="border-t border-border/50 pt-2">
             <div className="text-xs text-foreground-muted mb-2">Exercises:</div>
             <div className="space-y-1">
-              {circuit.exercises.map((ex: any, idx: number) => (
+              {circuit.exercises.map((ex: CircuitExercise, idx: number) => (
                 <div key={idx} className="flex items-center justify-between text-sm">
-                  <span className="text-foreground">{ex.movement}</span>
-                  <span className="text-foreground-muted text-xs">
-                    {ex.reps && `${ex.reps} reps`}
-                    {ex.duration_seconds && `${ex.duration_seconds}s`}
-                    {ex.metric_type && (
-                      <span className="ml-1 text-foreground-muted">
-                        ({ex.metric_type})
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-foreground font-medium">{ex.movement}</span>
+                      {(ex.rx_weight_male || ex.rx_weight_female) && (
+                        <div className="flex items-center gap-1 text-xs text-foreground-muted">
+                          <Dumbbell className="h-3 w-3" />
+                          {ex.rx_weight_male && (
+                            <span>♂ {ex.rx_weight_male}</span>
+                          )}
+                          {ex.rx_weight_female && (
+                            <span>♀ {ex.rx_weight_female}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                    <span className="bg-background-input px-2 py-0.5 rounded">
+                      {formatCircuitExercise(ex)}
+                    </span>
+                    {ex.rest_seconds && (
+                      <span className="text-foreground-muted/60">
+                        rest {ex.rest_seconds}s
                       </span>
                     )}
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -135,6 +196,7 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
   const isGenerating = !isRestDay && !hasContent;
   const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
   const hasCircuit = session.circuit !== undefined && session.circuit !== null;
+  const hasFinisherCircuit = session.finisher_circuit !== undefined && session.finisher_circuit !== null;
   const hasAccessories = session.accessory && session.accessory.length > 0;
 
   return (
@@ -224,11 +286,13 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
           <ExerciseList exercises={session.main} title="Main" />
           
           {/* Mutually exclusive: Either circuit block OR accessory block, never both */}
-          <CircuitDisplay circuit={session.circuit} />
+          <CircuitDisplay circuit={session.circuit} title="Circuit Block" />
           {!hasCircuit && <ExerciseList exercises={session.accessory} title="Accessory" />}
           
           {/* Finisher */}
-          {session.finisher && (
+          {session.finisher_circuit ? (
+            <CircuitDisplay circuit={session.finisher_circuit} title="Finisher" />
+          ) : session.finisher && (
             <div className="mt-3">
               <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
                 <Flame className="h-3 w-3" />

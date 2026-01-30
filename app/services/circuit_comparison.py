@@ -4,13 +4,16 @@ This service provides circuit comparison and recommendation functionality
 based on patterns, regions, muscles, equipment, and intensity.
 """
 
-from typing import List, Dict, Set, Tuple, Optional
+import logging
+from typing import List, Dict, Optional
 from dataclasses import dataclass
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.circuit_extended import CircuitMacro
-from app.models.enums import PrimaryRegion, MovementTier, MovementPattern
+from app.models.enums import MovementTier
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -73,11 +76,17 @@ class CircuitComparisonService:
     WEIGHT_EQUIPMENT = 0.15
     WEIGHT_INTENSITY = 0.15
     
-    # Complementarity weights
+    # Complementarity weights (for variety - different is better)
     COMPLEMENTARY_PATTERN = 0.30
     COMPLEMENTARY_REGION = 0.30
     COMPLEMENTARY_MUSCLE = 0.30
     COMPLEMENTARY_EQUIPMENT = 0.10
+    
+    # Similarity weights (for finishers - same is better)
+    SIMILARITY_PATTERN = 0.30
+    SIMILARITY_REGION = 0.30
+    SIMILARITY_MUSCLE = 0.30
+    SIMILARITY_EQUIPMENT = 0.10
     
     # Similarity thresholds
     MIN_SIMILARITY_THRESHOLD = 0.5
@@ -123,7 +132,7 @@ class CircuitComparisonService:
         macros = {m.circuit_id: m for m in result.scalars().all()}
         
         if circuit_a_id not in macros or circuit_b_id not in macros:
-            raise ValueError(f"Both circuits must have macro records")
+            raise ValueError("Both circuits must have macro records")
         
         macro_a = macros[circuit_a_id]
         macro_b = macros[circuit_b_id]
@@ -489,7 +498,78 @@ class CircuitComparisonService:
             equipment_overlap * self.COMPLEMENTARY_EQUIPMENT
         )
         
+        logger.debug(f"[_calculate_complementarity_score] Ref circuit {reference.circuit_id} vs Cand circuit {candidate.circuit_id}")
+        logger.debug(f"[_calculate_complementarity_score] Pattern diversity: {pattern_diversity:.3f} (overlap: {pattern_overlap:.3f})")
+        logger.debug(f"[_calculate_complementarity_score] Region diversity: {region_diversity:.3f} (ref={reference.primary_region.value}, cand={candidate.primary_region.value})")
+        logger.debug(f"[_calculate_complementarity_score] Muscle diversity: {muscle_diversity:.3f} (overlap: {muscle_overlap:.3f})")
+        logger.debug(f"[_calculate_complementarity_score] Equipment overlap: {equipment_overlap:.3f}")
+        logger.debug(f"[_calculate_complementarity_score] Final complementarity: {complementarity:.3f}")
+        
         return complementarity
+    
+    def _calculate_finisher_similarity_score(
+        self,
+        reference: CircuitMacro,
+        candidate: CircuitMacro
+    ) -> float:
+        """Calculate similarity score for finisher selection.
+        
+        For finishers, we want circuits that are SIMILAR to the main lifts
+        to act as a burner on the same muscles. This uses similarity weights
+        instead of complementarity weights.
+        
+        Similarity is based on:
+        1. Pattern similarity: Same movement patterns
+        2. Region similarity: Same primary region
+        3. Muscle similarity: Same primary muscles
+        4. Equipment overlap: Shared equipment is good
+        
+        Args:
+            reference: Reference circuit's macro data (from main lifts)
+            candidate: Candidate circuit's macro data
+            
+        Returns:
+            Similarity score (0-1) where higher is more similar
+        """
+        # Pattern similarity (same is better)
+        patterns_ref = set(reference.movement_pattern_counts.keys())
+        patterns_cand = set(candidate.movement_pattern_counts.keys())
+        pattern_overlap = len(patterns_ref & patterns_cand) / len(patterns_ref | patterns_cand) if (patterns_ref | patterns_cand) else 0
+        
+        # Region similarity (same is better)
+        region_similarity = 1.0 if reference.primary_region == candidate.primary_region else 0.0
+        
+        # Muscle similarity (same is better)
+        muscles_ref = set(reference.primary_muscles)
+        muscles_cand = set(candidate.primary_muscles)
+        muscle_overlap = len(muscles_ref & muscles_cand) / len(muscles_ref | muscles_cand) if (muscles_ref | muscles_cand) else 0
+        
+        # Equipment overlap (some shared is better)
+        equipment_ref = set(reference.required_equipment)
+        equipment_cand = set(candidate.required_equipment)
+        if not equipment_ref and not equipment_cand:
+            equipment_overlap = 1.0
+        elif not equipment_ref or not equipment_cand:
+            equipment_overlap = 0.0
+        else:
+            equipment_overlap = len(equipment_ref & equipment_cand) / len(equipment_ref | equipment_cand)
+        
+        # Weighted similarity (same is better)
+        similarity = (
+            pattern_overlap * self.SIMILARITY_PATTERN +
+            region_similarity * self.SIMILARITY_REGION +
+            muscle_overlap * self.SIMILARITY_MUSCLE +
+            equipment_overlap * self.SIMILARITY_EQUIPMENT
+        )
+        
+        logger.debug(f"[_calculate_finisher_similarity_score] Ref circuit {reference.circuit_id} vs Cand circuit {candidate.circuit_id}")
+        logger.debug(f"[_calculate_finisher_similarity_score] Pattern similarity: {pattern_overlap:.3f}")
+        logger.debug(f"[_calculate_finisher_similarity_score] Region similarity: {region_similarity:.3f} (ref={reference.primary_region.value}, cand={candidate.primary_region.value})")
+        logger.debug(f"[_calculate_finisher_similarity_score] Muscle similarity: {muscle_overlap:.3f}")
+        logger.debug(f"[_calculate_finisher_similarity_score] Equipment overlap: {equipment_overlap:.3f}")
+        logger.debug(f"[_calculate_finisher_similarity_score] Final similarity: {similarity:.3f}")
+        
+        return similarity
     
     def _generate_complementarity_reason(
         self,
@@ -538,7 +618,8 @@ class CircuitComparisonService:
         target_patterns: Optional[List[str]] = None,
         difficulty_tier: Optional[str] = None,
         max_equipment: int = None,
-        limit: int = 10
+        limit: int = 10,
+        is_finisher: bool = False
     ) -> List[CircuitRecommendation]:
         """Recommend circuits for a training session.
         
@@ -546,12 +627,14 @@ class CircuitComparisonService:
         multiple constraints and preferences.
         
         Args:
-            circuit_ids: Current circuits in session (for complementarity)
+            circuit_ids: Current circuits in session (for complementarity/similarity)
             target_regions: Preferred body regions
             target_patterns: Preferred movement patterns
             difficulty_tier: Maximum difficulty tier
             max_equipment: Maximum number of equipment items
             limit: Maximum number of recommendations
+            is_finisher: If True, use similarity scoring (for finishers);
+                         if False, use complementarity scoring (for variety)
             
         Returns:
             List of CircuitRecommendation sorted by relevance
@@ -564,71 +647,181 @@ class CircuitComparisonService:
             >>>     limit=5
             >>> )
         """
-        # Build query with filters
-        stmt = select(CircuitMacro)
+        logger.info("=" * 80)
+        logger.info(f"[CircuitComparisonService.recommend_circuits_for_session] ENTRY POINT")
+        logger.info(f"[CircuitComparisonService] circuit_ids={circuit_ids}")
+        logger.info(f"[CircuitComparisonService] target_regions={target_regions}")
+        logger.info(f"[CircuitComparisonService] target_patterns={target_patterns}")
+        logger.info(f"[CircuitComparisonService] difficulty_tier={difficulty_tier}")
+        logger.info(f"[CircuitComparisonService] max_equipment={max_equipment}")
+        logger.info(f"[CircuitComparisonService] limit={limit}")
+        logger.info(f"[CircuitComparisonService] is_finisher={is_finisher}")
+        logger.info("=" * 80)
         
-        # Apply filters
-        if target_regions:
-            stmt = stmt.where(CircuitMacro.primary_region.in_(target_regions))
-        
-        if difficulty_tier:
-            tier_value = MovementTier(difficulty_tier).value
-            stmt = stmt.where(CircuitMacro.difficulty_tier <= tier_value)
-        
-        if max_equipment is not None:
-            stmt = stmt.where(CircuitMacro.equipment_complexity <= max_equipment)
-        
-        if circuit_ids:
-            stmt = stmt.where(CircuitMacro.circuit_id.notin_(circuit_ids))
-        
-        # Execute query
-        result = await self.db.execute(stmt)
-        candidates = result.scalars().all()
-        
-        # Filter by target patterns (JSONB filtering is complex, do in Python)
-        if target_patterns:
-            candidates = [
-                c for c in candidates
-                if any(p in c.movement_pattern_counts for p in target_patterns)
-            ]
-        
-        # Score candidates
-        recommendations = []
-        for candidate in candidates:
-            score = 0.0
+        try:
+            # Build query with filters
+            stmt = select(CircuitMacro)
+            
+            # Apply filters
+            filters_applied = []
+            if target_regions:
+                stmt = stmt.where(CircuitMacro.primary_region.in_(target_regions))
+                filters_applied.append(f"target_regions={target_regions}")
+                logger.info(f"[CircuitComparisonService] Applied filter: target_regions={target_regions}")
+            
+            if difficulty_tier:
+                tier_value = MovementTier(difficulty_tier).value
+                stmt = stmt.where(CircuitMacro.difficulty_tier <= tier_value)
+                filters_applied.append(f"difficulty_tier={difficulty_tier} (value={tier_value})")
+                logger.info(f"[CircuitComparisonService] Applied filter: difficulty_tier={difficulty_tier} (value={tier_value})")
+            
+            if max_equipment is not None:
+                stmt = stmt.where(CircuitMacro.equipment_complexity <= max_equipment)
+                filters_applied.append(f"max_equipment={max_equipment}")
+                logger.info(f"[CircuitComparisonService] Applied filter: max_equipment={max_equipment}")
             
             if circuit_ids:
-                # Complementarity score
+                stmt = stmt.where(CircuitMacro.circuit_id.notin_(circuit_ids))
+                filters_applied.append(f"excluding circuit_ids={circuit_ids}")
+                logger.info(f"[CircuitComparisonService] Applied filter: excluding circuit_ids={circuit_ids}")
+            
+            logger.info(f"[CircuitComparisonService] Filters applied: {filters_applied if filters_applied else 'none'}")
+            
+            # Execute query
+            logger.info(f"[CircuitComparisonService] Executing database query...")
+            result = await self.db.execute(stmt)
+            candidates = result.scalars().all()
+            logger.info(f"[CircuitComparisonService] Database query returned {len(candidates)} candidate circuits")
+            
+            if len(candidates) > 0:
+                # Log details of first few candidates for debugging
+                for i, c in enumerate(candidates[:3]):
+                    logger.info(f"[CircuitComparisonService] Candidate {i+1}: circuit_id={c.circuit_id}, primary_region={c.primary_region.value}, difficulty_tier={c.difficulty_tier.value}, total_exercises={c.total_exercises}")
+            
+            # Filter by target patterns (JSONB filtering is complex, do in Python)
+            if target_patterns:
+                candidates_before_filter = len(candidates)
+                candidates = [
+                    c for c in candidates
+                    if any(p in c.movement_pattern_counts for p in target_patterns)
+                ]
+                logger.info(
+                    f"[CircuitComparisonService] After target_patterns filter ({target_patterns}): "
+                    f"{len(candidates)} candidates (was {candidates_before_filter})"
+                )
+                
+                if len(candidates) > 0:
+                    # Log which patterns matched for first candidate
+                    for i, c in enumerate(candidates[:3]):
+                        matched_patterns = [p for p in target_patterns if p in c.movement_pattern_counts]
+                        logger.info(f"[CircuitComparisonService] Candidate {c.circuit_id} matched patterns: {matched_patterns}")
+            
+            if len(candidates) == 0:
+                logger.warning("[CircuitComparisonService] No candidates remaining after filters, returning empty list")
+                logger.info("=" * 80)
+                return []
+            
+            # Score candidates
+            logger.info(f"[CircuitComparisonService] Scoring {len(candidates)} candidates...")
+            recommendations = []
+            
+            # Get reference circuit if provided
+            reference = None
+            if circuit_ids:
+                logger.info(f"[CircuitComparisonService] Fetching reference circuit with id={circuit_ids[0]}")
                 reference_stmt = select(CircuitMacro).where(
                     CircuitMacro.circuit_id == circuit_ids[0]
                 )
                 result = await self.db.execute(reference_stmt)
                 reference = result.scalar_one_or_none()
+                if reference:
+                    logger.info(f"[CircuitComparisonService] Reference circuit found: circuit_id={reference.circuit_id}, primary_region={reference.primary_region.value}, difficulty_tier={reference.difficulty_tier.value}")
+                    logger.info(f"[CircuitComparisonService] Reference primary_muscles: {reference.primary_muscles}")
+                else:
+                    logger.warning(f"[CircuitComparisonService] Reference circuit {circuit_ids[0]} not found in database")
+            
+            scoring_method = "finisher_similarity" if (is_finisher and reference) else ("complementarity" if reference else "default")
+            logger.info(f"[CircuitComparisonService] Scoring method: {scoring_method}")
+            
+            for candidate in candidates:
+                score = 0.0
                 
                 if reference:
-                    complementarity = self._calculate_complementarity_score(
-                        reference, candidate
-                    )
-                    score = complementarity
-            else:
-                # Relevance score based on filters
-                score = 1.0  # Default for unfiltered queries
+                    if is_finisher:
+                        # Similarity score for finishers (same muscles/region is better)
+                        score = self._calculate_finisher_similarity_score(
+                            reference, candidate
+                        )
+                        logger.debug(
+                            f"[CircuitComparisonService] Calculated finisher similarity for circuit {candidate.circuit_id}: "
+                            f"score={score:.3f}"
+                        )
+                    else:
+                        # Complementarity score for variety (different is better)
+                        score = self._calculate_complementarity_score(
+                            reference, candidate
+                        )
+                        logger.debug(
+                            f"[CircuitComparisonService] Calculated complementarity for circuit {candidate.circuit_id}: "
+                            f"score={score:.3f}"
+                        )
+                else:
+                    # Relevance score based on filters
+                    score = 1.0  # Default for unfiltered queries
+                    logger.debug(f"[CircuitComparisonService] No circuit_ids provided, using default score=1.0")
+                
+                recommendations.append(CircuitRecommendation(
+                    circuit_id=candidate.circuit_id,
+                    reason="matches session criteria",
+                    similarity_score=score if is_finisher else 0.0,
+                    complementary_score=0.0 if is_finisher else score,
+                    metadata={
+                        'primary_region': candidate.primary_region.value,
+                        'difficulty_tier': candidate.difficulty_tier.value,
+                        'total_exercises': candidate.total_exercises
+                    }
+                ))
             
-            recommendations.append(CircuitRecommendation(
-                circuit_id=candidate.circuit_id,
-                reason=f"matches session criteria",
-                similarity_score=score,
-                complementary_score=score,
-                metadata={
-                    'primary_region': candidate.primary_region.value,
-                    'difficulty_tier': candidate.difficulty_tier.value,
-                    'total_exercises': candidate.total_exercises
-                }
-            ))
-        
-        # Sort by score (descending) and limit
-        recommendations.sort(key=lambda x: x.complementary_score, reverse=True)
-        return recommendations[:limit]
+            # Log scored recommendations
+            for i, rec in enumerate(recommendations[:5]):
+                logger.info(
+                    f"[CircuitComparisonService] Scored recommendation {i+1}: circuit_id={rec.circuit_id}, "
+                    f"similarity_score={rec.similarity_score:.3f}, complementary_score={rec.complementary_score:.3f}, "
+                    f"region={rec.metadata['primary_region']}, tier={rec.metadata['difficulty_tier']}"
+                )
+            
+            # Sort by score (descending) and limit
+            if is_finisher:
+                recommendations.sort(key=lambda x: x.similarity_score, reverse=True)
+                logger.info("[CircuitComparisonService] Sorted by similarity_score (descending)")
+            else:
+                recommendations.sort(key=lambda x: x.complementary_score, reverse=True)
+                logger.info("[CircuitComparisonService] Sorted by complementary_score (descending)")
+            
+            final_recommendations = recommendations[:limit]
+            logger.info(
+                f"[CircuitComparisonService] RETURN - {len(final_recommendations)} recommendations "
+                f"(requested limit={limit}, is_finisher={is_finisher})"
+            )
+            
+            # Log final recommendations
+            for i, rec in enumerate(final_recommendations):
+                logger.info(
+                    f"[CircuitComparisonService] Final recommendation {i+1}: circuit_id={rec.circuit_id}, "
+                    f"reason={rec.reason}, similarity={rec.similarity_score:.3f}, complementary={rec.complementary_score:.3f}, "
+                    f"metadata={rec.metadata}"
+                )
+            
+            logger.info("=" * 80)
+            return final_recommendations
+            
+        except Exception as e:
+            logger.error(
+                f"[CircuitComparisonService] ERROR in recommend_circuits_for_session: {e}",
+                exc_info=True
+            )
+            logger.info("=" * 80)
+            raise
 
 
 # Convenience function for single-use comparison

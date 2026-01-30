@@ -29,6 +29,7 @@ import { Route as LogWorkoutRouteImport } from './routes/log.workout'
 import { Route as LogSorenessRouteImport } from './routes/log.soreness'
 import { Route as LogCustomRouteImport } from './routes/log.custom'
 import { Route as LogActivityRouteImport } from './routes/log.activity'
+import { Route as CircuitsDemoRouteImport } from './routes/circuits.demo'
 import { Route as AdminCircuitsCircuitIdRouteImport } from './routes/admin.circuits.$circuitId'
 
 const TeamsRoute = TeamsRouteImport.update({
@@ -131,6 +132,11 @@ const LogActivityRoute = LogActivityRouteImport.update({
   path: '/log/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CircuitsDemoRoute = CircuitsDemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => CircuitsRoute,
+} as any)
 const AdminCircuitsCircuitIdRoute = AdminCircuitsCircuitIdRouteImport.update({
   id: '/admin/circuits/$circuitId',
   path: '/admin/circuits/$circuitId',
@@ -139,7 +145,7 @@ const AdminCircuitsCircuitIdRoute = AdminCircuitsCircuitIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/circuits': typeof CircuitsRoute
+  '/circuits': typeof CircuitsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/circuits/demo': typeof CircuitsDemoRoute
   '/log/activity': typeof LogActivityRoute
   '/log/custom': typeof LogCustomRoute
   '/log/soreness': typeof LogSorenessRoute
@@ -162,7 +169,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/circuits': typeof CircuitsRoute
+  '/circuits': typeof CircuitsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/circuits/demo': typeof CircuitsDemoRoute
   '/log/activity': typeof LogActivityRoute
   '/log/custom': typeof LogCustomRoute
   '/log/soreness': typeof LogSorenessRoute
@@ -186,7 +194,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/circuits': typeof CircuitsRoute
+  '/circuits': typeof CircuitsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/circuits/demo': typeof CircuitsDemoRoute
   '/log/activity': typeof LogActivityRoute
   '/log/custom': typeof LogCustomRoute
   '/log/soreness': typeof LogSorenessRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/teams'
+    | '/circuits/demo'
     | '/log/activity'
     | '/log/custom'
     | '/log/soreness'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/teams'
+    | '/circuits/demo'
     | '/log/activity'
     | '/log/custom'
     | '/log/soreness'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/teams'
+    | '/circuits/demo'
     | '/log/activity'
     | '/log/custom'
     | '/log/soreness'
@@ -281,7 +293,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CircuitsRoute: typeof CircuitsRoute
+  CircuitsRoute: typeof CircuitsRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   FavoritesRoute: typeof FavoritesRoute
   FriendsRoute: typeof FriendsRoute
@@ -445,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/circuits/demo': {
+      id: '/circuits/demo'
+      path: '/demo'
+      fullPath: '/circuits/demo'
+      preLoaderRoute: typeof CircuitsDemoRouteImport
+      parentRoute: typeof CircuitsRoute
+    }
     '/admin/circuits/$circuitId': {
       id: '/admin/circuits/$circuitId'
       path: '/admin/circuits/$circuitId'
@@ -455,9 +474,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CircuitsRouteChildren {
+  CircuitsDemoRoute: typeof CircuitsDemoRoute
+}
+
+const CircuitsRouteChildren: CircuitsRouteChildren = {
+  CircuitsDemoRoute: CircuitsDemoRoute,
+}
+
+const CircuitsRouteWithChildren = CircuitsRoute._addFileChildren(
+  CircuitsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CircuitsRoute: CircuitsRoute,
+  CircuitsRoute: CircuitsRouteWithChildren,
   DashboardRoute: DashboardRoute,
   FavoritesRoute: FavoritesRoute,
   FriendsRoute: FriendsRoute,

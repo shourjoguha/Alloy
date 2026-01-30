@@ -21,6 +21,7 @@ from app.models import (
     MicrocycleStatus,
     EnjoyableActivity,
     SessionExercise,
+    CircuitTemplate,
 )
 from app.schemas.program import (
     ProgramCreate,
@@ -215,8 +216,14 @@ async def get_program(
                 selectinload(Microcycle.sessions)
                 .options(
                     selectinload(Session.exercises).selectinload(SessionExercise.movement),
-                    selectinload(Session.main_circuit),
+                    selectinload(Session.main_circuit)
+                        .selectinload(CircuitTemplate.melted_exercises),
+                    selectinload(Session.main_circuit)
+                        .selectinload(CircuitTemplate.macro_metrics),
                     selectinload(Session.finisher_circuit)
+                        .selectinload(CircuitTemplate.melted_exercises),
+                    selectinload(Session.finisher_circuit)
+                        .selectinload(CircuitTemplate.macro_metrics)
                 )
             )
         )
@@ -234,8 +241,14 @@ async def get_program(
                 selectinload(Microcycle.sessions)
                 .options(
                     selectinload(Session.exercises).selectinload(SessionExercise.movement),
-                    selectinload(Session.main_circuit),
+                    selectinload(Session.main_circuit)
+                        .selectinload(CircuitTemplate.melted_exercises),
+                    selectinload(Session.main_circuit)
+                        .selectinload(CircuitTemplate.macro_metrics),
                     selectinload(Session.finisher_circuit)
+                        .selectinload(CircuitTemplate.melted_exercises),
+                    selectinload(Session.finisher_circuit)
+                        .selectinload(CircuitTemplate.macro_metrics)
                 )
             )
             .order_by(Microcycle.sequence_number)
@@ -265,8 +278,14 @@ async def get_program(
                 )
                 .options(
                     selectinload(Session.exercises).selectinload(SessionExercise.movement),
-                    selectinload(Session.main_circuit),
+                    selectinload(Session.main_circuit)
+                        .selectinload(CircuitTemplate.melted_exercises),
+                    selectinload(Session.main_circuit)
+                        .selectinload(CircuitTemplate.macro_metrics),
                     selectinload(Session.finisher_circuit)
+                        .selectinload(CircuitTemplate.melted_exercises),
+                    selectinload(Session.finisher_circuit)
+                        .selectinload(CircuitTemplate.macro_metrics)
                 )
                 .order_by(Session.date)
             )

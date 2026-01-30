@@ -1,0 +1,372 @@
+/* ========================================
+   CIRCUIT DISPLAY COMPONENT STYLES
+   ======================================== */
+
+/* Circuit card base styles */
+.circuit-card {
+  @apply rounded-xl overflow-hidden border-2 border-border/30;
+  background: linear-gradient(135deg, var(--color-background-card) 0%, var(--color-background-secondary) 100%);
+  transition: all var(--transition-normal) ease;
+}
+
+.circuit-card:hover {
+  @apply shadow-lg;
+  transform: translateY(-2px);
+}
+
+/* Circuit header styles */
+.circuit-header {
+  @apply px-4 py-3 border-b border-border/30;
+}
+
+/* Circuit type-specific header backgrounds */
+.circuit-header.amrap {
+  @apply bg-amber-50;
+}
+
+.circuit-header.emom {
+  @apply bg-blue-50;
+}
+
+.circuit-header.rft {
+  @apply bg-green-50;
+}
+
+.circuit-header.ladder {
+  @apply bg-purple-50;
+}
+
+.circuit-header.chipper {
+  @apply bg-orange-50;
+}
+
+.circuit-header.tabata {
+  @apply bg-rose-50;
+}
+
+.circuit-header.station {
+  @apply bg-teal-50;
+}
+
+/* Circuit type badge styles */
+.circuit-type-badge {
+  @apply px-3 py-1.5 rounded-lg font-bold text-sm text-white;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-type-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Circuit type badge colors */
+.circuit-type-badge.amrap {
+  @apply bg-amber-500;
+}
+
+.circuit-type-badge.emom {
+  @apply bg-blue-500;
+}
+
+.circuit-type-badge.rft {
+  @apply bg-green-500;
+}
+
+.circuit-type-badge.ladder {
+  @apply bg-purple-500;
+}
+
+.circuit-type-badge.chipper {
+  @apply bg-orange-500;
+}
+
+.circuit-type-badge.tabata {
+  @apply bg-rose-500;
+}
+
+.circuit-type-badge.station {
+  @apply bg-teal-500;
+}
+
+/* Circuit type icon container */
+.circuit-icon-container {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center;
+  transition: all var(--transition-normal) ease;
+}
+
+.circuit-icon-container:hover {
+  transform: rotate(5deg) scale(1.1);
+}
+
+.circuit-icon-container.amrap {
+  @apply bg-amber-500;
+}
+
+.circuit-icon-container.emom {
+  @apply bg-blue-500;
+}
+
+.circuit-icon-container.rft {
+  @apply bg-green-500;
+}
+
+.circuit-icon-container.ladder {
+  @apply bg-purple-500;
+}
+
+.circuit-icon-container.chipper {
+  @apply bg-orange-500;
+}
+
+.circuit-icon-container.tabata {
+  @apply bg-rose-500;
+}
+
+.circuit-icon-container.station {
+  @apply bg-teal-500;
+}
+
+/* Circuit metrics row */
+.circuit-metrics-row {
+  @apply mt-3 flex items-center gap-2 flex-wrap;
+}
+
+.circuit-metric-badge {
+  @apply flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 text-foreground text-xs font-medium;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-metric-badge:hover {
+  @apply bg-white;
+  transform: translateY(-1px);
+}
+
+/* Muscle tags section */
+.circuit-muscles-section {
+  @apply px-4 py-2 border-b border-border/20 bg-background/50;
+}
+
+.circuit-muscle-tag {
+  @apply text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-muscle-tag:hover {
+  @apply bg-primary/20;
+}
+
+/* Exercises list container */
+.circuit-exercises-container {
+  @apply p-4 bg-background-card;
+}
+
+/* Exercise row styles */
+.circuit-exercise-row {
+  @apply group relative flex items-stretch gap-3 p-3 rounded-lg;
+  transition: all var(--transition-normal) ease;
+}
+
+.circuit-exercise-row:hover {
+  @apply bg-background-secondary;
+  transform: translateX(4px);
+}
+
+/* Exercise number indicator */
+.circuit-exercise-number {
+  @apply flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-exercise-number:hover {
+  transform: scale(1.1);
+}
+
+/* Exercise number colors by metric type */
+.circuit-exercise-number.reps {
+  @apply bg-blue-500;
+}
+
+.circuit-exercise-number.time {
+  @apply bg-amber-500;
+}
+
+.circuit-exercise-number.distance {
+  @apply bg-green-500;
+}
+
+.circuit-exercise-number.calories {
+  @apply bg-orange-500;
+}
+
+/* Metric badge styles */
+.circuit-metric-badge {
+  @apply flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-sm;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-metric-badge:hover {
+  transform: scale(1.05);
+}
+
+.circuit-metric-badge.reps {
+  @apply bg-blue-50 text-blue-700;
+}
+
+.circuit-metric-badge.time {
+  @apply bg-amber-50 text-amber-700;
+}
+
+.circuit-metric-badge.distance {
+  @apply bg-green-50 text-green-700;
+}
+
+.circuit-metric-badge.calories {
+  @apply bg-orange-50 text-orange-700;
+}
+
+/* Max effort tag */
+.circuit-max-effort-tag {
+  @apply text-xs px-2 py-0.5 rounded-full font-medium;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-max-effort-tag:hover {
+  transform: scale(1.05);
+}
+
+.circuit-max-effort-tag.reps {
+  @apply bg-blue-50 text-blue-700;
+}
+
+.circuit-max-effort-tag.time {
+  @apply bg-amber-50 text-amber-700;
+}
+
+.circuit-max-effort-tag.distance {
+  @apply bg-green-50 text-green-700;
+}
+
+.circuit-max-effort-tag.calories {
+  @apply bg-orange-50 text-orange-700;
+}
+
+/* Circuit footer */
+.circuit-footer {
+  @apply mt-3 pt-3 border-t border-border/30;
+}
+
+/* Compact display styles */
+.circuit-compact {
+  @apply flex items-center gap-3 p-3 rounded-lg border border-border/30;
+  background: linear-gradient(90deg, var(--color-background-secondary) 0%, var(--color-background-card) 100%);
+  transition: all var(--transition-normal) ease;
+}
+
+.circuit-compact:hover {
+  @apply shadow-md;
+  transform: translateX(2px);
+}
+
+.circuit-compact-icon {
+  @apply w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0;
+  transition: all var(--transition-fast) ease;
+}
+
+.circuit-compact-icon:hover {
+  transform: rotate(3deg) scale(1.1);
+}
+
+.circuit-compact-icon.amrap {
+  @apply bg-amber-500;
+}
+
+.circuit-compact-icon.emom {
+  @apply bg-blue-500;
+}
+
+.circuit-compact-icon.rft {
+  @apply bg-green-500;
+}
+
+.circuit-compact-icon.ladder {
+  @apply bg-purple-500;
+}
+
+.circuit-compact-icon.chipper {
+  @apply bg-orange-500;
+}
+
+.circuit-compact-icon.tabata {
+  @apply bg-rose-500;
+}
+
+.circuit-compact-icon.station {
+  @apply bg-teal-500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .circuit-header {
+    @apply px-3 py-2.5;
+  }
+
+  .circuit-exercises-container {
+    @apply p-3;
+  }
+
+  .circuit-exercise-row {
+    @apply p-2.5 gap-2;
+  }
+
+  .circuit-exercise-number {
+    @apply w-7 h-7 text-xs;
+  }
+
+  .circuit-metric-badge {
+    @apply px-2 py-1 text-xs;
+  }
+
+  .circuit-compact {
+    @apply p-2.5;
+  }
+}
+
+/* Animation for circuit loading */
+@keyframes circuit-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.circuit-loading {
+  animation: circuit-pulse 1.5s ease-in-out infinite;
+}
+
+/* Focus styles for accessibility */
+.circuit-exercise-row:focus-visible {
+  @apply ring-2 ring-primary ring-offset-2;
+  outline: none;
+}
+
+.circuit-compact:focus-visible {
+  @apply ring-2 ring-primary ring-offset-2;
+  outline: none;
+}
+
+/* Print styles */
+@media print {
+  .circuit-card {
+    @apply shadow-none border border-border;
+    break-inside: avoid;
+  }
+
+  .circuit-header {
+    @apply bg-white;
+  }
+
+  .circuit-exercise-row {
+    @apply page-break-inside-avoid;
+  }
+}

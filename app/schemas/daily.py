@@ -5,7 +5,12 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.models.enums import PersonaTone, PersonaAggression, SessionType
-from app.schemas.program import ExerciseBlock, FinisherBlock, SessionResponse
+from app.schemas.program import (
+    ExerciseBlock, 
+    FinisherBlock, 
+    SessionResponse,
+    CircuitBlock,
+)
 
 
 # ============== Daily Plan Schemas ==============
@@ -73,6 +78,11 @@ class AdaptationRequest(BaseModel):
 
 class AdaptedSessionPlan(BaseModel):
     """Adapted session plan from LLM."""
+    # Circuit blocks (when LLM returns circuits)
+    circuit: CircuitBlock | None = None
+    finisher_circuit: CircuitBlock | None = None
+    
+    # Sections (traditional session structure)
     warmup: list[ExerciseBlock] | None = None
     main: list[ExerciseBlock] | None = None
     accessory: list[ExerciseBlock] | None = None

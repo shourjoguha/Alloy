@@ -22,6 +22,7 @@ from app.models import (
     RecoverySource,
 )
 from sqlalchemy.orm import selectinload  # Added
+from app.models.circuit import CircuitTemplate
 from app.schemas.daily import (
     DailyPlanResponse,
     AdaptationRequest,
@@ -92,8 +93,8 @@ async def get_daily_plan(
         )
         .options(
             selectinload(Session.exercises).selectinload(SessionExercise.movement),
-            selectinload(Session.main_circuit),
-            selectinload(Session.finisher_circuit)
+            selectinload(Session.main_circuit).selectinload(CircuitTemplate.melted_exercises),
+            selectinload(Session.finisher_circuit).selectinload(CircuitTemplate.melted_exercises)
         )
     )
     session = session_result.scalar_one_or_none()

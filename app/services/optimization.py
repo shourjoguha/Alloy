@@ -2,10 +2,9 @@
 Optimization Service using Google OR-Tools.
 Implements a Constraint Satisfaction Problem (CSP) solver for workout generation.
 """
-from typing import List, Dict, Optional, Tuple, Union
+from typing import List, Dict
 from dataclasses import dataclass
 from ortools.sat.python import cp_model
-from app.models import Movement, CNSLoad, MuscleRole
 from app.models.enums import SkillLevel, CircuitType
 from app.config import activity_distribution as activity_distribution_config
 
@@ -190,7 +189,28 @@ class ConstraintSolver:
         duration_expr = movement_duration + circuit_duration
         model.Add(duration_expr <= request.session_duration_minutes)
         
-        # E. Circuit Diversity Constraints
+        # E. Compound Movement Constraints
+        # Ensure 2-3 compound movements in main lifts, or 1 compound + 2 isolations
+        compound_vars = [
+            movement_vars[m.id] 
+            for m in request.available_movements 
+            if m.id in movement_vars and m.compound
+        ]
+        total_compound = sum(compound_vars)
+        
+        isolation_vars = [
+            movement_vars[m.id] 
+            for m in request.available_movements 
+            if m.id in movement_vars and not m.compound
+        ]
+        total_isolation = sum(isolation_vars)
+        
+        # Either: 2-3 compounds OR 1 compound + 2+ isolations
+        has_sufficient_compounds = total_compound >= 2
+        has_sufficient_isolations = total_compound == 1 and total_isolation >= 2
+        model.Add(has_sufficient_compounds + has_sufficient_isolations >= 1)
+        
+        # F. Circuit Diversity Constraints
         # NOTE: Relaxed circuit selection - no region limits, no pattern diversity limits
         # Circuits are selected atomically (all-or-nothing) with only fatigue/duration constraints
         # Original diversity constraints commented out for more flexible circuit selection:

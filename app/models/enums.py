@@ -33,6 +33,8 @@ class PrimaryRegion(str, Enum):
     UPPER_BODY = "upper body"
     CORE = "core"
 
+    # add plane - sagital, tranversal etc
+
 class PrimaryMuscle(str, Enum):
     """Primary muscle groups."""
     QUADRICEPS = "quadriceps"    

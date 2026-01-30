@@ -1,7 +1,7 @@
 """
 LLM optimization utilities for faster session generation.
 """
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from app.models.enums import SessionType, Goal
 
 
@@ -248,6 +248,10 @@ class PromptCache:
         """
         Generate warmup based on session patterns and type.
         Provides flexibility while offering intelligent defaults.
+        
+        NOTE: Currently uses hardcoded movement names that should exist in the database.
+        Future enhancement: Query movement database for mobility movements via
+        SessionGenerator._get_mobility_warmup_movements() method.
         """
         base_warmup = [
             {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility prep"}
