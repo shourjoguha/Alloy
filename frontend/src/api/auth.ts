@@ -11,6 +11,7 @@ export type UserResponse = {
   email: string;
   name?: string | null;
   is_active: boolean;
+  has_completed_onboarding: boolean;
 };
 
 export async function login(email: string, password: string): Promise<TokenResponse> {

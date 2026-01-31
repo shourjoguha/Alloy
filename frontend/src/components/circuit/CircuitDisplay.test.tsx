@@ -6,7 +6,8 @@
  * Gainsly type system and data structures.
  */
 
-import type { CircuitBlock, CircuitExercise, CircuitType } from '@/types';
+import type { CircuitBlock, CircuitExercise } from '@/types';
+import { CircuitType } from '@/types';
 
 // ============================================================================
 // TEST DATA: Valid Circuit Block Examples
@@ -17,7 +18,7 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
   AMRAP_WITH_REPS: {
     circuit_id: 1,
     name: 'AMRAP Test',
-    circuit_type: 'AMRAP',
+    circuit_type: 'amrap',
     difficulty_tier: 2,
     estimated_duration_seconds: 600,
     default_rounds: 10,
@@ -43,13 +44,13 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         rest_seconds: 0,
       },
     ],
-  },
+},
 
   // EMOM with time intervals
   EMOM_WITH_TIME: {
     circuit_id: 2,
     name: 'EMOM Test',
-    circuit_type: 'EMOM',
+    circuit_type: 'emom',
     difficulty_tier: 2,
     estimated_duration_seconds: 480,
     default_rounds: 8,
@@ -79,7 +80,7 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         rest_seconds: 20,
       },
     ],
-  },
+},
 
   // RFT with prescribed weights
   RFT_WITH_WEIGHTS: {
@@ -113,7 +114,7 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         rest_seconds: 60,
       },
     ],
-  },
+},
 
   // LADDER with notes
   LADDER_WITH_NOTES: {
@@ -149,13 +150,13 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         notes: 'Ladder: 3, 6, 9, 12, 15, 18',
       },
     ],
-  },
+},
 
   // Distance-based exercises
   DISTANCE_BASED: {
     circuit_id: 5,
     name: 'Distance Test',
-    circuit_type: 'AMRAP',
+    circuit_type: 'amrap',
     difficulty_tier: 2,
     estimated_duration_seconds: 960,
     default_rounds: 16,
@@ -181,13 +182,13 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         rest_seconds: 90,
       },
     ],
-  },
+},
 
   // Calorie-based exercises with max
   CALORIE_WITH_MAX: {
     circuit_id: 6,
     name: 'Calorie Test',
-    circuit_type: 'AMRAP',
+    circuit_type: 'amrap',
     difficulty_tier: 2,
     estimated_duration_seconds: 600,
     default_rounds: 10,
@@ -215,13 +216,13 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         rest_seconds: 0,
       },
     ],
-  },
+},
 
   // Time-based exercises
   TIME_BASED: {
     circuit_id: 7,
     name: 'Time Test',
-    circuit_type: 'AMRAP',
+    circuit_type: 'amrap',
     difficulty_tier: 1,
     estimated_duration_seconds: 480,
     default_rounds: 8,
@@ -247,13 +248,13 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
         rest_seconds: 30,
       },
     ],
-  },
+},
 
   // Mixed metric types
   MIXED_METRICS: {
     circuit_id: 8,
     name: 'Mixed Metrics Test',
-    circuit_type: 'AMRAP',
+    circuit_type: 'amrap',
     difficulty_tier: 2,
     estimated_duration_seconds: 720,
     default_rounds: 12,
@@ -288,21 +289,14 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
       },
     ],
   },
+};
 
-  // All circuit types
-  ALL_TYPES: Object.values({
-    AMRAP: 'amrap',
-    EMOM: 'emom',
-    RFT: 'rounds_for_time',
-    LADDER: 'ladder',
-    CHIPPER: 'chipper',
-    TABATA: 'tabata',
-    STATION: 'station',
-  }).reduce((acc, type) => {
-    acc[type.toUpperCase()] = {
+// All circuit types - separate constant
+const ALL_TYPES: Record<string, CircuitBlock> = {
+  AMRAP: {
       circuit_id: 100 + Math.floor(Math.random() * 1000),
-      name: `${type.toUpperCase()} Circuit`,
-      circuit_type: type as CircuitType,
+      name: 'AMRAP Circuit',
+      circuit_type: 'amrap',
       difficulty_tier: 2,
       estimated_duration_seconds: 600,
       default_rounds: 5,
@@ -320,9 +314,139 @@ const TEST_CIRCUITS: Record<string, CircuitBlock> = {
           rest_seconds: 0,
         },
       ],
-    };
-    return acc;
-  }, {} as Record<string, CircuitBlock>),
+    },
+    EMOM: {
+      circuit_id: 100 + Math.floor(Math.random() * 1000),
+      name: 'EMOM Circuit',
+      circuit_type: 'emom',
+      difficulty_tier: 2,
+      estimated_duration_seconds: 600,
+      default_rounds: 5,
+      primary_region: 'full body',
+      primary_muscles: ['quadriceps', 'chest'],
+      fatigue_factor: 1.3,
+      stimulus_factor: 1.5,
+      exercises: [
+        {
+          movement: 'Burpees',
+          movement_id: 1,
+          sequence: 1,
+          metric_type: 'reps',
+          reps: 10,
+          rest_seconds: 0,
+        },
+      ],
+    },
+    RFT: {
+      circuit_id: 100 + Math.floor(Math.random() * 1000),
+      name: 'RFT Circuit',
+      circuit_type: 'rounds_for_time',
+      difficulty_tier: 2,
+      estimated_duration_seconds: 600,
+      default_rounds: 5,
+      primary_region: 'full body',
+      primary_muscles: ['quadriceps', 'chest'],
+      fatigue_factor: 1.3,
+      stimulus_factor: 1.5,
+      exercises: [
+        {
+          movement: 'Burpees',
+          movement_id: 1,
+          sequence: 1,
+          metric_type: 'reps',
+          reps: 10,
+          rest_seconds: 0,
+        },
+      ],
+    },
+    LADDER: {
+      circuit_id: 100 + Math.floor(Math.random() * 1000),
+      name: 'LADDER Circuit',
+      circuit_type: 'ladder',
+      difficulty_tier: 2,
+      estimated_duration_seconds: 600,
+      default_rounds: 5,
+      primary_region: 'full body',
+      primary_muscles: ['quadriceps', 'chest'],
+      fatigue_factor: 1.3,
+      stimulus_factor: 1.5,
+      exercises: [
+        {
+          movement: 'Burpees',
+          movement_id: 1,
+          sequence: 1,
+          metric_type: 'reps',
+          reps: 10,
+          rest_seconds: 0,
+        },
+      ],
+    },
+    CHIPPER: {
+      circuit_id: 100 + Math.floor(Math.random() * 1000),
+      name: 'CHIPPER Circuit',
+      circuit_type: 'chipper',
+      difficulty_tier: 2,
+      estimated_duration_seconds: 600,
+      default_rounds: 5,
+      primary_region: 'full body',
+      primary_muscles: ['quadriceps', 'chest'],
+      fatigue_factor: 1.3,
+      stimulus_factor: 1.5,
+      exercises: [
+        {
+          movement: 'Burpees',
+          movement_id: 1,
+          sequence: 1,
+          metric_type: 'reps',
+          reps: 10,
+          rest_seconds: 0,
+        },
+      ],
+    },
+    TABATA: {
+      circuit_id: 100 + Math.floor(Math.random() * 1000),
+      name: 'TABATA Circuit',
+      circuit_type: 'tabata',
+      difficulty_tier: 2,
+      estimated_duration_seconds: 600,
+      default_rounds: 5,
+      primary_region: 'full body',
+      primary_muscles: ['quadriceps', 'chest'],
+      fatigue_factor: 1.3,
+      stimulus_factor: 1.5,
+      exercises: [
+        {
+          movement: 'Burpees',
+          movement_id: 1,
+          sequence: 1,
+          metric_type: 'reps',
+          reps: 10,
+          rest_seconds: 0,
+        },
+      ],
+    },
+    STATION: {
+      circuit_id: 100 + Math.floor(Math.random() * 1000),
+      name: 'STATION Circuit',
+      circuit_type: 'station',
+      difficulty_tier: 2,
+      estimated_duration_seconds: 600,
+      default_rounds: 5,
+      primary_region: 'full body',
+      primary_muscles: ['quadriceps', 'chest'],
+      fatigue_factor: 1.3,
+      stimulus_factor: 1.5,
+      exercises: [
+        {
+          movement: 'Burpees',
+          movement_id: 1,
+          sequence: 1,
+          metric_type: 'reps',
+          reps: 10,
+          rest_seconds: 0,
+        },
+      ],
+    },
 };
 
 // ============================================================================
@@ -377,13 +501,13 @@ function validateMetricType(metricType: string): boolean {
  */
 function validateCircuitType(circuitType: string): boolean {
   const validTypes: CircuitType[] = [
-    'rounds_for_time',
-    'amrap',
-    'emom',
-    'ladder',
-    'tabata',
-    'chipper',
-    'station',
+    CircuitType.ROUNDS_FOR_TIME,
+    CircuitType.AMRAP,
+    CircuitType.EMOM,
+    CircuitType.LADDER,
+    CircuitType.TABATA,
+    CircuitType.CHIPPER,
+    CircuitType.STATION,
   ];
   return validTypes.includes(circuitType.toLowerCase() as CircuitType);
 }
@@ -412,14 +536,16 @@ function validateExerciseSequences(circuit: CircuitBlock): boolean {
 /**
  * Test 7: Validate estimated duration is reasonable
  */
-function validateDuration(durationSeconds: number): boolean {
-  return durationSeconds > 0 && durationSeconds <= 3600; // Max 1 hour
+function validateDuration(durationSeconds: number | null): boolean {
+  if (durationSeconds === null) return true;
+  return durationSeconds > 0 && durationSeconds <= 3600;
 }
 
 /**
  * Test 8: Validate default rounds is reasonable
  */
-function validateRounds(rounds: number): boolean {
+function validateRounds(rounds: number | null): boolean {
+  if (rounds === null) return true;
   return rounds > 0 && rounds <= 50;
 }
 

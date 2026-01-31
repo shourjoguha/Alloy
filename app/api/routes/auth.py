@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.config.settings import get_settings
 from app.db.database import get_db
-from app.models.user import User
+from app.models.user import User, UserProfile
 from app.security import get_password_hash, verify_password, create_access_token, verify_token
 
 router = APIRouter()
@@ -41,6 +41,7 @@ class UserResponse(BaseModel):
     email: str
     name: str | None
     is_active: bool
+    has_completed_onboarding: bool
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -161,7 +162,6 @@ async def verify_token_endpoint(
         HTTPException: If token is invalid or user not found
     """
     user_id = verify_token(token)
-
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -173,16 +173,23 @@ async def verify_token_endpoint(
         select(User).where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
-
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 
+    from app.models.user import UserProfile
+    profile = await db.scalar(
+        select(UserProfile).where(UserProfile.user_id == user_id)
+    )
+
+    has_completed_onboarding = profile is not None and profile.onboarding_completed_at is not None
+
     return UserResponse(
         id=user.id,
         email=user.email,
         name=user.name,
         is_active=user.is_active,
+        has_completed_onboarding=has_completed_onboarding,
     )

@@ -12,9 +12,10 @@ export const Route = createRootRoute({
 function RootComponent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, hasCompletedOnboarding } = useAuthStore();
   const isAuthRoute = ['/login', '/register'].includes(location.pathname);
   const isLandingRoute = location.pathname === '/';
+  const isOnboardingRoute = location.pathname === '/onboarding';
   const isPublicRoute = isAuthRoute || isLandingRoute;
   
   useAuthInitialization();
@@ -23,9 +24,17 @@ function RootComponent() {
     if (!isAuthenticated && !isPublicRoute && !isAuthRoute) {
       navigate({ to: '/login' } as any);
     } else if (isAuthenticated && (isLandingRoute || isAuthRoute)) {
+      if (hasCompletedOnboarding) {
+        navigate({ to: '/dashboard' } as any);
+      } else {
+        navigate({ to: '/onboarding' } as any);
+      }
+    } else if (isAuthenticated && !hasCompletedOnboarding && !isOnboardingRoute) {
+      navigate({ to: '/onboarding' } as any);
+    } else if (isAuthenticated && hasCompletedOnboarding && isOnboardingRoute) {
       navigate({ to: '/dashboard' } as any);
     }
-  }, [isAuthenticated, isPublicRoute, isAuthRoute, isLandingRoute, navigate]);
+  }, [isAuthenticated, hasCompletedOnboarding, isPublicRoute, isAuthRoute, isLandingRoute, isOnboardingRoute, navigate]);
 
   return (
     <>

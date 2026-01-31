@@ -102,7 +102,11 @@ function CompactDisplayExample({ circuits }: { circuits: CircuitBlock[] }) {
 // EXAMPLE 4: Integration with SessionCard
 // ============================================================================
 
-import { SessionCardProps, Session } from '@/types';
+import type { Session } from '@/types';
+
+interface SessionCardProps {
+  session: Session;
+}
 
 function SessionCardWithCircuit({ session }: SessionCardProps) {
   return (

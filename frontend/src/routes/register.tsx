@@ -63,7 +63,7 @@ function RegisterPage() {
         type: 'success',
         message: 'Account created successfully',
       });
-      navigate({ to: '/dashboard' });
+      navigate({ to: '/onboarding' });
     } catch (error: any) {
       addToast({
         type: 'error',

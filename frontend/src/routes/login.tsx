@@ -56,7 +56,8 @@ function LoginPage() {
         type: 'success',
         message: 'Logged in successfully',
       });
-      navigate({ to: '/dashboard' });
+      // Let root route handle redirect based on onboarding status
+      navigate({ to: '/' });
     } catch (error: any) {
       addToast({
         type: 'error',

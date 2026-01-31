@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
         movement_preferences_router,
     )
     from app.api.routes import auth as auth_router
+    from app.api.routes import onboarding as onboarding_router
 
     app.include_router(auth_router.router, prefix="/auth", tags=["Authentication"])
     app.include_router(programs_router, prefix="/programs", tags=["Programs"])
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
     app.include_router(activities_router, prefix="/activities", tags=["Activities"])
     app.include_router(favorites_router, prefix="/favorites", tags=["Favorites"])
     app.include_router(movement_preferences_router, prefix="/movement-preferences", tags=["Movement Preferences"])
+    app.include_router(onboarding_router.router, prefix="/onboarding", tags=["Onboarding"])
     
     @app.exception_handler(Exception)
     async def global_exception_handler(request, exc):

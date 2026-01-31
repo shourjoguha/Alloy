@@ -72,6 +72,7 @@ class User(Base):
     skills = relationship("UserSkill", back_populates="user", cascade="all, delete-orphan")
     injuries = relationship("UserInjury", back_populates="user", cascade="all, delete-orphan")
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
+    onboarding_responses = relationship("OnboardingResponse", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, name='{self.name}')>"
@@ -177,6 +178,13 @@ class UserProfile(Base):
     # Long Term Goals
     long_term_goal_category = Column(String(50), nullable=True)
     long_term_goal_description = Column(Text, nullable=True)
+
+    # Onboarding
+    onboarding_completed_at = Column(DateTime, nullable=True)
+    onboarding_version = Column(String(50), nullable=True)
+    equipment_familiarity = Column(JSON, nullable=True)  # {"barbell": 1-5, "dumbbell": 1-5, ...}
+    athletic_background = Column(JSON, nullable=True)  # {"sports": [], "running": bool, "yoga": bool, ...}
+    gym_comfort_level = Column(String(50), nullable=True)  # enum: beginner, active, experienced
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

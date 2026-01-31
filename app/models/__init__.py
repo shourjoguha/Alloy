@@ -86,6 +86,7 @@ from app.models.config import (
     ExternalMetricStream,
 )
 from app.models.circuit import CircuitTemplate
+from app.models.onboarding import OnboardingResponse
 
 __all__ = [
     # Enums
@@ -171,4 +172,5 @@ __all__ = [
     "ExternalActivityRecord",
     "ExternalMetricStream",
     "CircuitTemplate",
+    "OnboardingResponse",
 ]
