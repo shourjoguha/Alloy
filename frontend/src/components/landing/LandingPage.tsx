@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { useAuthStore } from '@/stores/auth-store';
 
 const slides = [
   {
@@ -29,20 +30,21 @@ const slides = [
   }
 ];
 
+const particles = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  left: Math.random() * 100,
+  delay: Math.random() * 20,
+  duration: 15 + Math.random() * 10
+}));
+
 export function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [touchStartX, setTouchStartX] = useState(0);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const particles = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    delay: Math.random() * 20,
-    duration: 15 + Math.random() * 10
-  }));
 
   useEffect(() => {
     if (!isDragging) {
@@ -75,7 +77,7 @@ export function LandingPage() {
     setDragStartX(e.clientX);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = () => {
     if (!isDragging) return;
   };
 
@@ -116,7 +118,11 @@ export function LandingPage() {
   };
 
   const handleLogin = () => {
-    navigate({ to: '/login' });
+    if (isAuthenticated) {
+      navigate({ to: '/dashboard' });
+    } else {
+      navigate({ to: '/login' });
+    }
   };
 
   return (
@@ -180,7 +186,7 @@ export function LandingPage() {
           className="landing-cta-button"
           onClick={handleLogin}
         >
-          <span className="cta-text">Unlock</span>
+          <span className="cta-text">{isAuthenticated ? 'Enter Dashboard' : 'Unlock'}</span>
           <div className="cta-glow"></div>
         </button>
       </div>

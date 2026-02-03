@@ -283,7 +283,7 @@ class SessionGeneratorService:
         from app.db.database import async_session_maker
         
         logger.info("=" * 80)
-        logger.info(f"[populate_session_by_id] ENTRY POINT")
+        logger.info("[populate_session_by_id] ENTRY POINT")
         logger.info(f"[populate_session_by_id] session_id={session_id}, program_id={program_id}, microcycle_id={microcycle_id}")
         logger.info(f"[populate_session_by_id] Used movements count: {len(used_movements) if used_movements else 0}")
         logger.info(f"[populate_session_by_id] Used movement groups: {used_movement_groups}")
@@ -311,7 +311,7 @@ class SessionGeneratorService:
             logger.info(f"[populate_session_by_id] Microcycle: is_deload={microcycle.is_deload}, sequence={microcycle.sequence_number}")
             
             # Fetch supporting data
-            logger.info(f"[populate_session_by_id] Loading supporting data...")
+            logger.info("[populate_session_by_id] Loading supporting data...")
             movements_by_pattern = await self._load_movements_by_pattern(db)
             logger.info(f"[populate_session_by_id] Loaded {len(movements_by_pattern)} movement patterns")
             movement_rules = await self._load_user_movement_rules_dict(db, program.user_id)
@@ -403,7 +403,7 @@ class SessionGeneratorService:
                     content = self._remove_cross_session_accessory_duplicates(
                         content, set(previous_accessories), context_data["session"]["session_type"]
                     )
-                    logger.info(f"[populate_session_by_id] Removed duplicate accessories from content")
+                    logger.info("[populate_session_by_id] Removed duplicate accessories from content")
 
         # 3. Save Results (Short DB transaction)
         current_session_volume = {}
@@ -455,6 +455,7 @@ class SessionGeneratorService:
     async def generate_session_exercises_offline(
         self,
         context: dict,
+        db: AsyncSession | None = None,
         used_movements: list[str] | None = None,
         used_movement_groups: dict[str, int] | None = None,
         used_accessory_movements: dict[int, list[str]] | None = None,
@@ -464,7 +465,7 @@ class SessionGeneratorService:
         Generate exercise content without active DB session.
         """
         logger.info("-" * 80)
-        logger.info(f"[generate_session_exercises_offline] ENTRY POINT")
+        logger.info("[generate_session_exercises_offline] ENTRY POINT")
         logger.info(f"[generate_session_exercises_offline] Session ID: {context['session']['id']}")
         logger.info(f"[generate_session_exercises_offline] Session Type: {context['session']['session_type'].value}")
         logger.info(f"[generate_session_exercises_offline] Intent Tags: {context['session']['intent_tags'] or []}")
@@ -1559,7 +1560,7 @@ class SessionGeneratorService:
             # Get circuit recommendations
             target_region = self._get_primary_region_for_session_type(session_type)
             logger.info(f"[_generate_circuit_block_with_db] Target region mapped: {target_region}")
-            logger.info(f"[_generate_circuit_block_with_db] CALLING CircuitComparisonService.recommend_circuits_for_session()")
+            logger.info("[_generate_circuit_block_with_db] CALLING CircuitComparisonService.recommend_circuits_for_session()")
             logger.info(f"[_generate_circuit_block_with_db] Parameters - target_regions=[{target_region}], target_patterns={list(intent_tags) if intent_tags else None}, is_finisher=False")
             
             recommendations = await circuit_service.recommend_circuits_for_session(

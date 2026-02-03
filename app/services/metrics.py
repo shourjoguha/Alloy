@@ -1,12 +1,10 @@
 """Metrics service for e1RM calculation and Pattern Strength Index."""
-from datetime import date, timedelta
 from typing import Literal
 
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    TopSetLog,
     PatternExposure,
     Microcycle,
     MovementPattern,

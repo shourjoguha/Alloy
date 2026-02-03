@@ -26,7 +26,6 @@ from app.models.enums import ExerciseRole
 from app.schemas.logging import (
     WorkoutLogCreate,
     WorkoutLogResponse,
-    TopSetCreate,
     TopSetResponse,
     SorenessLogCreate,
     SorenessLogResponse,
@@ -453,7 +452,7 @@ async def create_soreness_log(
     user_id: int = Depends(get_current_user_id),
 ):
     """Log muscle soreness for a body part and update recovery state."""
-    from datetime import datetime, timedelta
+    from datetime import datetime
     
     log_date = log.log_date or date.today()
     
@@ -553,7 +552,7 @@ async def get_muscle_recovery_states(
     Get current muscle recovery states with decay applied.
     Returns recovery levels adjusted for time since last update (1 point per 10 hours decay).
     """
-    from datetime import datetime, timedelta
+    from datetime import datetime
     
     query = select(MuscleRecoveryState).where(
         MuscleRecoveryState.user_id == user_id
@@ -595,7 +594,7 @@ async def get_muscle_recovery_state(
     Get current recovery state for a specific muscle with decay applied.
     Returns recovery level adjusted for time since last update (1 point per 10 hours decay).
     """
-    from datetime import datetime, timedelta
+    from datetime import datetime
     
     query = select(MuscleRecoveryState).where(
         MuscleRecoveryState.user_id == user_id,

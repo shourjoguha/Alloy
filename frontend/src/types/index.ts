@@ -738,6 +738,11 @@ export interface UserProfile {
   date_of_birth?: string;
   sex?: Sex;
   height_cm?: number;
+  onboarding_completed_at?: string;
+  onboarding_version?: string;
+  gym_comfort_level?: string;
+  equipment_familiarity?: Record<string, number>;
+  athletic_background?: Record<string, boolean | Record<string, string>>;
   discipline_preferences?: DisciplinePreferences;
   discipline_experience?: DisciplineExperience;
   scheduling_preferences?: SchedulingPreferences;
@@ -753,6 +758,11 @@ export interface UserProfileUpdate {
   date_of_birth?: string;
   sex?: Sex;
   height_cm?: number;
+  onboarding_completed_at?: string;
+  onboarding_version?: string;
+  gym_comfort_level?: string;
+  equipment_familiarity?: Record<string, number>;
+  athletic_background?: Record<string, boolean | Record<string, string>>;
   discipline_preferences?: DisciplinePreferences;
   discipline_experience?: DisciplineExperience;
   scheduling_preferences?: SchedulingPreferences;

@@ -12,11 +12,8 @@ from app.models.enums import (
     PersonaAggression,
     MicrocycleStatus,
     SessionType,
-    ExerciseRole,
     MetricType,
     CircuitType,
-    MovementTier,
-    PrimaryRegion,
 )
 
 

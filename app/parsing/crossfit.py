@@ -1,5 +1,4 @@
 import re
-import json
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 class CrossFitParser:
@@ -37,8 +36,6 @@ class CrossFitParser:
         # or parse them line-by-line.
         # But commonly in CF.com text: "♂ 50 lb ♀ 35 lb" appears on its own line or at the bottom.
         # We'll scan for these global/footer weights and try to associate them if exercises don't have their own.
-        
-        footer_weights = self._extract_footer_weights(raw_text)
         
         for line in lines:
             line = line.strip()
@@ -234,8 +231,6 @@ class CrossFitParser:
         clean_line = line
         
         dist_match = re.search(r'(\d+(?:,\d+)?)\s*[- ]?\b(meter|meters|m|ft|foot|feet|km|row|run|swim|yard|yards)\b', clean_line, re.IGNORECASE)
-        
-        detached_match = re.search(r'^(\d+)-\s+([A-Za-z]+)', clean_line)
         
         if dist_match:
             val_str = dist_match.group(1).replace(',', '')

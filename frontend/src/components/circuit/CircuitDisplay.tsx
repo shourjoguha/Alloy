@@ -1,11 +1,12 @@
 import { Clock, Flame, Timer, Dumbbell, Zap, Target, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CircuitBlock, CircuitExercise } from '@/types';
+import type { LucideIcon } from 'lucide-react';
 
 // Circuit type configuration with distinct styling
-const CIRCUIT_TYPE_CONFIG: Record<string, { 
-  label: string; 
-  icon: any; 
+const CIRCUIT_TYPE_CONFIG: Record<string, {
+  label: string;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   textColor: string;
@@ -70,11 +71,11 @@ const CIRCUIT_TYPE_CONFIG: Record<string, {
 };
 
 // Metric type color coding
-const METRIC_COLORS: Record<string, { 
-  color: string; 
+const METRIC_COLORS: Record<string, {
+  color: string;
   bgColor: string;
   textColor: string;
-  icon: any;
+  icon: LucideIcon;
 }> = {
   reps: { 
     color: 'blue', 
@@ -103,7 +104,7 @@ const METRIC_COLORS: Record<string, {
 };
 
 // Format exercise metric with proper units
-function formatExerciseMetric(ex: CircuitExercise): { value: string; type: string; icon: any } {
+function formatExerciseMetric(ex: CircuitExercise): { value: string; type: string; icon: LucideIcon } {
   const metric = ex.metric_type?.toLowerCase() || '';
 
   // Check for max reps pattern
@@ -146,7 +147,7 @@ function formatExerciseMetric(ex: CircuitExercise): { value: string; type: strin
 }
 
 // Helper function to validate if a value is a valid number
-function isValidNumber(value: any): value is number {
+function isValidNumber(value: unknown): value is number {
   return typeof value === 'number' &&
     !Number.isNaN(value) &&
     !Number.isFinite(value) === false &&

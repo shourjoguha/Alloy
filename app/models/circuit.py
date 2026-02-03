@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 
 from app.db.database import Base
 from app.models.enums import CircuitType
-from app.models.circuit_extended import CircuitMelted, CircuitMacro
 
 
 class CircuitTemplate(Base):

@@ -9,18 +9,12 @@ Responsible for:
 - Managing deload recovery patterns
 """
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, List
+from typing import Tuple
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     Microcycle, RecoverySignal, Program
-)
-from app.models.logging import (
-    WorkoutLog
-)
-from app.models.enums import (
-    MicrocycleStatus
 )
 from app.config.heuristics import DELOAD_POLICY
 
@@ -137,7 +131,7 @@ class DeloadService:
             .where(
                 and_(
                     Microcycle.program_id == program_id,
-                    Microcycle.is_deload == True
+                    Microcycle.is_deload.is_(True)
                 )
             )
             .order_by(desc(Microcycle.start_date))

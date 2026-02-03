@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from ortools.sat.python import cp_model
 from app.models.enums import SkillLevel, CircuitType
 from app.config import activity_distribution as activity_distribution_config
+import logging
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class SolverMovement:
@@ -68,6 +71,20 @@ class ConstraintSolver:
         Solve for the optimal set of movements that satisfy volume targets
         while minimizing fatigue and maximizing stimulus.
         """
+        logger.info("=" * 80)
+        logger.info("[ConstraintSolver.solve_session] Starting optimization")
+        logger.info(f"  Available movements: {len(request.available_movements)}")
+        logger.info(f"  Available circuits: {len(request.available_circuits)}")
+        logger.info(f"  Target muscle volumes: {request.target_muscle_volumes}")
+        logger.info(f"  Max fatigue: {request.max_fatigue}")
+        logger.info(f"  Min stimulus: {request.min_stimulus}")
+        logger.info(f"  Skill level: {request.user_skill_level}")
+        logger.info(f"  Session duration: {request.session_duration_minutes} minutes")
+        logger.info(f"  Allow circuits: {request.allow_circuits}")
+        logger.info(f"  Allow complex lifts: {request.allow_complex_lifts}")
+        logger.info(f"  Goal weights: {request.goal_weights}")
+        logger.info("=" * 80)
+        
         # Create fresh model and solver for each request to avoid memory leaks
         # and performance degradation from accumulating variables
         model = cp_model.CpModel()
@@ -94,6 +111,7 @@ class ConstraintSolver:
                 circuit_vars[c.id] = model.NewBoolVar(f'circuit_{c.id}')
             
         if not movement_vars and not circuit_vars:
+            logger.warning("[ConstraintSolver.solve_session] No variables available, returning INFEASIBLE")
             return OptimizationResult([], [], 0, 0, 0, "INFEASIBLE")
 
         # 2. Constraints
@@ -270,7 +288,9 @@ class ConstraintSolver:
         model.Maximize(sum(objective_terms))
 
         # 3. Solve
+        logger.info("[ConstraintSolver.solve_session] Starting solver...")
         status = solver.Solve(model)
+        logger.info(f"[ConstraintSolver.solve_session] Solver status: {solver.StatusName(status)}")
         
         # 4. Result
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
@@ -295,13 +315,22 @@ class ConstraintSolver:
                         total_stimulus += c.stimulus_factor
             
             status_str = "OPTIMAL" if status == cp_model.OPTIMAL else "FEASIBLE"
+            logger.info(f"[ConstraintSolver.solve_session] Result: {status_str}")
+            logger.info(f"  Selected movements: {len(selected_movements)}")
+            logger.info(f"  Selected circuits: {len(selected_circuits)}")
+            logger.info(f"  Total fatigue: {total_fatigue:.2f}")
+            logger.info(f"  Total stimulus: {total_stimulus:.2f}")
+            estimated_duration = (len(selected_movements) * MINS_PER_MOVEMENT) + (sum(c.duration_seconds for c in selected_circuits) // 60)
+            logger.info(f"  Estimated duration: {estimated_duration} minutes")
+            logger.info("=" * 80)
             return OptimizationResult(
                 selected_movements=selected_movements,
                 selected_circuits=selected_circuits,
                 total_fatigue=total_fatigue,
                 total_stimulus=total_stimulus,
-                estimated_duration=(len(selected_movements) * MINS_PER_MOVEMENT) + (sum(c.duration_seconds for c in selected_circuits) // 60),
+                estimated_duration=estimated_duration,
                 status=status_str
             )
-            
+        
+        logger.warning("[ConstraintSolver.solve_session] No feasible solution found, returning INFEASIBLE")
         return OptimizationResult([], [], 0, 0, 0, "INFEASIBLE")

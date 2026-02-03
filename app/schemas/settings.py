@@ -1,6 +1,6 @@
 """Pydantic schemas for settings and configuration API endpoints."""
 from datetime import date, datetime
-from typing import Any, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, computed_field, model_validator, field_validator
 
@@ -16,7 +16,6 @@ from app.models.enums import (
     CNSLoad,
     MetricType,
     Sex,
-    MuscleRole,
     MovementTier,
     MetabolicDemand,
 )
@@ -154,6 +153,12 @@ class UserProfileUpdate(BaseModel):
     date_of_birth: date | None = None
     sex: Sex | None = None
     height_cm: int | None = None
+    # Onboarding fields
+    onboarding_completed_at: datetime | None = None
+    onboarding_version: str | None = None
+    gym_comfort_level: str | None = None
+    equipment_familiarity: dict[str, Any] | None = None
+    athletic_background: dict[str, Any] | None = None
     # Advanced Preferences
     discipline_preferences: dict[str, Any] | None = None
     discipline_experience: dict[str, Any] | None = None
@@ -175,6 +180,12 @@ class UserProfileResponse(BaseModel):
     date_of_birth: date | None = None
     sex: Sex | None = None
     height_cm: int | None = None
+    # Onboarding fields
+    onboarding_completed_at: datetime | None = None
+    onboarding_version: str | None = None
+    gym_comfort_level: str | None = None
+    equipment_familiarity: dict[str, Any] | None = None
+    athletic_background: dict[str, Any] | None = None
     # Advanced Preferences
     discipline_preferences: dict[str, Any] | None = None
     discipline_experience: dict[str, Any] | None = None

@@ -56,7 +56,7 @@ export function ProfileTab() {
     try {
       let scheduling_preferences = data.scheduling_preferences;
       if (scheduling_preferences) {
-        const microcycle = (scheduling_preferences as any).microcycle_length_days;
+        const microcycle = scheduling_preferences.microcycle_length_days;
         if (typeof microcycle === 'string' && microcycle !== 'auto') {
           scheduling_preferences = {
             ...scheduling_preferences,
@@ -65,7 +65,7 @@ export function ProfileTab() {
         }
       }
 
-      const payload: any = {};
+      const payload: Partial<UserProfileUpdate> = {};
       
       if (data.name !== undefined && data.name !== '') payload.name = data.name;
       if (data.experience_level !== undefined) payload.experience_level = data.experience_level;
@@ -102,22 +102,23 @@ export function ProfileTab() {
         type: 'success',
         message: 'Profile updated successfully',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Profile update error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error data:', error.response?.data);
+      const err = error as { response?: { data?: { detail?: string | { msg?: string }[] } } };
+      console.error('Error response:', err.response);
+      console.error('Error data:', err.response?.data);
       
       let errorMessage = 'Failed to update profile';
-      
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        } else if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
-        } else if (typeof error.response.data.detail === 'object') {
-          errorMessage = JSON.stringify(error.response.data.detail);
+
+      if (err.response?.data?.detail) {
+        if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        } else if (Array.isArray(err.response.data.detail)) {
+          errorMessage = err.response.data.detail.map((e: { msg?: string }) => e.msg || JSON.stringify(e)).join(', ');
+        } else if (typeof err.response.data.detail === 'object') {
+          errorMessage = JSON.stringify(err.response.data.detail);
         }
-      } else if (error.message) {
+      } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
       
@@ -381,7 +382,7 @@ export function ProfileTab() {
                     When endurance is your top goal, include at least one dedicated cardio day per 14-day microcycle.
                   </p>
                   <select
-                    {...register('scheduling_preferences.endurance_dedicated_cardio_day_policy' as any)}
+                    {...register('scheduling_preferences.endurance_dedicated_cardio_day_policy')}
                     className="w-full rounded-md border-0 bg-background-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="default">Use system default</option>
@@ -396,7 +397,7 @@ export function ProfileTab() {
                     Defaults to 14 days. You can also let the system decide.
                   </p>
                   <select
-                    {...register('scheduling_preferences.microcycle_length_days' as any)}
+                    {...register('scheduling_preferences.microcycle_length_days')}
                     className="w-full rounded-md border-0 bg-background-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="auto">Auto (recommended)</option>
@@ -412,7 +413,7 @@ export function ProfileTab() {
                     Stored as a preference only. Scheduling is not constrained by templates by default.
                   </p>
                   <select
-                    {...register('scheduling_preferences.split_template_preference' as any)}
+                    {...register('scheduling_preferences.split_template_preference')}
                     className="w-full rounded-md border-0 bg-background-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="none">None</option>

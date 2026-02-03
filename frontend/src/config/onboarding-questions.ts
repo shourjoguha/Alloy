@@ -56,10 +56,10 @@ export interface Question {
   max?: number;
   required: boolean;
   multiSelect?: boolean;
-  validation?: (value: any) => string | null;
+  validation?: (value: unknown) => string | null;
   mapping: {
     field: string;
-    transform?: (value: any) => any;
+    transform?: (value: unknown) => unknown;
   };
 }
 

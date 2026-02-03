@@ -66,6 +66,12 @@ export function useFavorites() {
   return useQuery({
     queryKey: favoriteKeys.lists(),
     queryFn: fetchFavorites,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 

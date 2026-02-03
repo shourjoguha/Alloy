@@ -4,6 +4,7 @@ import type { AxiosError } from 'axios';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 import { useCreateProgram } from '@/api/programs';
 import { useUserMovementRules } from '@/api/movement-preferences';
+import { useUserProfile } from '@/api/settings';
 import { WizardContainer } from '@/components/wizard/WizardContainer';
 import {
   GoalsStep,
@@ -51,6 +52,7 @@ function ProgramWizardPage() {
   const createProgram = useCreateProgram();
   const { addToast } = useUIStore();
   const { data: userPreferences } = useUserMovementRules();
+  const { data: userProfile } = useUserProfile();
   
   const {
     goals,
@@ -64,15 +66,24 @@ function ProgramWizardPage() {
     durationWeeks,
     reset,
     initializeFromUserPreferences,
+    initializeFromOnboardingData,
   } = useProgramWizardStore();
 
-  // Initialize wizard with user preferences on mount
+  // Initialize wizard with user preferences and onboarding data on mount
   useEffect(() => {
     reset();
     if (userPreferences && userPreferences.items) {
       initializeFromUserPreferences(userPreferences.items);
     }
-  }, [userPreferences, reset, initializeFromUserPreferences]);
+    if (userProfile) {
+      const onboardingData = {
+        gym_comfort_level: userProfile.gym_comfort_level,
+        goal_category: userProfile.long_term_goal_category,
+        goal_description: userProfile.long_term_goal_description,
+      };
+      initializeFromOnboardingData(onboardingData);
+    }
+  }, [userPreferences, userProfile, reset, initializeFromUserPreferences, initializeFromOnboardingData]);
 
   const canProceed = (): boolean => {
     switch (currentStep) {

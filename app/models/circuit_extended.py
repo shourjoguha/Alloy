@@ -1,10 +1,10 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Float, ForeignKey, JSON, Enum as SQLEnum, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, Float, ForeignKey, Enum as SQLEnum, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
 from app.db.database import Base
-from app.models.enums import CircuitType, MetricType, MovementTier, PrimaryRegion
+from app.models.enums import MetricType, MovementTier, PrimaryRegion
 
 
 class CircuitMelted(Base):

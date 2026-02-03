@@ -64,10 +64,11 @@ function RegisterPage() {
         message: 'Account created successfully',
       });
       navigate({ to: '/dashboard' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       addToast({
         type: 'error',
-        message: error.response?.data?.detail || 'Registration failed. Please try again.',
+        message: err.response?.data?.detail || 'Registration failed. Please try again.',
       });
     } finally {
       setIsLoading(false);

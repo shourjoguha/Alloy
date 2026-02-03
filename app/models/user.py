@@ -18,7 +18,6 @@ from app.models.enums import (
     DataSource,
     BiometricMetricType,
     RuleOperator,
-    DisciplineType,
 )
 
 
@@ -168,6 +167,13 @@ class UserProfile(Base):
     date_of_birth = Column(Date, nullable=True)
     sex = Column(SQLEnum(Sex), nullable=True)
     height_cm = Column(Integer, nullable=True)
+    
+    # Onboarding Fields
+    onboarding_completed_at = Column(DateTime, nullable=True)
+    onboarding_version = Column(String(50), nullable=True)
+    gym_comfort_level = Column(String(50), nullable=True)
+    equipment_familiarity = Column(JSON, nullable=True)
+    athletic_background = Column(JSON, nullable=True)
     
     # Advanced Preferences
     discipline_preferences = Column(JSON, nullable=True)  # {"mobility": 5, "calisthenics": 3, ...}

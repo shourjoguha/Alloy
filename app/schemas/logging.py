@@ -1,6 +1,5 @@
 """Pydantic schemas for logging API endpoints."""
 from datetime import date as DateType, datetime as DatetimeType
-from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 

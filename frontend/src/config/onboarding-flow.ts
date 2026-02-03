@@ -1,5 +1,3 @@
-import type { Question } from './onboarding-questions';
-
 export type AnswerValue = string | string[] | number | boolean | Record<string, number> | Record<string, boolean> | null;
 
 export interface Answers {

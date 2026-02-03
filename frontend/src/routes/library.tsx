@@ -559,7 +559,7 @@ function CircuitCard({ circuit }: CircuitCardProps) {
 }
 
 function MovementsTab() {
-  const { data, isLoading, error } = useMovements({ limit: 1000 });
+  const { data, error } = useMovements({ limit: 1000 });
   const { data: filtersData } = useMovementFilters();
   const [search, setSearch] = useState('');
   const [selectedPattern, setSelectedPattern] = useState<MovementPattern | 'all'>('all');
@@ -579,14 +579,6 @@ function MovementsTab() {
     () => data?.movements ?? [],
     [data],
   );
-
-  if (error) {
-    return (
-      <div className="rounded bg-error/10 p-3 text-sm text-error">
-        Failed to load movements. Please try refreshing the page or check your connection.
-      </div>
-    );
-  }
 
   const patternOptions: { value: MovementPattern | 'all'; label: string }[] =
     useMemo(() => {
@@ -679,6 +671,14 @@ function MovementsTab() {
 
     return result;
   }, [movements, search, selectedPattern, selectedEquipment, selectedRegions, selectedMuscles, selectedSkillLevels, selectedCNSLoads, selectedMetricTypes, sortConfig]);
+
+  if (error) {
+    return (
+      <div className="rounded bg-error/10 p-3 text-sm text-error">
+        Failed to load movements. Please try refreshing the page or check your connection.
+      </div>
+    );
+  }
 
   const toggleColumn = (id: ColumnId) => {
     setVisibleColumns((current) =>

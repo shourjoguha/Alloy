@@ -1,5 +1,6 @@
 """API routes for favorites management."""
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -9,7 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.database import get_db
 from app.models import Movement, UserMovementRule
-from app.models.enums import MovementRuleType, RuleCadence
+from app.models.enums import MovementRuleType, RuleCadence, RuleOperator
 from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()

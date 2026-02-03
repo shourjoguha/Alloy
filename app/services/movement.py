@@ -5,11 +5,11 @@ Provides optimized query functions for tiering, biomechanics, and metabolic dema
 along with a safety-first substitution service based on biomechanics profiles.
 """
 from typing import Optional, Any, Dict, List
-from sqlalchemy import select, and_, or_, Float, func
+from sqlalchemy import select, and_, Float, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
-from app.models.movement import Movement, MovementDiscipline, MovementEquipment, MovementTag
+from app.models.movement import Movement, MovementDiscipline, MovementEquipment, MovementTag, Equipment
 from app.models.enums import MovementTier, MetabolicDemand, DisciplineType
 
 
@@ -134,7 +134,6 @@ class MovementQueryService:
                 .distinct()
             )
         
-        from app.models.movement import Equipment
         result = await db.execute(
             select(Movement).where(Movement.id.in_(subquery))
         )
@@ -843,7 +842,7 @@ class MovementQueryService:
         """Get movements with secondary movement planes (complex movements)."""
         result = await db.execute(
             select(Movement).where(
-                Movement.biomechanics_profile['movement_vectors']['secondary'].astext != None
+                Movement.biomechanics_profile['movement_vectors']['secondary'].astext.isnot(None)
             )
         )
         return list(result.scalars().all())
@@ -1020,7 +1019,6 @@ class MovementSubstitutionService:
         Returns:
             List of progression steps with metadata
         """
-        from sqlalchemy import func
         from app.models.movement import MovementRelationship
         from app.models.enums import RelationshipType
         

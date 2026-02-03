@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { Answers } from '../config/onboarding-flow';
+import type { Answers, AnswerValue } from '../config/onboarding-flow';
 
 export interface OnboardingStatusResponse {
   completed: boolean;
@@ -22,7 +22,7 @@ export async function submitOnboarding(answers: Answers): Promise<OnboardingSubm
   return data;
 }
 
-export async function saveOnboardingProgress(questionId: string, answerValue: any): Promise<{ message: string }> {
+export async function saveOnboardingProgress(questionId: string, answerValue: AnswerValue): Promise<{ message: string }> {
   const { data } = await apiClient.patch<{ message: string }>('/onboarding/progress', {
     question_id: questionId,
     answer_value: answerValue,

@@ -196,10 +196,10 @@ async def create_program(
     # This ensures all sessions are visible to the background task
     try:
         logger.info(f"[API] About to commit ALL changes for program_id={program.id}")
-        logger.info(f"[API] This commit will make all sessions visible to background tasks")
+        logger.info("[API] This commit will make all sessions visible to background tasks")
         await db.commit()
         logger.info(f"Successfully committed all changes for program_id={program.id}")
-    except Exception as e:
+    except Exception:
         await db.rollback()
         logger.exception(f"Failed to commit program creation for program_id={program.id}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -208,8 +208,8 @@ async def create_program(
     # This ensures all sessions are available when the background task queries the database
     # If the background task is added before commit, it may query for sessions before they are
     # committed, leading to only seeing the first and last sessions that were flushed
-    logger.info(f"[API] CRITICAL: Adding background task AFTER commit")
-    logger.info(f"[API] All sessions should now be visible in the database")
+    logger.info("[API] CRITICAL: Adding background task AFTER commit")
+    logger.info("[API] All sessions should now be visible in the database")
     background_tasks.add_task(
         program_service.generate_active_microcycle_sessions,
         program.id,
@@ -429,7 +429,7 @@ async def get_program(
             upcoming_sessions=session_responses,
             microcycles=microcycle_responses,
         )
-        print(f"DEBUG: ProgramWithMicrocycleResponse constructed successfully")
+        print("DEBUG: ProgramWithMicrocycleResponse constructed successfully")
         return response
     except Exception as e:
         print(f"ERROR: Failed to construct ProgramWithMicrocycleResponse: {e}")

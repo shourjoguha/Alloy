@@ -57,10 +57,11 @@ function LoginPage() {
         message: 'Logged in successfully',
       });
       navigate({ to: '/dashboard' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       addToast({
         type: 'error',
-        message: error.response?.data?.detail || 'Login failed. Please check your credentials.',
+        message: err.response?.data?.detail || 'Login failed. Please check your credentials.',
       });
     } finally {
       setIsLoading(false);

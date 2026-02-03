@@ -12,10 +12,7 @@ from app.llm.ollama_provider import (
     SESSION_PLAN_SCHEMA,
     ADAPTATION_RESPONSE_SCHEMA,
 )
-from app.llm.prompts import (
-    JEROME_SYSTEM_PROMPT,
-    build_full_session_prompt,
-)
+
 
 __all__ = [
     "LLMProvider",

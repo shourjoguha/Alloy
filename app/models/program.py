@@ -1,5 +1,5 @@
 """Program planning models."""
-from datetime import date, datetime
+from datetime import datetime
 from sqlalchemy import (
     Boolean, Column, Integer, String, Date, DateTime, 
     ForeignKey, Text, JSON, Enum as SQLEnum, Float,

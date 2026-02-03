@@ -1,9 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  useMovements, 
-  useMovementFilters 
-} from '@/api/settings';
+import { useMovements } from '@/api/settings';
 import { apiClient } from '@/api/client';
 
 import { 
@@ -137,16 +134,16 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
     }
   };
 
-  const getSelectedMovements = () => {
+  const selectedMovements = useMemo(() => {
     if (!userRules) return [];
     return userRules.filter((r: MovementRule) => r.rule_type !== 'HARD_NO');
-  };
+  }, [userRules]);
 
   useEffect(() => {
     if (onSelectionChange) {
-      onSelectionChange(getSelectedMovements());
+      onSelectionChange(selectedMovements);
     }
-  }, [userRules, onSelectionChange]);
+  }, [selectedMovements, onSelectionChange]);
 
   if (movementsLoading || rulesLoading) {
     return (
@@ -157,7 +154,6 @@ export function MovementPreferences({ onSelectionChange }: MovementPreferencesPr
   }
 
   const sortedMovements = getSortedMovements();
-  const selectedMovements = getSelectedMovements();
 
   return (
     <div className="space-y-6">

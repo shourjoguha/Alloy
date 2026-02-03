@@ -1,6 +1,6 @@
 """System prompts for LLM-powered features."""
 
-from app.llm.optimization import LLMOptimizer, PromptCache, ModelOptimizer
+from app.llm.optimization import LLMOptimizer
 from app.models.enums import SessionType, Goal
 
 # Jerome - the AI coach persona (OPTIMIZED - reduced by 40%)

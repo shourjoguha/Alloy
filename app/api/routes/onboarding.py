@@ -1,6 +1,5 @@
 """API routes for onboarding flow."""
 import logging
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession

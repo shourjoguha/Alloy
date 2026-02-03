@@ -1,5 +1,5 @@
 """Shared dependencies for API routes."""
-from fastapi import Depends, HTTPException, Header
+from fastapi import HTTPException, Header
 from app.config.settings import get_settings
 from app.security import verify_token
 

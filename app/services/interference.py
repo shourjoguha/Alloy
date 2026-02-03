@@ -1,8 +1,7 @@
 """Interference management service for goal conflict detection and adjustment."""
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from dataclasses import dataclass
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Goal

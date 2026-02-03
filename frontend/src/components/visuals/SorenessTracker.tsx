@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { RotateCcw, Check, X, User, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { RotateCcw, Check, X, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { HumanBodyMap } from './HumanBodyMap';

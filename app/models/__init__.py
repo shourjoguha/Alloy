@@ -163,6 +163,7 @@ __all__ = [
     "PatternExposure",
     "SorenessLog",
     "RecoverySignal",
+    "MuscleRecoveryState",
     "HeuristicConfig",
     "ConversationThread",
     "ConversationTurn",

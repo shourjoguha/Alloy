@@ -3,7 +3,7 @@ import asyncio
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.db.database import async_session_maker
-from app.models import Program, Session, SessionExercise
+from app.models import Program, SessionExercise
 from app.services.session_generator import SessionGeneratorService
 
 
@@ -49,7 +49,7 @@ async def test_regenerate_one_program():
             .where(SessionExercise.session_id.in_(session_ids))
         )
         await db.commit()
-        print(f"Deleted existing session exercises")
+        print("Deleted existing session exercises")
         
         # Regenerate session exercises
         session_gen = SessionGeneratorService()
@@ -87,7 +87,7 @@ async def test_regenerate_one_program():
                 
                 await db.commit()
                 
-                print(f"  ✓ Success")
+                print("  ✓ Success")
                 warmup = content.get('warmup')
                 main = content.get('main')
                 accessory = content.get('accessory')

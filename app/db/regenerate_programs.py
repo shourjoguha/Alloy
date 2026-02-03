@@ -1,10 +1,9 @@
 """Regenerate session exercises for all programs."""
 import asyncio
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.db.database import async_session_maker
-from app.models import Program, Session, SessionExercise, Microcycle
+from app.models import Program, SessionExercise, Microcycle
 from app.services.session_generator import SessionGeneratorService
 
 
@@ -50,7 +49,7 @@ async def regenerate_all_programs():
                     .where(SessionExercise.session_id.in_(session_ids))
                 )
                 await db.commit()
-                print(f"  Deleted existing session exercises")
+                print("  Deleted existing session exercises")
                 
                 # Regenerate session exercises
                 for session, microcycle in sessions_to_regenerate:
@@ -84,7 +83,7 @@ async def regenerate_all_programs():
                         )
                         
                         await db.commit()
-                        print(f"      ✓ Success")
+                        print("      ✓ Success")
                     except Exception as e:
                         print(f"      ✗ Error: {e}")
                         await db.rollback()

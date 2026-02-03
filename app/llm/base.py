@@ -1,7 +1,7 @@
 """LLM provider interface and base classes."""
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, AsyncIterator
+from dataclasses import dataclass
+from typing import AsyncIterator
 
 
 @dataclass

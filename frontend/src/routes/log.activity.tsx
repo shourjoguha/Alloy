@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -40,8 +40,11 @@ function LogActivityPage() {
     },
   });
 
-  const selectedActivityId = Number(form.watch('activity_definition_id'));
+  const selectedActivityId = Number(useWatch({ control: form.control, name: 'activity_definition_id' }));
   const selectedActivity = activities?.find(a => a.id === selectedActivityId);
+  const perceivedDifficulty = useWatch({ control: form.control, name: 'perceived_difficulty' });
+  const enjoymentRating = useWatch({ control: form.control, name: 'enjoyment_rating' });
+  const notes = useWatch({ control: form.control, name: 'notes' });
   // Check for 'cardio' (lowercase from enum) or 'CARDIO' (just in case)
   const isCardio = selectedActivity?.category?.toLowerCase() === 'cardio';
 
@@ -137,7 +140,7 @@ function LogActivityPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium flex justify-between">
               <span>Perceived Difficulty (1-10)</span>
-              <span className="text-foreground-muted font-normal">{String(form.watch('perceived_difficulty'))}</span>
+              <span className="text-foreground-muted font-normal">{String(perceivedDifficulty)}</span>
             </label>
             <input
               type="range"
@@ -157,7 +160,7 @@ function LogActivityPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium flex justify-between">
               <span>Enjoyment Rating (1-5)</span>
-              <span className="text-foreground-muted font-normal">{String(form.watch('enjoyment_rating'))}</span>
+              <span className="text-foreground-muted font-normal">{String(enjoymentRating)}</span>
             </label>
             <input
               type="range"
@@ -182,7 +185,7 @@ function LogActivityPage() {
               placeholder="How did it feel?"
             />
             <p className="text-xs text-foreground-muted text-right">
-              {form.watch('notes')?.length || 0}/500
+              {notes?.length || 0}/500
             </p>
             {form.formState.errors.notes && (
               <p className="text-sm text-destructive">{form.formState.errors.notes.message}</p>

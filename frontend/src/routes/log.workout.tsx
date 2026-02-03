@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Save, Plus, X, Search, Dumbbell, Timer, Flame } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Search, Flame } from 'lucide-react';
 import { useMovements } from '@/api/settings';
 import { useCircuits } from '@/api/circuits';
 import { useLogCustomWorkout } from '@/api/logs';
-import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/common/Spinner';
 import { SorenessTracker } from '@/components/visuals';
 import { 

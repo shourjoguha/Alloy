@@ -24,7 +24,6 @@ from app.models import (
     ExperienceLevel,
     PersonaTone,
     PersonaAggression,
-    ActivitySource,
 )
 
 

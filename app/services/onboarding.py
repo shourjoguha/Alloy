@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EnjoyableActivity, Sex
 from app.models.onboarding import OnboardingResponse
-from app.models.user import User, UserProfile, UserEnjoyableActivity, UserMovementRule
-from app.models.movement import Movement
-from app.models.program import Discipline
+from app.models.user import User, UserProfile, UserEnjoyableActivity
 from app.schemas.onboarding import OnboardingAnswers
 
 

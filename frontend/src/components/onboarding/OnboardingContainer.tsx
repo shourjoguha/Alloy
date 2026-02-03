@@ -2,7 +2,6 @@ import { useOnboardingStore } from '@/stores/onboarding-store';
 import { QuestionRenderer } from './QuestionRenderer';
 import {
   ONBOARDING_FLOW,
-  getVisibleQuestions,
   getPreviousQuestionId,
   getNextQuestionId,
   getVisibleQuestionCount,
@@ -60,7 +59,6 @@ export function OnboardingContainer() {
     setIsInitialized(true);
   }, [navigate, currentQuestionId, setCurrentQuestionId, hasCompletedOnboarding]);
 
-  const visibleQuestions = getVisibleQuestions(answers);
   const totalQuestions = getVisibleQuestionCount(answers);
 
   const handleNext = () => {
@@ -104,9 +102,11 @@ export function OnboardingContainer() {
 
       // Reset answers after navigation to prevent UI flicker and state loss
       reset();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Onboarding submission error:', error);
-      const errorMessage = error.response?.data?.detail || 'Failed to submit onboarding. Please try again.';
+      const errorMessage = error instanceof Error && (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        ? (error as { response: { data: { detail: string } } }).response.data.detail
+        : 'Failed to submit onboarding. Please try again.';
 
       addToast({
         type: 'error',

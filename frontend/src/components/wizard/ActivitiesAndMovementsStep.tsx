@@ -55,7 +55,7 @@ function SectionCard({ children, className }: { children: React.ReactNode; class
   );
 }
 
-function SectionHeader({ icon: Icon, title, description }: { icon: any; title: string; description: string }) {
+function SectionHeader({ icon: Icon, title, description }: { icon: React.ComponentType<{ className?: string }>; title: string; description: string }) {
   return (
     <div className="space-y-3 pb-4 border-b border-border">
       <div className="flex items-center gap-3">
@@ -155,7 +155,7 @@ export function ActivitiesAndMovementsStep() {
     if (customMovement.trim()) {
       addMovementRule({
         movement_id: 0,
-        rule_type: 'preferred' as any,
+        rule_type: 'preferred' as MovementRuleType,
       });
       setCustomMovement('');
     }

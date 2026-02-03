@@ -19,7 +19,6 @@ from app.models import (
     SorenessLog,
     RecoverySignal,
     MicrocycleStatus,
-    RecoverySource,
 )
 from sqlalchemy.orm import selectinload  # Added
 from app.models.circuit import CircuitTemplate
@@ -36,8 +35,6 @@ from app.schemas.circuit import (
     CircuitAssignmentCreate,
     CircuitAssignmentUpdate,
     CircuitAssignmentResponse,
-    CircuitRecommendationRequest,
-    CircuitRecommendationResponse,
     CircuitPreviewResponse,
 )
 from app.llm import get_llm_provider, LLMConfig, Message, PromptBuilder
@@ -604,7 +601,7 @@ async def update_circuit_assignment(
             SessionExercise.__table__.delete().where(
                 and_(
                     SessionExercise.session_id == session_id,
-                    SessionExercise.circuit_id != None
+                    SessionExercise.circuit_id.isnot(None)
                 )
             )
         )

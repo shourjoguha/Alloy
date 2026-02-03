@@ -19,7 +19,7 @@ export function BurgerMenu() {
   const handleLogout = () => {
     logout();
     setMenuOpen(false);
-    navigate({ to: '/login' } as any);
+    navigate({ to: '/login' });
   };
 
   return (

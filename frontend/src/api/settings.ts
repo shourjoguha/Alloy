@@ -5,8 +5,11 @@ import type {
   UserProfileUpdate,
   Movement,
   MovementCreate,
+  MovementRule,
+  MovementRuleCreate,
 } from '@/types';
 import type { MovementPattern } from '@/types';
+import { useAuthStore } from '@/stores/auth-store';
 
 type MovementsQueryOptions = {
   pattern?: MovementPattern | 'all';
@@ -93,9 +96,17 @@ async function createMovement(payload: MovementCreate): Promise<Movement> {
 }
 
 export function useUserProfile() {
+  const { isAuthenticated, token, _hasHydrated } = useAuthStore();
   return useQuery({
     queryKey: settingsKeys.profile(),
     queryFn: fetchUserProfile,
+    enabled: _hasHydrated && isAuthenticated && !!token, // Only fetch when authenticated with a token and hydration is complete
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
@@ -116,6 +127,12 @@ export function useMovements(options: MovementsQueryOptions = { limit: 1000 }) {
   return useQuery({
     queryKey: settingsKeys.movements(queryOptions),
     queryFn: () => fetchMovements(queryOptions),
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
@@ -123,6 +140,12 @@ export function useMovementFilters() {
   return useQuery({
     queryKey: settingsKeys.movementFilters(),
     queryFn: fetchMovementFilters,
+    staleTime: 10 * 60 * 1000, // 10 minutes - filters change less frequently
+    gcTime: 15 * 60 * 1000, // 15 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
@@ -138,12 +161,12 @@ export function useCreateMovement() {
   });
 }
 
-async function fetchUserMovementRules(): Promise<any[]> {
+async function fetchUserMovementRules(): Promise<MovementRule[]> {
   const { data } = await apiClient.get('/settings/movement-rules');
   return data;
 }
 
-async function createUserMovementRuleAPI(data: any): Promise<any> {
+async function createUserMovementRuleAPI(data: MovementRuleCreate): Promise<MovementRule> {
   const { data: response } = await apiClient.post('/settings/movement-rules', data);
   return response;
 }
@@ -152,7 +175,7 @@ async function deleteUserMovementRuleAPI(ruleId: number): Promise<void> {
   await apiClient.delete(`/settings/movement-rules/${ruleId}`);
 }
 
-export function getUserMovementRules(): Promise<any[]> {
+export function getUserMovementRules(): Promise<MovementRule[]> {
   return fetchUserMovementRules();
 }
 
@@ -160,7 +183,7 @@ export function getAllMovements(options: MovementsQueryOptions = {}): Promise<Mo
   return fetchMovements(options);
 }
 
-export function createUserMovementRule(data: any): Promise<any> {
+export function createUserMovementRule(data: MovementRuleCreate): Promise<MovementRule> {
   return createUserMovementRuleAPI(data);
 }
 

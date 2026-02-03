@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChevronDown, ChevronUp, Clock, Flame, Coffee, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Session, ExerciseBlock, CircuitExercise } from '@/types';
+import type { Session, ExerciseBlock, CircuitExercise, CircuitBlock } from '@/types';
 
 interface SessionCardProps {
   session: Session;
@@ -109,7 +109,7 @@ function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null 
   );
 }
 
-function CircuitDisplay({ circuit, title = "Circuit Block" }: { circuit: any; title?: string }) {
+function CircuitDisplay({ circuit, title = "Circuit Block" }: { circuit: CircuitBlock; title?: string }) {
   if (!circuit) return null;
 
   return (
@@ -200,8 +200,6 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
   const isGenerating = !isRestDay && !hasContent;
   const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
   const hasCircuit = session.circuit !== undefined && session.circuit !== null;
-  const hasFinisherCircuit = session.finisher_circuit !== undefined && session.finisher_circuit !== null;
-  const hasAccessories = session.accessory && session.accessory.length > 0;
 
   return (
     <Card variant="grouped"

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
 import type { Program, ProgramCreate, ProgramWithMicrocycle, ProgramUpdate } from '@/types';
+import { useAuthStore } from '@/stores/auth-store';
 
 // Query keys
 export const programKeys = {
@@ -45,9 +46,17 @@ async function activateProgram(id: number): Promise<Program> {
 
 // React Query hooks
 export function usePrograms(activeOnly = false) {
+  const { isAuthenticated, token, _hasHydrated } = useAuthStore();
   return useQuery({
     queryKey: programKeys.list({ active_only: activeOnly }),
     queryFn: () => fetchPrograms(activeOnly),
+    enabled: _hasHydrated && isAuthenticated && !!token, // Only fetch when authenticated with a token and hydration is complete
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
@@ -56,6 +65,12 @@ export function useProgram(id: number) {
     queryKey: programKeys.detail(id),
     queryFn: () => fetchProgram(id),
     enabled: Number.isFinite(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 

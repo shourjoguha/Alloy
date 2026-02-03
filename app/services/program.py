@@ -9,7 +9,7 @@ Responsible for:
 - Applying movement rule constraints and interference logic
 """
 
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 from typing import Optional, Dict, Any
 import logging
 from sqlalchemy import select, and_, or_, cast, String
@@ -17,7 +17,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    Program, Microcycle, Session, User, Movement, UserProfile, UserMovementRule, SessionExercise, ProgramDiscipline
+    Program, Microcycle, Session, User, Movement, UserProfile, UserMovementRule, ProgramDiscipline
 )
 from app.schemas.program import ProgramCreate
 from app.models.enums import (
@@ -187,7 +187,7 @@ class ProgramService:
             select(Program).where(
                 and_(
                     Program.user_id == user_id,
-                    Program.is_active == True
+                    Program.is_active.is_(True)
                 )
             )
         )
@@ -265,9 +265,6 @@ class ProgramService:
         current_date = start_date
         deload_frequency = request.deload_every_n_microcycles or 4
         
-        # Track active microcycle for session generation
-        active_microcycle = None
-        
         for mc_idx, cycle_length_days in enumerate(microcycle_lengths):
             logger.info("Creating microcycle %d with length=%s days", mc_idx, cycle_length_days)
             is_deload = ((mc_idx + 1) % deload_frequency == 0)
@@ -312,10 +309,6 @@ class ProgramService:
                 is_deload=is_deload,
             )
             logger.info("Microcycle %d created with id=%s", mc_idx, microcycle.id)
-            
-            # Keep reference to active (first) microcycle
-            if mc_idx == 0:
-                active_microcycle = microcycle
             
             current_date += timedelta(days=cycle_length_days)
         
@@ -586,7 +579,7 @@ class ProgramService:
         logger.info(f"[_generate_session_content_async] Completed all {len(sessions)} sessions in microcycle")
         logger.info(f"[_generate_session_content_async] Loop finished - used_movements count: {len(used_movements)}")
         # Generate Jerome notes for all sessions in microcycle after content is complete
-        logger.info(f"[_generate_session_content_async] All sessions generated, starting batched Jerome notes generation")
+        logger.info("[_generate_session_content_async] All sessions generated, starting batched Jerome notes generation")
         try:
             await self._generate_microcycle_jerome_notes(program, microcycle, sessions)
         except Exception as e:
@@ -628,9 +621,6 @@ class ProgramService:
         
         current_day = session.day_number
         current_patterns = session.intent_tags or []
-        
-        # Get all training days in this microcycle for context
-        training_days = sorted([day for day, patterns in used_main_patterns.items() if patterns])
         
         # Define pattern alternatives for intelligent substitution
         pattern_alternatives = {
@@ -792,7 +782,7 @@ class ProgramService:
         training_sessions = [s for s in sessions if s.session_type != SessionType.RECOVERY]
         
         if not training_sessions:
-            logger.info(f"[_generate_microcycle_jerome_notes] No training sessions to generate notes for")
+            logger.info("[_generate_microcycle_jerome_notes] No training sessions to generate notes for")
             return
         
         # Build goal weights
@@ -906,7 +896,7 @@ class ProgramService:
                 else:
                     # Fallback to default notes for this batch
                     logger.warning(
-                        f"[_generate_microcycle_jerome_notes] Failed to parse batch response, using fallback notes"
+                        "[_generate_microcycle_jerome_notes] Failed to parse batch response, using fallback notes"
                     )
                     await self._apply_fallback_notes(batch, microcycle.is_deload)
                     

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
 import type { MovementRuleType } from '@/types';
+import { useAuthStore } from '@/stores/auth-store';
 
 export interface MovementPreference {
   id: number;
@@ -112,9 +113,11 @@ async function batchUpsertMovementPreferences(
 export function useUserMovementRules(
   options: MovementPreferencesQueryOptions = {},
 ) {
+  const { isAuthenticated, token, _hasHydrated } = useAuthStore();
   return useQuery({
     queryKey: movementPreferencesKeys.list(options),
     queryFn: () => fetchMovementPreferences(options),
+    enabled: _hasHydrated && isAuthenticated && !!token, // Only fetch when authenticated with a token and hydration is complete
   });
 }
 
@@ -127,6 +130,12 @@ export function useMovementPreference(id: number) {
     queryKey: movementPreferencesKeys.detail(id),
     queryFn: () => fetchMovementPreference(id),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 

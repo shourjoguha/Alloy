@@ -10,10 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 
-from app.models.program import Session, SessionExercise, ExerciseRole
+from app.models.program import Session, SessionExercise
 from app.models.circuit import CircuitTemplate
 from app.models.circuit_extended import CircuitMelted, CircuitMacro
-from app.services.circuit_comparison import CircuitComparisonService
+from app.models.program import ExerciseRole
 
 logger = logging.getLogger(__name__)
 
@@ -333,7 +333,7 @@ class CircuitAssignmentService:
                         circuit.id, circuit.id
                     )
                     compatibility_score = similarity_result.similarity_score
-                except:
+                except Exception:
                     compatibility_score = 0.5
                 
                 macro = next(

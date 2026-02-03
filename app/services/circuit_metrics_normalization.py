@@ -10,13 +10,13 @@ The normalization approach:
 4. Validate and enforce the 50% target range
 """
 
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, Dict, List, Any
 from dataclasses import dataclass
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.models import Movement, Session, SessionExercise
+from app.models import SessionExercise
 from app.models.circuit import CircuitTemplate
 from app.models.enums import CircuitType, ExerciseRole
 
@@ -144,8 +144,8 @@ class CircuitMetricsNormalizer:
         
         if not session_exercises:
             raise ValueError(
-                f"No main exercises found in database. "
-                f"Cannot calculate main lift baseline."
+                "No main exercises found in database. "
+                "Cannot calculate main lift baseline."
             )
         
         # Filter for main lift movements

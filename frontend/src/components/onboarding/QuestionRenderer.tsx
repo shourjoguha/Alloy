@@ -1,4 +1,4 @@
-import { ONBOARDING_QUESTIONS, ICON_MAPPINGS, type Question, type QuestionOption } from '@/config/onboarding-questions';
+import { ONBOARDING_QUESTIONS, ICON_MAPPINGS, type QuestionOption } from '@/config/onboarding-questions';
 import { useOnboardingStore } from '@/stores/onboarding-store';
 import { useUIStore } from '@/stores/ui-store';
 import { SexToggle } from './SexToggle';
@@ -6,7 +6,7 @@ import { Slider5Point } from './Slider5Point';
 import { YesNoCard } from './YesNoCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Loader2, RefreshCw, CheckCircle2, Check, Trophy, Mountain, Bike, Droplets, CircleDot, Flag, Flower2, Music, Sparkles, Dumbbell, Building, ArrowDown, ArrowUp, Footprints, Flame, Zap, Target, Heart, Leaf, Activity } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Loader2, RefreshCw, CheckCircle2, Check, Trophy, Mountain, Bike, Droplets, CircleDot, Flag, Flower2, Music, Sparkles, Dumbbell, Building, ArrowDown, ArrowUp, Footprints, Flame, Zap, Target, Heart, Leaf } from 'lucide-react';
 import { saveOnboardingProgress } from '@/api/onboarding';
 import { useState } from 'react';
 

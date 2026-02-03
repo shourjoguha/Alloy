@@ -648,8 +648,8 @@ class CircuitComparisonService:
             >>> )
         """
         logger.info("=" * 80)
-        logger.info(f"[CircuitComparisonService.recommend_circuits_for_session] ENTRY POINT")
-        logger.info(f"[CircuitComparisonService] circuit_ids={circuit_ids}")
+        logger.info("[CircuitComparisonService.recommend_circuits_for_session] ENTRY POINT")
+        logger.info("[CircuitComparisonService] circuit_ids={circuit_ids}")
         logger.info(f"[CircuitComparisonService] target_regions={target_regions}")
         logger.info(f"[CircuitComparisonService] target_patterns={target_patterns}")
         logger.info(f"[CircuitComparisonService] difficulty_tier={difficulty_tier}")
@@ -688,7 +688,7 @@ class CircuitComparisonService:
             logger.info(f"[CircuitComparisonService] Filters applied: {filters_applied if filters_applied else 'none'}")
             
             # Execute query
-            logger.info(f"[CircuitComparisonService] Executing database query...")
+            logger.info("[CircuitComparisonService] Executing database query...")
             result = await self.db.execute(stmt)
             candidates = result.scalars().all()
             logger.info(f"[CircuitComparisonService] Database query returned {len(candidates)} candidate circuits")
@@ -762,13 +762,13 @@ class CircuitComparisonService:
                             reference, candidate
                         )
                         logger.debug(
-                            f"[CircuitComparisonService] Calculated complementarity for circuit {candidate.circuit_id}: "
-                            f"score={score:.3f}"
-                        )
+                        f"[CircuitComparisonService] Calculated complementarity for circuit {candidate.circuit_id}: "
+                        f"score={score:.3f}"
+                    )
                 else:
                     # Relevance score based on filters
                     score = 1.0  # Default for unfiltered queries
-                    logger.debug(f"[CircuitComparisonService] No circuit_ids provided, using default score=1.0")
+                    logger.debug("[CircuitComparisonService] No circuit_ids provided, using default score=1.0")
                 
                 recommendations.append(CircuitRecommendation(
                     circuit_id=candidate.circuit_id,

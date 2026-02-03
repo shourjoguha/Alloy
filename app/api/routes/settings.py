@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, Float
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,7 +23,6 @@ from app.models import (
     MovementMuscleMap,
     Muscle,
     Equipment,
-    HeuristicConfig,
     MovementPattern,
 )
 from app.schemas.settings import (
@@ -119,6 +118,11 @@ async def get_user_profile(
         date_of_birth=profile.date_of_birth,
         sex=profile.sex,
         height_cm=profile.height_cm,
+        onboarding_completed_at=profile.onboarding_completed_at,
+        onboarding_version=profile.onboarding_version,
+        gym_comfort_level=profile.gym_comfort_level,
+        equipment_familiarity=profile.equipment_familiarity,
+        athletic_background=profile.athletic_background,
         discipline_preferences=profile.discipline_preferences,
         discipline_experience=profile.discipline_experience,
         scheduling_preferences=profile.scheduling_preferences,
@@ -1003,7 +1007,6 @@ async def query_movements_by_biomechanics(
     user_id: int = Depends(get_current_user_id),
 ):
     """Query movements by biomechanics attributes."""
-    from app.services.movement import MovementQueryService
     from app.models.enums import MovementTier, MetabolicDemand
     
     query = select(Movement).where(

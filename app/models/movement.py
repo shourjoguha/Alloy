@@ -1,6 +1,6 @@
 """Movement repository models."""
 from datetime import datetime
-from sqlalchemy import Boolean, Column, Integer, String, Text, JSON, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, Text, ForeignKey
 from sqlalchemy import DateTime, Float, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -16,7 +16,6 @@ from app.models.enums import (
     CNSLoad,
     RelationshipType,
     MuscleRole,
-    RuleOperator,
     SpinalCompression,
     DisciplineType,
     MovementTier,

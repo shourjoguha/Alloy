@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MovementsStep } from '@/components/wizard/MovementsStep';
 import { useUserMovementRules, useUpsertMovementRule, useDeleteMovementRule } from '@/api/movement-preferences';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
@@ -8,28 +8,36 @@ export function FavoritesTab() {
   const upsertMutation = useUpsertMovementRule();
   const deleteMutation = useDeleteMovementRule();
   const { movementRules, setMovementRules, addMovementRule, removeMovementRule } = useProgramWizardStore();
-  
+
   const [preferenceIdMap, setPreferenceIdMap] = useState<Map<string, number>>(new Map());
 
+  const wizardPreferences = useMemo(() => {
+    if (!userPreferences?.items) return [];
+    return userPreferences.items.map((pref) => ({
+      movement_id: pref.movement_id,
+      rule_type: pref.rule_type,
+      cadence: pref.cadence || undefined,
+      notes: pref.notes || undefined,
+    }));
+  }, [userPreferences]);
+
+  const preferenceIdMapData = useMemo(() => {
+    if (!userPreferences?.items) return new Map<string, number>();
+    const newMap = new Map<string, number>();
+    userPreferences.items.forEach((pref) => {
+      const key = `${pref.movement_id}-${pref.rule_type}`;
+      newMap.set(key, pref.id);
+    });
+    return newMap;
+  }, [userPreferences]);
+
   useEffect(() => {
-    if (userPreferences && userPreferences.items) {
-      const wizardPreferences = userPreferences.items.map((pref) => ({
-        movement_id: pref.movement_id,
-        rule_type: pref.rule_type,
-        cadence: pref.cadence || undefined,
-        notes: pref.notes || undefined,
-      }));
-      
-      const newMap = new Map<string, number>();
-      userPreferences.items.forEach((pref) => {
-        const key = `${pref.movement_id}-${pref.rule_type}`;
-        newMap.set(key, pref.id);
-      });
-      
-      setMovementRules(wizardPreferences);
-      setPreferenceIdMap(newMap);
-    }
-  }, [userPreferences, setMovementRules]);
+    setMovementRules(wizardPreferences);
+  }, [wizardPreferences, setMovementRules]);
+
+  useEffect(() => {
+    setPreferenceIdMap(preferenceIdMapData);
+  }, [preferenceIdMapData]);
 
   const handleAddRule = async (rule: { movement_id: number; rule_type: string; cadence?: string; notes?: string }) => {
     addMovementRule(rule);
