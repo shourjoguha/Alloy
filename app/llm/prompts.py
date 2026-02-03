@@ -45,7 +45,10 @@ Generate workout session based on program goals and guidance.
 - Main lifts should prioritize specified patterns
 - Respect user movement preferences (avoid, must_include, prefer)
 - Follow rep/set guidelines from system prompt (lines 18-22)
-- Review the Draft Session (if provided) and use it as a baseline. You may swap exercises for injuries or specific user needs, but try to respect the volume allocation.
+- Review of Draft Session (if provided) and use it as a baseline. You may swap exercises for injuries or specific user needs, but try to respect the volume allocation.
+- INCLUDE COOLDOWN in ALL training sessions (unless recovery/cardio)
+- Use ALL available session time up to max_session_duration limit
+- Add 2-4 accessory exercises to support main movements (when not circuit-based)
 
 ## LLM Decision Areas (Use Your Expertise)
 - Exercise selection from available movements

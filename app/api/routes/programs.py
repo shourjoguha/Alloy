@@ -1,5 +1,5 @@
 """API routes for program management."""
-from datetime import date
+from datetime import datetime, date
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
@@ -127,46 +127,94 @@ async def create_program(
     program = result.scalar_one()
     logger.info("Program disciplines loaded successfully")
     
-    # Create movement rules if provided (post-program creation)
+    # Create or update movement rules if provided (post-program creation)
     if program_data.movement_rules:
         for rule in program_data.movement_rules:
-            user_rule = UserMovementRule(
-                user_id=user_id,
-                movement_id=rule.movement_id,
-                rule_type=rule.rule_type,
-                cadence=rule.cadence,
-                notes=rule.notes,
+            # Check if rule already exists
+            existing_rule = await db.execute(
+                select(UserMovementRule).where(
+                    and_(
+                        UserMovementRule.user_id == user_id,
+                        UserMovementRule.movement_id == rule.movement_id,
+                        UserMovementRule.rule_type == rule.rule_type
+                    )
+                )
             )
-            db.add(user_rule)
+            existing = existing_rule.scalar_one_or_none()
+            
+            if existing:
+                # Update existing rule
+                existing.cadence = rule.cadence
+                existing.notes = rule.notes
+                existing.updated_at = datetime.utcnow()
+            else:
+                # Create new rule
+                user_rule = UserMovementRule(
+                    user_id=user_id,
+                    movement_id=rule.movement_id,
+                    rule_type=rule.rule_type,
+                    cadence=rule.cadence,
+                    notes=rule.notes,
+                )
+                db.add(user_rule)
     
-    # Create enjoyable activities if provided
+    # Create or update enjoyable activities if provided
     if program_data.enjoyable_activities:
         for activity in program_data.enjoyable_activities:
             activity_enum, normalized_custom_name = _normalize_enjoyable_activity(
                 activity.activity_type,
                 activity.custom_name,
             )
-            user_activity = UserEnjoyableActivity(
-                user_id=user_id,
-                activity_type=activity_enum,
-                custom_name=normalized_custom_name,
-                recommend_every_days=activity.recommend_every_days,
-                enabled=True,
+            # Check if activity already exists
+            existing_activity = await db.execute(
+                select(UserEnjoyableActivity).where(
+                    and_(
+                        UserEnjoyableActivity.user_id == user_id,
+                        UserEnjoyableActivity.activity_type == activity_enum,
+                        UserEnjoyableActivity.custom_name == normalized_custom_name
+                    )
+                )
             )
-            db.add(user_activity)
+            existing = existing_activity.scalar_one_or_none()
+            
+            if existing:
+                # Update existing activity
+                existing.recommend_every_days = activity.recommend_every_days
+                existing.enabled = True
+            else:
+                # Create new activity
+                user_activity = UserEnjoyableActivity(
+                    user_id=user_id,
+                    activity_type=activity_enum,
+                    custom_name=normalized_custom_name,
+                    recommend_every_days=activity.recommend_every_days,
+                    enabled=True,
+                )
+                db.add(user_activity)
     
-    if program_data.movement_rules or program_data.enjoyable_activities:
-        try:
-            await db.commit()
-        except Exception:
-            await db.rollback()
-            logger.exception("Unhandled error while saving program preferences")
-            raise HTTPException(status_code=500, detail="Internal server error")
+    # Commit all changes (program, microcycles, sessions, movement rules, enjoyable activities)
+    # This ensures all sessions are visible to the background task
+    try:
+        logger.info(f"[API] About to commit ALL changes for program_id={program.id}")
+        logger.info(f"[API] This commit will make all sessions visible to background tasks")
+        await db.commit()
+        logger.info(f"Successfully committed all changes for program_id={program.id}")
+    except Exception as e:
+        await db.rollback()
+        logger.exception(f"Failed to commit program creation for program_id={program.id}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
+    # CRITICAL: Add background task AFTER all transactions are committed
+    # This ensures all sessions are available when the background task queries the database
+    # If the background task is added before commit, it may query for sessions before they are
+    # committed, leading to only seeing the first and last sessions that were flushed
+    logger.info(f"[API] CRITICAL: Adding background task AFTER commit")
+    logger.info(f"[API] All sessions should now be visible in the database")
     background_tasks.add_task(
         program_service.generate_active_microcycle_sessions,
         program.id,
     )
+    logger.info(f"Background task added to generate sessions for program_id={program.id}")
 
     try:
         return program
@@ -429,8 +477,8 @@ async def generate_next_microcycle(
     
     This will:
     1. Mark the current active microcycle as complete
-    2. Create a new microcycle
-    3. Generate sessions for the new microcycle using LLM
+    2. Create a new microcycle with sessions
+    3. Generate session content for the new microcycle using LLM
     """
     program = await db.get(Program, program_id)
     
@@ -475,21 +523,50 @@ async def generate_next_microcycle(
     else:
         length_days = activity_distribution_config.default_microcycle_length_days
     
-    # Create new microcycle
-    new_microcycle = Microcycle(
+    # Build split configuration for the new microcycle
+    # Construct goals from program's goal fields
+    from app.schemas.program import GoalWeight
+    goals = [
+        GoalWeight(goal=program.goal_1, weight=program.goal_weight_1),
+        GoalWeight(goal=program.goal_2, weight=program.goal_weight_2),
+        GoalWeight(goal=program.goal_3, weight=program.goal_weight_3),
+    ]
+    
+    split_config = program_service._build_freeform_split_config(
+        cycle_length_days=length_days,
+        days_per_week=program.days_per_week,
+    )
+    split_config = program_service._apply_goal_based_cycle_distribution(
+        split_config=split_config,
+        goals=goals,
+        days_per_week=program.days_per_week,
+        cycle_length_days=length_days,
+        max_session_duration=program.max_session_duration,
+        user_experience_level=None,  # Will fetch if needed
+        scheduling_prefs=scheduling_prefs,
+    )
+    split_config = program_service._assign_freeform_day_types_and_focus(
+        split_config=split_config,
+        days_per_week=program.days_per_week,
+    )
+    
+    # Create new microcycle with sessions using the internal method
+    new_microcycle = await program_service._create_microcycle(
+        db,
+        user_id=program.user_id,
         program_id=program_id,
+        mc_index=next_seq - 1,  # 0-indexed
         start_date=next_start,
-        length_days=length_days,
-        sequence_number=next_seq,
-        status=MicrocycleStatus.ACTIVE,
+        split_config=split_config,
         is_deload=is_deload,
     )
-    db.add(new_microcycle)
     
+    # Commit microcycle and sessions to database
     await db.commit()
     await db.refresh(new_microcycle)
     
-    # Generate sessions in background using LLM
+    # Generate session content in background using LLM
+    # This ensures all sessions are committed before background task starts
     background_tasks.add_task(program_service.generate_active_microcycle_sessions, program_id)
     
     return new_microcycle

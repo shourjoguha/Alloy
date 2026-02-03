@@ -246,90 +246,38 @@ class PromptCache:
     @classmethod
     def get_pattern_based_warmup(cls, intent_tags: List[str], session_type: SessionType) -> List[Dict[str, Any]]:
         """
-        Generate warmup based on session patterns and type.
+        Generate warmup based on patterns used in session.
+        Prepares joints and muscles for specific movements.
+        
         Provides flexibility while offering intelligent defaults.
         
-        NOTE: Currently uses hardcoded movement names that should exist in the database.
-        Future enhancement: Query movement database for mobility movements via
-        SessionGenerator._get_mobility_warmup_movements() method.
+        NOTE: Returns empty list - warmup generation is now handled by
+        SessionGenerator._generate_warmup_cooldown() which selects real
+        movements from the database.
         """
-        base_warmup = [
-            {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility prep"}
-        ]
-        
-        # Add pattern-specific warmup movements
-        pattern_warmups = {
-            "squat": {"movement": "Goblet Squat", "sets": 2, "reps": 8, "notes": "Hip and ankle mobility"},
-            "hinge": {"movement": "Good Morning", "sets": 2, "reps": 10, "notes": "Hip hinge pattern prep"},
-            "horizontal_push": {"movement": "Push-Up", "sets": 2, "reps": 10, "notes": "Shoulder and chest activation"},
-            "vertical_push": {"movement": "Arm Circles", "sets": 2, "reps": 10, "notes": "Shoulder mobility"},
-            "horizontal_pull": {"movement": "Band Pull-Apart", "sets": 2, "reps": 15, "notes": "Rear delt activation"},
-            "vertical_pull": {"movement": "Scapular Pull-Up", "sets": 2, "reps": 8, "notes": "Lat activation"},
-        }
-        
-        # Add pattern-specific movements for main patterns
-        for pattern in intent_tags[:2]:  # First 2 patterns are main
-            if pattern in pattern_warmups:
-                base_warmup.append(pattern_warmups[pattern])
-        
-        return base_warmup
+        return []
     
     @classmethod
     def get_cached_warmup(cls, session_type: SessionType) -> List[Dict[str, Any]]:
         """Return basic warmup for session type (fallback)."""
-        warmups = {
-            SessionType.FULL_BODY: [
-                {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility"},
-                {"movement": "Goblet Squat", "sets": 2, "reps": 8, "notes": "Movement prep"},
-            ],
-            SessionType.UPPER: [
-                {"movement": "Arm Circles", "sets": 2, "reps": 10, "notes": "Shoulder mobility"},
-                {"movement": "Band Pull-Apart", "sets": 2, "reps": 15, "notes": "Activation"},
-            ],
-            SessionType.LOWER: [
-                {"movement": "Leg Swing", "sets": 2, "reps": 10, "notes": "Hip mobility"},
-                {"movement": "Bodyweight Squat", "sets": 2, "reps": 10, "notes": "Movement prep"},
-            ],
-        }
-        return warmups.get(session_type, warmups[SessionType.FULL_BODY])
+        return []
     
     @classmethod
     def get_pattern_based_cooldown(cls, intent_tags: List[str]) -> List[Dict[str, Any]]:
         """
         Generate cooldown based on patterns used in session.
         Targets muscles/areas that were trained.
+        
+        NOTE: Returns empty list - cooldown generation is now handled by
+        SessionGenerator._generate_warmup_cooldown() which selects real
+        movements from the database.
         """
-        base_cooldown = [
-            {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Focus on trained muscles"}
-        ]
-        
-        # Add pattern-specific stretches
-        pattern_stretches = {
-            "squat": {"movement": "Hip Flexor Stretch", "duration_seconds": 120, "notes": "Counter hip flexion"},
-            "hinge": {"movement": "Hamstring Stretch", "duration_seconds": 120, "notes": "Lengthen posterior chain"},
-            "horizontal_push": {"movement": "Chest Stretch", "duration_seconds": 90, "notes": "Open chest and shoulders"},
-            "vertical_push": {"movement": "Overhead Stretch", "duration_seconds": 90, "notes": "Shoulder mobility"},
-            "horizontal_pull": {"movement": "Lat Stretch", "duration_seconds": 90, "notes": "Lengthen lats"},
-            "vertical_pull": {"movement": "Doorway Stretch", "duration_seconds": 90, "notes": "Counter pulling posture"},
-        }
-        
-        # Add stretches for patterns used
-        for pattern in intent_tags:
-            if pattern in pattern_stretches:
-                base_cooldown.append(pattern_stretches[pattern])
-        
-        # Always end with foam rolling
-        base_cooldown.append({"movement": "Foam Rolling", "duration_seconds": 180, "notes": "Target tight areas"})
-        
-        return base_cooldown
+        return []
     
     @classmethod
     def get_cached_cooldown(cls) -> List[Dict[str, Any]]:
         """Return standard cooldown (fallback)."""
-        return [
-            {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Focus on trained muscles"},
-            {"movement": "Foam Rolling", "duration_seconds": 180, "notes": "Target tight areas"},
-        ]
+        return []
 
 
 class ModelOptimizer:

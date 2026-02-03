@@ -65,6 +65,7 @@ export enum MovementPattern {
   ISOMETRIC = 'isometric',
   CONDITIONING = 'conditioning',
   CARDIO = 'cardio',
+  STRETCH = 'stretch',
 }
 
 export enum PrimaryRegion {

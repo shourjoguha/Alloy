@@ -193,6 +193,7 @@ class SessionGeneratorService:
         
         # Load movement library grouped by pattern
         movements_by_pattern = await self._load_movements_by_pattern(db)
+        all_movements = await self._load_all_movements(db)
         goal_weights = self._get_goal_weights_for_program(program)
         
         # LOG GOAL WEIGHTS
@@ -202,9 +203,9 @@ class SessionGeneratorService:
         draft_content = None
         try:
             logger.info("[generate_session_exercises] Attempting to generate optimal draft session...")
-            draft_result = await self._generate_draft_session(db, session, used_movements, goal_weights=goal_weights)
+            draft_result = await self._generate_draft_session(db, session, used_movements, goal_weights=goal_weights, max_session_duration=program.max_session_duration)
             if draft_result.status in ["OPTIMAL", "FEASIBLE"] and draft_result.selected_movements:
-                draft_content = self._convert_optimization_result_to_content(draft_result, session.session_type)
+                draft_content = self._convert_optimization_result_to_content(draft_result, session.session_type, all_movements)
                 logger.info(f"[generate_session_exercises] Generated optimal draft for session {session.id} with status {draft_result.status}")
                 logger.info(f"[generate_session_exercises] Selected movements: {len(draft_result.selected_movements)}")
             else:
@@ -216,10 +217,11 @@ class SessionGeneratorService:
             logger.info("[generate_session_exercises] Path: CUSTOM conditioning session")
             all_movements = await self._load_all_movements(db)
             conditioning_names = self._get_conditioning_movement_names(all_movements)
-            content = self._get_fast_conditioning_session_content(conditioning_names, program.max_session_duration)
+            content = self._get_fast_conditioning_session_content(conditioning_names, program.max_session_duration, all_movements)
         elif session.session_type in {SessionType.CARDIO, SessionType.MOBILITY}:
             logger.info(f"[generate_session_exercises] Path: {session.session_type.value} session")
-            content = self._get_fast_special_session_content(session.session_type, program.max_session_duration)
+            all_movements = await self._load_all_movements(db)
+            content = self._get_fast_special_session_content(session.session_type, program.max_session_duration, all_movements)
         elif draft_content:
             logger.info("[generate_session_exercises] Path: Building content from optimal draft")
             content = await self._build_fast_content_from_draft(
@@ -228,6 +230,7 @@ class SessionGeneratorService:
                 session.intent_tags or [],
                 microcycle.is_deload,
                 goal_weights,
+                all_movements,
             )
         else:
             logger.info("[generate_session_exercises] Path: Using smart fallback session content")
@@ -236,6 +239,7 @@ class SessionGeneratorService:
                 session.intent_tags or [],
                 movements_by_pattern,
                 used_movements=used_movements,
+                all_movements=all_movements,
             )
             if session.session_type not in {SessionType.CARDIO, SessionType.MOBILITY} and not content.get("finisher"):
                 logger.info("[generate_session_exercises] No finisher found, attempting to build goal finisher")
@@ -524,6 +528,7 @@ class SessionGeneratorService:
                 preferred_movement_ids=preferred_ids,
                 excluded_movement_ids=hard_no_ids,
                 required_movement_ids=hard_yes_ids,
+                max_session_duration=context["program"]["max_session_duration"],
             )
             if draft_result.status in ["OPTIMAL", "FEASIBLE"] and draft_result.selected_movements:
                 draft_content = self._convert_optimization_result_to_content(draft_result, session_type)
@@ -536,27 +541,33 @@ class SessionGeneratorService:
         
         if session_type == SessionType.CUSTOM and "conditioning" in (context["session"]["intent_tags"] or []):
             logger.info("[generate_session_exercises_offline] Path: CUSTOM conditioning session")
-            conditioning_names = self._get_conditioning_movement_names(context["all_movements"])
-            content = self._get_fast_conditioning_session_content(conditioning_names, context["program"]["max_session_duration"])
+            all_movements = context.get("all_movements") or await self._load_all_movements(db)
+            conditioning_names = self._get_conditioning_movement_names(all_movements)
+            content = self._get_fast_conditioning_session_content(conditioning_names, context["program"]["max_session_duration"], all_movements)
         elif session_type in {SessionType.CARDIO, SessionType.MOBILITY}:
             logger.info(f"[generate_session_exercises_offline] Path: {session_type.value} session")
-            content = self._get_fast_special_session_content(session_type, context["program"]["max_session_duration"])
+            all_movements = context.get("all_movements") or await self._load_all_movements(db)
+            content = self._get_fast_special_session_content(session_type, context["program"]["max_session_duration"], all_movements)
         elif draft_content:
             logger.info("[generate_session_exercises_offline] Path: Building content from optimal draft")
+            all_movements = context.get("all_movements") or await self._load_all_movements(db)
             content = await self._build_fast_content_from_draft(
                 draft_content,
                 session_type,
                 context["session"]["intent_tags"] or [],
                 context["microcycle"]["is_deload"],
                 goal_weights,
+                all_movements,
             )
         else:
             logger.info("[generate_session_exercises_offline] Path: Using smart fallback session content")
+            all_movements = context.get("all_movements") or await self._load_all_movements(db)
             content = self._get_smart_fallback_session_content(
                 session_type,
                 context["session"]["intent_tags"] or [],
                 movements_by_pattern,
                 used_movements=used_movements,
+                all_movements=all_movements,
             )
             if session_type not in {SessionType.CARDIO, SessionType.MOBILITY} and not content.get("finisher"):
                 logger.info("[generate_session_exercises_offline] No finisher found, attempting to build goal finisher")
@@ -840,6 +851,7 @@ class SessionGeneratorService:
         preferred_movement_ids: list[int] | None = None,
         excluded_movement_ids: list[int] | None = None,
         required_movement_ids: list[int] | None = None,
+        max_session_duration: int | None = None,
     ) -> Any:
         """
         Offline version of _generate_draft_session.
@@ -871,7 +883,7 @@ class SessionGeneratorService:
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
             required_movement_ids=list(required_movement_ids or []),
-            session_duration_minutes=60,
+            session_duration_minutes=max_session_duration or 60,
             allow_complex_lifts=True,
             allow_circuits=True,
             goal_weights=goal_weights,
@@ -1048,11 +1060,8 @@ class SessionGeneratorService:
         
         # Check required sections for training sessions
         if not content.get("warmup") or len(content.get("warmup", [])) == 0:
-            logger.warning(f"Missing warmup for {session_type} session, adding default")
-            content["warmup"] = [
-                {"movement": "Dynamic Stretching", "sets": 2, "reps": 10, "notes": "Full body prep"},
-                {"movement": "Light Cardio", "duration_seconds": 300, "notes": "5 min warm-up"},
-            ]
+            logger.warning(f"Missing warmup for {session_type} session, will add empty warmup")
+            content["warmup"] = []
         
         if not content.get("main") or len(content.get("main", [])) == 0:
             logger.error(f"Missing main section for {session_type} session!")
@@ -1061,11 +1070,8 @@ class SessionGeneratorService:
             content["main"] = fallback.get("main", [])
         
         if not content.get("cooldown") or len(content.get("cooldown", [])) == 0:
-            logger.warning(f"Missing cooldown for {session_type} session, adding default")
-            content["cooldown"] = [
-                {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Focus on trained muscles"},
-                {"movement": "Foam Rolling", "duration_seconds": 180, "notes": "Target tight areas"},
-            ]
+            logger.warning(f"Missing cooldown for {session_type} session, will add empty cooldown")
+            content["cooldown"] = []
         
         # CRITICAL: Remove duplicate movements within the session
         content = self._remove_intra_session_duplicates(content, session_type)
@@ -1079,16 +1085,21 @@ class SessionGeneratorService:
         intent_tags: list[str],
         is_deload: bool,
         goal_weights: dict[str, int],
+        all_movements: list[Movement] = None,
     ) -> dict[str, Any]:
-        from app.llm.optimization import PromptCache
-
         content = dict(draft_content)
-
-        if not content.get("warmup") or len(content.get("warmup", [])) < 2:
-            content["warmup"] = PromptCache.get_pattern_based_warmup(intent_tags or [], session_type)
-
-        if not content.get("cooldown") or len(content.get("cooldown", [])) < 2:
-            content["cooldown"] = PromptCache.get_pattern_based_cooldown(intent_tags or [])
+        
+        # Generate warmup and cooldown based on main exercises
+        main_exercises = content.get("main", [])
+        if all_movements and main_exercises:
+            warmup_cooldown = self._generate_warmup_cooldown(
+                session_type, main_exercises, all_movements
+            )
+            if not content.get("warmup") or len(content.get("warmup", [])) == 0:
+                content["warmup"] = warmup_cooldown["warmup"]
+            if not content.get("cooldown") or len(content.get("cooldown", [])) == 0:
+                content["cooldown"] = warmup_cooldown["cooldown"]
+        
         return await self._normalize_session_content(content, session_type, intent_tags, goal_weights)
     
     async def _normalize_session_content(
@@ -1118,17 +1129,15 @@ class SessionGeneratorService:
         if has_circuit:
             normalized["accessory"] = None
             normalized["finisher"] = None
+            normalized["cooldown"] = normalized.get("cooldown") or []
             return normalized
         
         if has_accessory and has_finisher:
-            if self._prefer_finisher(goal_weights, tags):
-                normalized["accessory"] = None
-            else:
-                normalized["finisher"] = None
             return normalized
         
         if has_finisher:
-            normalized["accessory"] = None
+            if not normalized.get("accessory"):
+                normalized["accessory"] = None
             return normalized
         
         if has_accessory:
@@ -1146,9 +1155,7 @@ class SessionGeneratorService:
                         finisher = dict(activity_distribution_config.goal_finisher_presets.get("fat_loss", {}))
                 if finisher:
                     normalized["finisher"] = finisher
-                    normalized["accessory"] = None
-                    return normalized
-            normalized["finisher"] = None
+            normalized["cooldown"] = normalized.get("cooldown") or []
             return normalized
         
         block_type = self._decide_session_block_type(session_type, tags, goal_weights)
@@ -1447,9 +1454,21 @@ class SessionGeneratorService:
             melted_exercises = await self._get_circuit_melted_exercises(db, circuit_id)
             logger.info(f"[_build_goal_finisher_with_db] Loaded {len(melted_exercises)} melted exercises")
             
+            # Load movements from database to get correct names
+            movement_ids = [m.movement_id for m in melted_exercises if m.movement_id]
+            movement_map = {}
+            if movement_ids:
+                movements_result = await db.execute(
+                    select(Movement).where(Movement.id.in_(movement_ids))
+                )
+                movements = movements_result.scalars().all()
+                movement_map = {m.id: m.name for m in movements}
+            
             for melted in melted_exercises:
+                # Use movement name from database if available
+                movement_name = movement_map.get(melted.movement_id, melted.movement_name)
                 exercise_data = {
-                    "movement": melted.movement_name,
+                    "movement": movement_name,
                     "movement_id": melted.movement_id,
                     "sequence": melted.exercise_sequence,
                     "metric_type": melted.metric_type.value,
@@ -1602,9 +1621,21 @@ class SessionGeneratorService:
             melted_exercises = await self._get_circuit_melted_exercises(db, circuit_id)
             logger.info(f"[_generate_circuit_block_with_db] Loaded {len(melted_exercises)} melted exercises")
             
+            # Load movements from database to get correct names
+            movement_ids = [m.movement_id for m in melted_exercises if m.movement_id]
+            movement_map = {}
+            if movement_ids:
+                movements_result = await db.execute(
+                    select(Movement).where(Movement.id.in_(movement_ids))
+                )
+                movements = movements_result.scalars().all()
+                movement_map = {m.id: m.name for m in movements}
+            
             for melted in melted_exercises:
+                # Use movement name from database if available
+                movement_name = movement_map.get(melted.movement_id, melted.movement_name)
                 exercise_data = {
-                    "movement": melted.movement_name,
+                    "movement": movement_name,
                     "movement_id": melted.movement_id,
                     "sequence": melted.exercise_sequence,
                     "metric_type": melted.metric_type.value,
@@ -1665,16 +1696,34 @@ class SessionGeneratorService:
         self,
         session_type: SessionType,
         max_session_duration: int | None,
+        all_movements: list[Movement] = None,
     ) -> dict[str, Any]:
         total_minutes = max_session_duration or 30
-        warmup = [{"movement": "Easy Cardio", "duration_seconds": 300, "notes": "Build pace"}]
-        cooldown = [{"movement": "Static Stretching", "duration_seconds": 300, "notes": "Full body"}]
+        warmup = []
+        cooldown = []
 
         if session_type == SessionType.MOBILITY:
-            main = [
-                {"movement": "Dynamic Stretching", "duration_seconds": 600, "notes": "Full body"},
-                {"movement": "Mobility Flow", "duration_seconds": max(300, (total_minutes - 15) * 60)},
+            # Generate mobility session content from database movements
+            mobility_movements = [
+                m for m in (all_movements or [])
+                if m.pattern and m.pattern.value in ["mobility", "stretch"]
             ]
+            main = []
+            if mobility_movements:
+                main = [
+                    {"movement": mobility_movements[0].name, "duration_seconds": 600, "notes": "Full body mobility"},
+                ]
+                if len(mobility_movements) > 1:
+                    main.append({"movement": mobility_movements[1].name, "duration_seconds": max(300, (total_minutes - 15) * 60), "notes": "Mobility flow"})
+            else:
+                main = [{"movement": "Generation Failed - No mobility movements found", "duration_seconds": 300, "notes": "Add mobility movements to database"}]
+            
+            # Generate cooldown based on main
+            if all_movements:
+                warmup_cooldown = self._generate_warmup_cooldown(session_type, main, all_movements)
+                warmup = warmup_cooldown["warmup"]
+                cooldown = warmup_cooldown["cooldown"]
+            
             return {
                 "warmup": warmup,
                 "main": main,
@@ -1685,9 +1734,24 @@ class SessionGeneratorService:
                 "reasoning": "Optimization-first mobility session",
             }
 
-        main = [
-            {"movement": "Cardio Intervals", "duration_seconds": max(600, (total_minutes - 10) * 60)},
+        # Cardio session
+        cardio_movements = [
+            m for m in (all_movements or [])
+            if m.pattern and m.pattern.value == "cardio"
         ]
+        if cardio_movements:
+            main = [
+                {"movement": cardio_movements[0].name, "duration_seconds": max(600, (total_minutes - 10) * 60), "notes": "Cardio workout"},
+            ]
+        else:
+            main = [{"movement": "Generation Failed - No cardio movements found", "duration_seconds": 300, "notes": "Add cardio movements to database"}]
+        
+        # Generate warmup/cooldown based on main
+        if all_movements:
+            warmup_cooldown = self._generate_warmup_cooldown(session_type, main, all_movements)
+            warmup = warmup_cooldown["warmup"]
+            cooldown = warmup_cooldown["cooldown"]
+        
         return {
             "warmup": warmup,
             "main": main,
@@ -1702,23 +1766,45 @@ class SessionGeneratorService:
         self,
         conditioning_movement_names: list[str],
         max_session_duration: int | None,
+        all_movements: list[Movement] = None,
     ) -> dict[str, Any]:
         total_minutes = max_session_duration or 45
         main_minutes = max(30, total_minutes - 10)
-        warmup = [
-            {"movement": "Easy Cardio", "duration_seconds": 300, "notes": "Build pace"},
-            {"movement": "Dynamic Stretching", "duration_seconds": 300, "notes": "Prep joints"},
-        ]
-        cooldown = [{"movement": "Static Stretching", "duration_seconds": 300, "notes": "Full body"}]
+        warmup = []
+        cooldown = []
 
         candidates = list(dict.fromkeys(conditioning_movement_names or []))
+        
+        # Get actual movement objects from database
+        if all_movements:
+            valid_movements = []
+            for name in candidates:
+                movement = next((m for m in all_movements if m.name == name), None)
+                if movement:
+                    valid_movements.append(movement)
+            candidates = [m.name for m in valid_movements]
+
         if len(candidates) < 5:
-            candidates.extend(["Sled Push", "Sled Pull", "Battle Ropes", "Farmer Carry", "Air Bike"])
+            # Add conditioning movements from database
+            conditioning_patterns = ["conditioning", "cardio", "sled", "carry", "rope"]
+            conditioning_db = [
+                m for m in (all_movements or [])
+                if m.pattern and m.pattern.value in conditioning_patterns
+            ]
+            for m in conditioning_db:
+                if m.name not in candidates:
+                    candidates.append(m.name)
             candidates = list(dict.fromkeys(candidates))
 
         selected = candidates[: max(5, min(8, len(candidates)))]
         per_station_seconds = max(120, int((main_minutes * 60) / max(5, len(selected))))
         main = [{"movement": name, "duration_seconds": per_station_seconds, "notes": "Conditioning station"} for name in selected]
+        
+        # Generate warmup/cooldown based on main
+        if all_movements:
+            warmup_cooldown = self._generate_warmup_cooldown(SessionType.CUSTOM, main, all_movements)
+            warmup = warmup_cooldown["warmup"]
+            cooldown = warmup_cooldown["cooldown"]
 
         return {
             "warmup": warmup,
@@ -2208,6 +2294,7 @@ class SessionGeneratorService:
         intent_tags: list[str],
         movements_by_pattern: dict[str, list[str]],
         used_movements: list[str] | None = None,
+        all_movements: list[Movement] = None,
     ) -> dict[str, Any]:
         """
         Return intelligent fallback content when LLM fails.
@@ -2276,49 +2363,31 @@ class SessionGeneratorService:
         
         # If we couldn't build main exercises, fall back to hardcoded
         if not main_exercises:
-            return self._get_fallback_session_content(session_type)
+            return self._get_fallback_session_content(session_type, all_movements)
         
-        # Build warmup using mobility movements from database
-        # For now, keep hardcoded pattern-specific warmups but use database when available
-        warmup = [
-            {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility"},
-        ]
+        # Generate warmup and cooldown based on main exercises
+        warmup_cooldown = self._generate_warmup_cooldown(
+            session_type, main_exercises, all_movements
+        )
         
-        # Add pattern-specific warmup
-        if any(p in intent_tags for p in ["squat", "hinge", "lunge"]):
-            warmup.append({"movement": "Goblet Squat", "sets": 2, "reps": 8, "notes": "Light weight warmup"})
-        if any(p in intent_tags for p in ["horizontal_push", "vertical_push"]):
-            warmup.append({"movement": "Push-Up", "sets": 2, "reps": 10, "notes": "Warmup sets"})
-        if any(p in intent_tags for p in ["horizontal_pull", "vertical_pull"]):
-            warmup.append({"movement": "Inverted Row", "sets": 2, "reps": 8, "notes": "Light warmup"})
-        
-        # Build cooldown
-        cooldown = [
-            {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Focus on trained muscles"},
-        ]
-        
-        # Estimate duration: warmup (10) + main (25-30) + accessory (10-15) + cooldown (5) = ~55 min
-        estimated_duration = 10 + (len(main_exercises) * 10) + (len(accessory_exercises) * 5) + 5
+        # Estimate duration: main (25-30) + accessory (10-15) + warmup/cooldown (10) = ~50 min
+        estimated_duration = (len(main_exercises) * 10) + (len(accessory_exercises) * 5) + 10
         
         return {
-            "warmup": warmup,
+            "warmup": warmup_cooldown["warmup"],
             "main": main_exercises,
             "accessory": accessory_exercises if accessory_exercises else None,
             "finisher": None,
-            "cooldown": cooldown,
+            "cooldown": warmup_cooldown["cooldown"],
             "estimated_duration_minutes": estimated_duration,
             "reasoning": f"Smart fallback session - LLM unavailable. Selected exercises based on {', '.join(intent_tags)} patterns.",
         }
     
-    def _get_fallback_session_content(self, session_type: SessionType) -> dict[str, Any]:
+    def _get_fallback_session_content(self, session_type: SessionType, available_movements: list[Movement] = None) -> dict[str, Any]:
         """Return basic fallback content when smart fallback also fails."""
         # Basic fallback based on session type
         fallbacks = {
             SessionType.UPPER: {
-                "warmup": [
-                    {"movement": "Arm Circles", "sets": 2, "reps": 10},
-                    {"movement": "Band Pull-Aparts", "sets": 2, "reps": 15},
-                ],
                 "main": [
                     {"movement": "Barbell Bench Press", "sets": 4, "rep_range_min": 6, "rep_range_max": 8, "target_rpe": 7.5, "rest_seconds": 120},
                     {"movement": "Barbell Row", "sets": 4, "rep_range_min": 6, "rep_range_max": 8, "target_rpe": 7.5, "rest_seconds": 120},
@@ -2329,17 +2398,10 @@ class SessionGeneratorService:
                     {"movement": "Bicep Curl", "sets": 3, "rep_range_min": 10, "rep_range_max": 12, "target_rpe": 7, "rest_seconds": 60},
                 ],
                 "finisher": None,
-                "cooldown": [
-                    {"movement": "Static Stretching", "duration_seconds": 300},
-                ],
-                "estimated_duration_minutes": 55,
+                "estimated_duration_minutes": 45,
                 "reasoning": "Fallback upper body session - LLM generation failed.",
             },
             SessionType.LOWER: {
-                "warmup": [
-                    {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180},
-                    {"movement": "Goblet Squat", "sets": 2, "reps": 8},
-                ],
                 "main": [
                     {"movement": "Back Squat", "sets": 4, "rep_range_min": 6, "rep_range_max": 8, "target_rpe": 7.5, "rest_seconds": 150},
                     {"movement": "Romanian Deadlift", "sets": 4, "rep_range_min": 8, "rep_range_max": 10, "target_rpe": 7, "rest_seconds": 120},
@@ -2349,18 +2411,10 @@ class SessionGeneratorService:
                     {"movement": "Leg Curl", "sets": 3, "rep_range_min": 10, "rep_range_max": 12, "target_rpe": 7, "rest_seconds": 60},
                 ],
                 "finisher": None,
-                "cooldown": [
-                    {"movement": "Hip Flexor Stretch", "duration_seconds": 120},
-                    {"movement": "Static Stretching", "duration_seconds": 180},
-                ],
-                "estimated_duration_minutes": 55,
+                "estimated_duration_minutes": 45,
                 "reasoning": "Fallback lower body session - LLM generation failed.",
             },
             SessionType.FULL_BODY: {
-                "warmup": [
-                    {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180},
-                    {"movement": "Goblet Squat", "sets": 2, "reps": 8},
-                ],
                 "main": [
                     {"movement": "Back Squat", "sets": 4, "rep_range_min": 6, "rep_range_max": 8, "target_rpe": 7.5, "rest_seconds": 150},
                     {"movement": "Barbell Bench Press", "sets": 4, "rep_range_min": 6, "rep_range_max": 8, "target_rpe": 7.5, "rest_seconds": 120},
@@ -2371,19 +2425,13 @@ class SessionGeneratorService:
                     {"movement": "Leg Curl", "sets": 3, "rep_range_min": 10, "rep_range_max": 12, "target_rpe": 7, "rest_seconds": 60},
                 ],
                 "finisher": None,
-                "cooldown": [
-                    {"movement": "Static Stretching", "duration_seconds": 300},
-                ],
-                "estimated_duration_minutes": 60,
+                "estimated_duration_minutes": 50,
                 "reasoning": "Fallback full body session - LLM generation failed.",
             },
         }
         
         # Default fallback for other session types (PPL, etc.)
         default = {
-            "warmup": [
-                {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180},
-            ],
             "main": [
                 {"movement": "Back Squat", "sets": 4, "rep_range_min": 8, "rep_range_max": 10, "target_rpe": 7, "rest_seconds": 120},
                 {"movement": "Barbell Bench Press", "sets": 4, "rep_range_min": 8, "rep_range_max": 10, "target_rpe": 7, "rest_seconds": 120},
@@ -2392,14 +2440,25 @@ class SessionGeneratorService:
                 {"movement": "Lateral Raise", "sets": 3, "rep_range_min": 12, "rep_range_max": 15, "target_rpe": 7, "rest_seconds": 60},
             ],
             "finisher": None,
-            "cooldown": [
-                {"movement": "Static Stretching", "duration_seconds": 300},
-            ],
-            "estimated_duration_minutes": 50,
+            "estimated_duration_minutes": 40,
             "reasoning": "Fallback session - LLM generation failed.",
         }
         
-        return fallbacks.get(session_type, default)
+        fallback_content = fallbacks.get(session_type, default)
+        
+        # Add warmup/cooldown if we have available movements
+        if available_movements:
+            warmup_cooldown = self._generate_warmup_cooldown(
+                session_type, fallback_content["main"], available_movements
+            )
+            fallback_content["warmup"] = warmup_cooldown["warmup"]
+            fallback_content["cooldown"] = warmup_cooldown["cooldown"]
+            fallback_content["estimated_duration_minutes"] += 10
+        else:
+            fallback_content["warmup"] = []
+            fallback_content["cooldown"] = []
+        
+        return fallback_content
 
     async def _load_all_movements(self, db: AsyncSession) -> list[Movement]:
         """Load all movements from the database."""
@@ -2609,6 +2668,7 @@ class SessionGeneratorService:
         session: Session,
         used_movements: list[str] | None = None,
         goal_weights: dict[str, int] | None = None,
+        max_session_duration: int | None = None,
     ) -> Any:
         """
         Generate a draft session using the Optimization Engine (OR-Tools).
@@ -2664,7 +2724,7 @@ class SessionGeneratorService:
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
             required_movement_ids=hard_yes_ids,
-            session_duration_minutes=60,
+            session_duration_minutes=max_session_duration or 60,
             allow_complex_lifts=True,
             allow_circuits=True,
             goal_weights=goal_weights,
@@ -2692,7 +2752,112 @@ class SessionGeneratorService:
                 
         return "\n".join(lines)
 
-    def _convert_optimization_result_to_content(self, result: Any, session_type: SessionType) -> dict[str, Any]:
+    def _generate_warmup_cooldown(
+        self,
+        session_type: SessionType,
+        main_exercises: list[dict],
+        available_movements: list[Movement]
+    ) -> dict:
+        """
+        Generate warmup and cooldown based on main exercises' muscles and patterns.
+        
+        Warmup: Short cardio + mobility movements for the patterns used
+        Cooldown: Stretch movements for the muscles used
+        Fatigue is ignored for warmup/cooldown.
+        """
+        from app.models.enums import MovementPattern
+        
+        # Extract patterns and muscles from main exercises
+        patterns_used = set()
+        muscles_used = set()
+        
+        for exercise in main_exercises:
+            movement_name = exercise.get("movement")
+            movement = next((m for m in available_movements if m.name == movement_name), None)
+            if movement:
+                if movement.pattern:
+                    patterns_used.add(movement.pattern.value)
+                if movement.primary_muscle:
+                    muscles_used.add(movement.primary_muscle.value)
+        
+        warmup = []
+        cooldown = []
+        
+        # Add short cardio for warmup (ignore fatigue)
+        cardio_movements = [
+            m for m in available_movements 
+            if m.pattern and m.pattern.value == "cardio"
+        ]
+        if cardio_movements:
+            cardio = cardio_movements[0]
+            warmup.append({
+                "movement": cardio.name,
+                "sets": 1,
+                "duration_seconds": 300,
+                "notes": "Light cardio to raise body temperature"
+            })
+        
+        # Add mobility movements based on patterns used
+        mobility_patterns_map = {
+            MovementPattern.SQUAT.value: ["mobility", "squat"],
+            MovementPattern.HINGE.value: ["mobility", "hinge"],
+            MovementPattern.LUNGE.value: ["mobility", "lunge"],
+            MovementPattern.HORIZONTAL_PUSH.value: ["mobility", "horizontal_push"],
+            MovementPattern.VERTICAL_PUSH.value: ["mobility", "vertical_push"],
+            MovementPattern.HORIZONTAL_PULL.value: ["mobility", "horizontal_pull"],
+            MovementPattern.VERTICAL_PULL.value: ["mobility", "vertical_pull"],
+        }
+        
+        for pattern in patterns_used:
+            target_patterns = mobility_patterns_map.get(pattern, ["mobility"])
+            mobility_movements = [
+                m for m in available_movements
+                if m.pattern and m.pattern.value in target_patterns
+            ]
+            if mobility_movements:
+                mobility = mobility_movements[0]
+                warmup.append({
+                    "movement": mobility.name,
+                    "sets": 2,
+                    "reps": 10,
+                    "notes": f"Mobility for {pattern} pattern"
+                })
+                break  # Just add one mobility movement
+        
+        # Add stretch movements for cooldown based on muscles used
+        stretch_movements = [
+            m for m in available_movements
+            if m.pattern and m.pattern.value == "stretch"
+        ]
+        
+        for muscle in muscles_used:
+            muscle_stretches = [
+                m for m in stretch_movements
+                if m.primary_muscle and m.primary_muscle.value == muscle
+            ]
+            if muscle_stretches:
+                stretch = muscle_stretches[0]
+                cooldown.append({
+                    "movement": stretch.name,
+                    "duration_seconds": 180,
+                    "notes": f"Stretch for {muscle}"
+                })
+        
+        # If no specific stretches, add general stretches
+        if not cooldown and stretch_movements:
+            for stretch in stretch_movements[:3]:
+                cooldown.append({
+                    "movement": stretch.name,
+                    "duration_seconds": 180,
+                    "notes": "General stretch"
+                })
+        
+        return {
+            "warmup": warmup,
+            "cooldown": cooldown
+        }
+
+    def _convert_optimization_result_to_content(self, result: Any, session_type: SessionType, available_movements: list[Movement]) -> dict[str, Any]:
         """Convert OptimizationResult to session content dict."""
         
         main_exercises = []
@@ -2735,19 +2900,19 @@ class SessionGeneratorService:
                 "rest_seconds": 0,
                 "notes": f"Could not generate valid session. Status: {result.status}. Please try regenerating or editing manually."
             })
-            
+        
+        # Generate warmup and cooldown based on main exercises
+        warmup_cooldown = self._generate_warmup_cooldown(
+            session_type, main_exercises, available_movements
+        )
+        
         return {
-            "warmup": [
-                {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 300, "notes": "General prep"},
-                {"movement": "Light Cardio", "duration_seconds": 300, "notes": "Raise body temp"}
-            ],
+            "warmup": warmup_cooldown["warmup"],
             "main": main_exercises,
             "accessory": accessory_exercises,
             "finisher": None,
-            "cooldown": [
-                {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Full body"}
-            ],
-            "estimated_duration_minutes": result.estimated_duration + 10, # +10 for warmup/cool
+            "cooldown": warmup_cooldown["cooldown"],
+            "estimated_duration_minutes": result.estimated_duration + 10,  # +10 for warmup/cooldown
             "reasoning": f"Optimization Engine generated session. Status: {result.status}. Stimulus: {result.total_stimulus:.2f}, Fatigue: {result.total_fatigue:.2f}"
         }
 

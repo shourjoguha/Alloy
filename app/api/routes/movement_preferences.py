@@ -43,7 +43,6 @@ class MovementPreferenceCreate(MovementPreferenceBase):
 
 class MovementPreferenceBatchCreate(BaseModel):
     preferences: List[MovementPreferenceCreate] = Field(
-        min_length=1,
         max_length=100,
         description="List of preferences to create"
     )

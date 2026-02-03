@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import type { AxiosError } from 'axios';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 import { useCreateProgram } from '@/api/programs';
-import { useUserMovementRules, usePersistWizardPreferences } from '@/api/movement-preferences';
+import { useUserMovementRules } from '@/api/movement-preferences';
 import { WizardContainer } from '@/components/wizard/WizardContainer';
 import {
   GoalsStep,
@@ -51,7 +51,6 @@ function ProgramWizardPage() {
   const createProgram = useCreateProgram();
   const { addToast } = useUIStore();
   const { data: userPreferences } = useUserMovementRules();
-  const persistWizardPreferences = usePersistWizardPreferences();
   
   const {
     goals,
@@ -129,27 +128,6 @@ function ProgramWizardPage() {
       });
       setCurrentStep(1);
       return;
-    }
-
-    // First, sync wizard movement preferences to user preferences
-    if (movementRules.length > 0) {
-      const preferences = movementRules.map((rule) => ({
-        movement_id: rule.movement_id,
-        rule_type: rule.rule_type,
-        cadence: rule.cadence || undefined,
-        notes: rule.notes || undefined,
-      }));
-
-      try {
-        await persistWizardPreferences.mutateAsync({ preferences });
-      } catch (error) {
-        console.error('Failed to sync movement preferences:', error);
-        addToast({
-          type: 'error',
-          message: 'Failed to save your movement preferences. Please try again.',
-        });
-        return;
-      }
     }
 
     // Build the program create payload

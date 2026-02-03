@@ -13,6 +13,7 @@ import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProgramsRouteImport } from './routes/programs'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
@@ -50,6 +51,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProgramsRoute = ProgramsRouteImport.update({
   id: '/programs',
   path: '/programs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MovementsRoute = MovementsRouteImport.update({
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
+  '/onboarding': typeof OnboardingRoute
   '/programs': typeof ProgramsRoute
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
+  '/onboarding': typeof OnboardingRoute
   '/programs': typeof ProgramsRoute
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
+  '/onboarding': typeof OnboardingRoute
   '/programs': typeof ProgramsRoute
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/movements'
+    | '/onboarding'
     | '/programs'
     | '/register'
     | '/settings'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/movements'
+    | '/onboarding'
     | '/programs'
     | '/register'
     | '/settings'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/movements'
+    | '/onboarding'
     | '/programs'
     | '/register'
     | '/settings'
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   MovementsRoute: typeof MovementsRoute
+  OnboardingRoute: typeof OnboardingRoute
   ProgramsRoute: typeof ProgramsRoute
   RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/programs'
       fullPath: '/programs'
       preLoaderRoute: typeof ProgramsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/movements': {
@@ -495,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   MovementsRoute: MovementsRoute,
+  OnboardingRoute: OnboardingRoute,
   ProgramsRoute: ProgramsRoute,
   RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,

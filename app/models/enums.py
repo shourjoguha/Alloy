@@ -21,6 +21,7 @@ class MovementPattern(str, Enum):
     ISOMETRIC = "isometric"
     CONDITIONING = "conditioning"
     CARDIO = "cardio"
+    STRETCH = "stretch"
 
 class PrimaryRegion(str, Enum):
     ANTERIOR_LOWER = "anterior lower"
@@ -55,6 +56,7 @@ class PrimaryMuscle(str, Enum):
     LOWER_BACK = "lower_back"
     HIP_FLEXORS = "hip_flexors"
     ADDUCTORS = "adductors"
+    ABDUCTORS = "abductors"
     FULL_BODY = "full_body"
 
 

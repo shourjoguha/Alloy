@@ -8,8 +8,8 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    react(),  // React plugin must come FIRST to handle JSX transformation
     TanStackRouterVite({ quoteStyle: 'single' }),
-    react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',

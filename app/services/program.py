@@ -296,6 +296,12 @@ class ProgramService:
             )
             logger.info("Assigned freeform day types and focus for microcycle %d", mc_idx)
             
+            # Log the structure that will be used to create sessions
+            structure = split_config.get("structure", [])
+            logger.info(f"[create_program] Microcycle {mc_idx} split_config structure length: {len(structure)}")
+            for idx, day_def in enumerate(structure):
+                logger.info(f"[create_program] Microcycle {mc_idx} day {idx}: {day_def}")
+            
             microcycle = await self._create_microcycle(
                 db,
                 user_id=program.user_id,
@@ -314,8 +320,10 @@ class ProgramService:
             current_date += timedelta(days=cycle_length_days)
         
         logger.info("Committing program creation transaction")
+        logger.info("[COMMIT] About to commit - this will make ALL sessions visible to background tasks")
         await db.commit()
         logger.info("Program creation committed successfully")
+        logger.info("[COMMIT] Transaction committed - all sessions should now be visible in database")
         await db.refresh(program)
         logger.info("Program refreshed successfully, returning program id=%s", program.id)
         logger.info("Program data for serialization: id=%s, start_date=%s, persona_aggression=%s, persona_tone=%s", 
@@ -356,6 +364,7 @@ class ProgramService:
         from app.db.database import async_session_maker
         
         logger.info(f"[generate_active_microcycle_sessions] START - program_id={program_id}")
+        logger.info("[generate_active_microcycle_sessions] BACKGROUND TASK STARTED - creating new DB session")
 
         async with async_session_maker() as db:
             program = await db.get(Program, program_id)
@@ -397,24 +406,31 @@ class ProgramService:
         
         logger.info(f"[_generate_session_content_async] START - program_id={program_id}, microcycle_id={microcycle_id}")
         
-        # Create a new DB session for reading program and sessions
-        async with async_session_maker() as db:
-            # Fetch program and microcycle
-            program = await db.get(Program, program_id)
-            microcycle = await db.get(Microcycle, microcycle_id)
-            
-            if not program or not microcycle:
-                logger.error(f"[_generate_session_content_async] FAILED - program={program}, microcycle={microcycle}")
-                return
-            
-            # Get all sessions for this microcycle
-            sessions_result = await db.execute(
-                select(Session).where(Session.microcycle_id == microcycle.id)
-                .order_by(Session.day_number)
-            )
-            sessions = list(sessions_result.scalars().all())
-            
-            logger.info(f"[_generate_session_content_async] Found {len(sessions)} sessions to generate")
+        try:
+            # Create a new DB session for reading program and sessions
+            async with async_session_maker() as db:
+                # Fetch program and microcycle
+                program = await db.get(Program, program_id)
+                microcycle = await db.get(Microcycle, microcycle_id)
+                
+                if not program or not microcycle:
+                    logger.error(f"[_generate_session_content_async] FAILED - program={program}, microcycle={microcycle}")
+                    return
+                
+                # Get all sessions for this microcycle
+                logger.info(f"[_generate_session_content_async] Querying sessions for microcycle_id={microcycle.id}")
+                sessions_result = await db.execute(
+                    select(Session).where(Session.microcycle_id == microcycle.id)
+                    .order_by(Session.day_number)
+                )
+                sessions = list(sessions_result.scalars().all())
+                
+                logger.info(f"[_generate_session_content_async] Found {len(sessions)} sessions to generate")
+                for s in sessions:
+                    logger.info(f"[_generate_session_content_async] Session id={s.id}, day_number={s.day_number}, type={s.session_type.value}, date={s.date}")
+        except Exception as e:
+            logger.exception(f"[_generate_session_content_async] FAILED to fetch sessions: {e}")
+            return
         
         # Track used movements to ensure variety
         used_movements = set()
@@ -426,17 +442,20 @@ class ProgramService:
         previous_day_volume = {}
         
         # Generate content for each session independently
-        for session in sessions:
+        for idx, session in enumerate(sessions):
+            logger.info(f"[_generate_session_content_async] ===== LOOP ITERATION {idx+1}/{len(sessions)} =====")
             logger.info(f"[_generate_session_content_async] Processing session {session.id} - type={session.session_type}, day={session.day_number}")
             
             # Skip recovery/rest sessions - they get default content
             if session.session_type == SessionType.RECOVERY:
-                logger.info(f"[_generate_session_content_async] Skipping RECOVERY session {session.id}")
+                logger.info(f"[_generate_session_content_async] Skipping RECOVERY session {session.id}, day={session.day_number}")
                 previous_day_volume = {}  # Recovery clears fatigue
+                logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] Finished skipping session {session.id}, continuing to next")
                 continue
             
             try:
                 # Apply inter-session interference rules for main lift patterns
+                logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] Applying interference rules for session {session.id}")
                 async with async_session_maker() as db:
                     session = await self._apply_pattern_interference_rules(
                         db, session, used_main_patterns, microcycle
@@ -451,6 +470,7 @@ class ProgramService:
             try:
                 # Generate and populate session with exercises
                 # Each call creates its own DB session
+                logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] Calling populate_session_by_id for session {session.id}")
                 current_volume = await session_generator.populate_session_by_id(
                     session.id,
                     program_id,
@@ -461,6 +481,7 @@ class ProgramService:
                     used_accessory_movements=dict(used_accessory_movements),
                     previous_day_volume=previous_day_volume,
                 )
+                logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] populate_session_by_id completed for session {session.id}, volume={current_volume}")
             except Exception as e:
                 logger.error(
                     "Failed to generate content for session %s: %s",
@@ -470,30 +491,52 @@ class ProgramService:
                 
                 # Robust Fallback: Mark session as failed but "content present" so spinner stops
                 try:
+                    from app.models.movement import Movement
+                    from app.models.program import SessionExercise, ExerciseRole
+                    
                     async with async_session_maker() as db:
                         failed_session = await db.get(Session, session.id)
                         if failed_session:
                             failed_session.coach_notes = f"Generation failed: {str(e)}. Please regenerate."
-                            # Add placeholder content to satisfy frontend hasContent check
-                            failed_session.main_json = [{
-                                "movement": "Generation Error",
-                                "sets": 0,
-                                "reps": "0",
-                                "rpe": "0",
-                                "rest": "0", 
-                                "notes": "An error occurred during generation."
-                            }]
+                            failed_session.estimated_duration_minutes = 45
+                            
+                            # Find a safe fallback movement
+                            fallback_movement = await db.execute(
+                                select(Movement).where(Movement.name.ilike("%air%squat%"))
+                            )
+                            fallback_movement = fallback_movement.scalar_one_or_none()
+                            
+                            if fallback_movement:
+                                # Add placeholder SessionExercise objects to satisfy frontend hasContent check
+                                placeholder_exercise = SessionExercise(
+                                    session_id=failed_session.id,
+                                    movement_id=fallback_movement.id,
+                                    exercise_role=ExerciseRole.MAIN,
+                                    order_in_session=1,
+                                    target_sets=1,
+                                    target_rep_range_min=10,
+                                    target_rep_range_max=10,
+                                    notes=f"Generation error: {str(e)}"
+                                )
+                                db.add(placeholder_exercise)
+                            
                             db.add(failed_session)
                             await db.commit()
+                            logger.info(f"[_generate_session_content_async] Applied fallback placeholder for session {session.id}")
                 except Exception as fallback_error:
                     logger.error(f"Failed to apply fallback for session {session.id}: {fallback_error}")
 
                 # Skip tracking for this session so others can still be generated
                 previous_day_volume = {}
+                logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] Finished error handling for session {session.id}, continuing to next")
                 continue
             
             # Update previous volume for next iteration
+            if current_volume is None:
+                logger.warning(f"[_generate_session_content_async] Session {session.id} returned None volume, using empty dict")
+                current_volume = {}
             previous_day_volume = current_volume
+            logger.info(f"[_generate_session_content_async] Completed session {session.id}, volume={current_volume}")
             
             # Track used movements and movement groups
             if current_volume:
@@ -537,7 +580,11 @@ class ProgramService:
                         await self._update_movement_group_usage(
                             db, session_movements, used_movement_groups
                         )
+            
+            logger.info(f"[_generate_session_content_async] ===== END OF ITERATION {idx+1}/{len(sessions)} =====")
         
+        logger.info(f"[_generate_session_content_async] Completed all {len(sessions)} sessions in microcycle")
+        logger.info(f"[_generate_session_content_async] Loop finished - used_movements count: {len(used_movements)}")
         # Generate Jerome notes for all sessions in microcycle after content is complete
         logger.info(f"[_generate_session_content_async] All sessions generated, starting batched Jerome notes generation")
         try:
@@ -970,6 +1017,10 @@ class ProgramService:
         await db.flush()  # Get microcycle.id
         
         # Create sessions from split template structure
+        logger.info(f"[_create_microcycle] START Creating sessions for microcycle_id={microcycle.id}")
+        logger.info(f"[_create_microcycle] Structure has {len(structure)} day definitions")
+        
+        created_sessions = []
         for day_def in structure:
             day_num = day_def.get("day", 1)
             day_type = day_def.get("type", "rest")
@@ -991,6 +1042,10 @@ class ProgramService:
                 intent_tags=focus_patterns,
             )
             db.add(session)
+            created_sessions.append(session)
+            logger.info(f"[_create_microcycle] Created session - day={day_num}, type={session_type.value}, focus={focus_patterns}")
+        
+        logger.info(f"[_create_microcycle] END Created {len(created_sessions)} sessions for microcycle_id={microcycle.id}")
         
         return microcycle
 
@@ -1021,6 +1076,10 @@ class ProgramService:
         base = total_days // count
         remainder = total_days % count
         lengths = [base + 1] * remainder + [base] * (count - remainder)
+        
+        logger.info(f"[_partition_microcycle_lengths] total_days={total_days}, preferred_length_days={preferred_length_days}")
+        logger.info(f"[_partition_microcycle_lengths] Creating {len(lengths)} microcycles with lengths: {lengths}")
+        
         return lengths
 
     def _pick_evenly_spaced_days(self, cycle_length_days: int, session_count: int) -> list[int]:
@@ -1056,6 +1115,10 @@ class ProgramService:
                 structure.append({"day": day, "type": "full_body", "focus": []})
             else:
                 structure.append({"day": day, "type": "rest"})
+        
+        logger.info(f"[_build_freeform_split_config] Generated structure with {len(structure)} days")
+        logger.info(f"[_build_freeform_split_config] Training days: {sorted(training_days)}")
+        
         return {
             "days_per_cycle": cycle_length_days,
             "structure": structure,
@@ -1065,11 +1128,18 @@ class ProgramService:
 
     def _assign_freeform_day_types_and_focus(self, split_config: dict[str, Any], days_per_week: int) -> dict[str, Any]:
         structure = [dict(d) for d in (split_config.get("structure") or [])]
+        
+        logger.info(f"[_assign_freeform_day_types_and_focus] Input structure length: {len(structure)}")
+        for idx, d in enumerate(structure):
+            logger.info(f"[_assign_freeform_day_types_and_focus] Input day {idx}: {d}")
+        
         lifting_indexes = [
             i
             for i, d in enumerate(structure)
             if (d.get("type") or "rest") not in {"rest", "recovery", "cardio", "mobility", "conditioning"}
         ]
+        
+        logger.info(f"[_assign_freeform_day_types_and_focus] Lifting indexes: {lifting_indexes}")
 
         if days_per_week <= 3:
             type_cycle = ["full_body"]
@@ -1138,6 +1208,11 @@ class ProgramService:
             structure[i]["focus"] = patterns + tags
 
         split_config["structure"] = structure
+        
+        logger.info(f"[_assign_freeform_day_types_and_focus] Output structure length: {len(structure)}")
+        for idx, d in enumerate(structure):
+            logger.info(f"[_assign_freeform_day_types_and_focus] Output day {idx}: {d}")
+        
         return split_config
 
     def _apply_goal_based_cycle_distribution(
@@ -1320,6 +1395,11 @@ class ProgramService:
         split_config["rest_days"] = sum(1 for d in structure if is_rest_day(d))
         split_config["goal_weights"] = goal_weights
         split_config["goal_bias_rationale"] = activity_distribution_config.BIAS_RATIONALE
+        
+        logger.info(f"[_apply_goal_based_cycle_distribution] Final structure length: {len(structure)}")
+        for idx, d in enumerate(structure):
+            logger.info(f"[_apply_goal_based_cycle_distribution] Final day {idx}: {d}")
+        
         return split_config
     
     async def _load_split_template(
