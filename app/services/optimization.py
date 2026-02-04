@@ -61,23 +61,154 @@ class OptimizationResult:
     total_stimulus: float
     estimated_duration: int
     status: str  # "OPTIMAL", "FEASIBLE", "INFEASIBLE"
+    pass_number: int = 1  # Track which pass succeeded
+    pass_config: str = ""  # Config used for successful pass
 
 class ConstraintSolver:
     def __init__(self):
         pass
-        
-    def solve_session(self, request: OptimizationRequest) -> OptimizationResult:
+
+    def solve_session_with_progressive_relaxation(self, request: OptimizationRequest) -> OptimizationResult:
         """
-        Solve for the optimal set of movements that satisfy volume targets
-        while minimizing fatigue and maximizing stimulus.
+        Solve with progressively relaxed constraints across multiple passes.
+
+        Pass 1: Original strict constraints
+        Pass 2: Relax fatigue by 50%
+        Pass 3: Relax volume by 30%
+        Pass 4: Relax compound requirement (1 compound + 1 isolation min)
+        Pass 5: Minimum constraints (just ensure at least 2 movements)
+
+        Returns the first feasible solution found, logging pass success data.
+        """
+        passes = [
+            {
+                "pass_number": 1,
+                "fatigue_multiplier": 1.0,
+                "volume_reduction_pct": activity_distribution_config.or_tools_volume_target_reduction_pct,
+                "min_compound": 2,
+                "min_isolation_if_one_compound": 2,
+                "description": "Original strict constraints"
+            },
+            {
+                "pass_number": 2,
+                "fatigue_multiplier": 1.5,  # Relax fatigue by 50%
+                "volume_reduction_pct": activity_distribution_config.or_tools_volume_target_reduction_pct,
+                "min_compound": 2,
+                "min_isolation_if_one_compound": 2,
+                "description": "Relax fatigue by 50%"
+            },
+            {
+                "pass_number": 3,
+                "fatigue_multiplier": 1.5,  # Keep relaxed fatigue
+                "volume_reduction_pct": 0.3,  # Relax volume by 30%
+                "min_compound": 2,
+                "min_isolation_if_one_compound": 2,
+                "description": "Relax volume by 30%"
+            },
+            {
+                "pass_number": 4,
+                "fatigue_multiplier": 1.5,
+                "volume_reduction_pct": 0.3,
+                "min_compound": 1,  # Relax compound requirement
+                "min_isolation_if_one_compound": 1,  # Relax isolation requirement
+                "description": "Relax compound requirement (1 compound + 1 isolation min)"
+            },
+            {
+                "pass_number": 5,
+                "fatigue_multiplier": 2.0,  # Maximum fatigue relaxation
+                "volume_reduction_pct": 0.5,  # Maximum volume relaxation
+                "min_compound": 0,  # No compound requirement
+                "min_isolation_if_one_compound": 0,
+                "description": "Minimum constraints (at least 2 movements)"
+            },
+        ]
+
+        logger.info("=" * 80)
+        logger.info("[ConstraintSolver.solve_session_with_progressive_relaxation] Starting progressive constraint relaxation")
+        logger.info(f"  Total passes to attempt: {len(passes)}")
+        logger.info(f"  Session duration target: {request.session_duration_minutes} minutes")
+        logger.info("=" * 80)
+
+        for pass_config in passes:
+            logger.info(f"--- Attempting Pass {pass_config['pass_number']}: {pass_config['description']} ---")
+            result = self._solve_with_pass_config(request, pass_config)
+
+            if result.status in ["OPTIMAL", "FEASIBLE"]:
+                logger.info(f"✓ Pass {pass_config['pass_number']} SUCCEEDED")
+                logger.info(f"  Config used: {pass_config['description']}")
+                logger.info(f"  Selected {len(result.selected_movements)} movements, {len(result.selected_circuits)} circuits")
+                logger.info(f"  Estimated duration: {result.estimated_duration} minutes")
+                
+                # Log pass success data for manual review
+                self._log_pass_success(pass_config, result, request)
+
+                result.pass_number = pass_config['pass_number']
+                result.pass_config = pass_config['description']
+                return result
+            else:
+                logger.warning(f"✗ Pass {pass_config['pass_number']} FAILED - {pass_config['description']}")
+
+        logger.error("[ConstraintSolver.solve_session_with_progressive_relaxation] All passes failed, returning INFEASIBLE")
+        return OptimizationResult([], [], 0, 0, 0, "INFEASIBLE", 5, "All passes failed")
+
+    def _solve_with_pass_config(self, request: OptimizationRequest, pass_config: dict) -> OptimizationResult:
+        """Solve with a specific pass configuration."""
+        return self._solve_session_internal(
+            request,
+            fatigue_multiplier=pass_config["fatigue_multiplier"],
+            volume_reduction_pct=pass_config["volume_reduction_pct"],
+            min_compound=pass_config["min_compound"],
+            min_isolation_if_one_compound=pass_config["min_isolation_if_one_compound"]
+        )
+
+    def _log_pass_success(self, pass_config: dict, result: OptimizationResult, request: OptimizationRequest):
+        """Log pass success data for manual review."""
+        log_entry = {
+                "pass_number": pass_config["pass_number"],
+                "description": pass_config["description"],
+                "fatigue_multiplier": pass_config["fatigue_multiplier"],
+                "volume_reduction_pct": pass_config["volume_reduction_pct"],
+                "min_compound": pass_config["min_compound"],
+                "session_type": getattr(request, 'session_type', 'unknown'),
+                "session_duration_minutes": request.session_duration_minutes,
+                "selected_movements_count": len(result.selected_movements),
+                "selected_circuits_count": len(result.selected_circuits),
+                "total_fatigue": result.total_fatigue,
+                "total_stimulus": result.total_stimulus,
+                "estimated_duration": result.estimated_duration,
+                "goal_weights": request.goal_weights
+        }
+
+        logger.info(f"[PASS_SUCCESS_DATA] {log_entry}")
+
+        # TODO: Save to database or persistent log file for manual review
+        # This data can be used to inform decisions over time about which constraints are too strict
+
+    def _solve_session_internal(
+        self,
+        request: OptimizationRequest,
+        fatigue_multiplier: float = 1.0,
+        volume_reduction_pct: float = 0.2,
+        min_compound: int = 2,
+        min_isolation_if_one_compound: int = 2,
+    ) -> OptimizationResult:
+        """
+        Internal solve method with configurable constraints.
+
+        Args:
+            fatigue_multiplier: Multiplier for max fatigue (1.0 = original, 1.5 = 50% relaxed)
+            volume_reduction_pct: Percentage to reduce volume targets (0.2 = 20% reduction)
+            min_compound: Minimum number of compound movements required
+            min_isolation_if_one_compound: Min isolations if only 1 compound
         """
         logger.info("=" * 80)
-        logger.info("[ConstraintSolver.solve_session] Starting optimization")
+        logger.info("[ConstraintSolver._solve_session_internal] Starting optimization")
         logger.info(f"  Available movements: {len(request.available_movements)}")
         logger.info(f"  Available circuits: {len(request.available_circuits)}")
         logger.info(f"  Target muscle volumes: {request.target_muscle_volumes}")
-        logger.info(f"  Max fatigue: {request.max_fatigue}")
-        logger.info(f"  Min stimulus: {request.min_stimulus}")
+        logger.info(f"  Max fatigue multiplier: {fatigue_multiplier}")
+        logger.info(f"  Volume reduction pct: {volume_reduction_pct}")
+        logger.info(f"  Min compound required: {min_compound}")
         logger.info(f"  Skill level: {request.user_skill_level}")
         logger.info(f"  Session duration: {request.session_duration_minutes} minutes")
         logger.info(f"  Allow circuits: {request.allow_circuits}")
@@ -130,7 +261,6 @@ class ConstraintSolver:
         MAX_SETS_PER_MOVEMENT = activity_distribution_config.or_tools_max_sets_per_movement
 
         # Reduce volume targets by configured percentage to make them easier to meet
-        volume_reduction_pct = activity_distribution_config.or_tools_volume_target_reduction_pct
         reduced_target_volumes = {
             muscle: int(target_sets * (1 - volume_reduction_pct))
             for muscle, target_sets in request.target_muscle_volumes.items()
@@ -165,7 +295,7 @@ class ConstraintSolver:
                 # Total sets >= Reduced target
                 model.Add(sum(relevant_sets_expr) >= reduced_target)
 
-        # C. Max Fatigue Constraint
+        # C. Max Fatigue Constraint (with multiplier)
         movement_fatigue = sum(
             movement_vars[m.id] * int(m.fatigue_factor * 100)
             for m in request.available_movements
@@ -181,7 +311,9 @@ class ConstraintSolver:
             )
 
         fatigue_expr = movement_fatigue + circuit_fatigue
-        model.Add(fatigue_expr <= int(activity_distribution_config.or_tools_max_fatigue * 100))
+        max_fatigue_limit = int(activity_distribution_config.or_tools_max_fatigue * 100 * fatigue_multiplier)
+        logger.info(f"  Max fatigue constraint: {max_fatigue_limit / 100:.2f} (multiplier: {fatigue_multiplier})")
+        model.Add(fatigue_expr <= max_fatigue_limit)
 
         # D. Max Duration Constraint
         # Assume 1 set = 2 mins + 2 mins rest = 4 mins
@@ -208,25 +340,23 @@ class ConstraintSolver:
         model.Add(duration_expr <= request.session_duration_minutes)
         
         # E. Compound Movement Constraints
-        # Ensure 2-3 compound movements in main lifts, or 1 compound + 2 isolations
+        # Ensure minimum compound movements based on pass config
         compound_vars = [
-            movement_vars[m.id] 
-            for m in request.available_movements 
+            movement_vars[m.id]
+            for m in request.available_movements
             if m.id in movement_vars and m.compound
         ]
         total_compound = sum(compound_vars)
-        
+
         isolation_vars = [
-            movement_vars[m.id] 
-            for m in request.available_movements 
+            movement_vars[m.id]
+            for m in request.available_movements
             if m.id in movement_vars and not m.compound
         ]
         total_isolation = sum(isolation_vars)
-        
-        # Either: 2-3 compounds OR 1 compound + 2+ isolations
-        has_sufficient_compounds = total_compound >= 2
-        has_sufficient_isolations = total_compound == 1 and total_isolation >= 2
-        model.Add(has_sufficient_compounds + has_sufficient_isolations >= 1)
+
+        # Ensure minimum compound movements based on pass config
+        model.Add(total_compound >= min_compound)
         
         # F. Circuit Diversity Constraints
         # NOTE: Relaxed circuit selection - no region limits, no pattern diversity limits
@@ -288,24 +418,24 @@ class ConstraintSolver:
         model.Maximize(sum(objective_terms))
 
         # 3. Solve
-        logger.info("[ConstraintSolver.solve_session] Starting solver...")
+        logger.info("[ConstraintSolver._solve_session_internal] Starting solver...")
         status = solver.Solve(model)
-        logger.info(f"[ConstraintSolver.solve_session] Solver status: {solver.StatusName(status)}")
-        
+        logger.info(f"[ConstraintSolver._solve_session_internal] Solver status: {solver.StatusName(status)}")
+
         # 4. Result
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             selected_movements = []
             selected_circuits = []
             total_fatigue = 0.0
             total_stimulus = 0.0
-            
+
             # Process movements
             for m in request.available_movements:
                 if m.id in movement_vars and solver.Value(movement_vars[m.id]):
                     selected_movements.append(m)
                     total_fatigue += m.fatigue_factor
                     total_stimulus += m.stimulus_factor
-            
+
             # Process circuits
             if request.allow_circuits and request.available_circuits:
                 for c in request.available_circuits:
@@ -313,9 +443,9 @@ class ConstraintSolver:
                         selected_circuits.append(c)
                         total_fatigue += c.fatigue_factor
                         total_stimulus += c.stimulus_factor
-            
+
             status_str = "OPTIMAL" if status == cp_model.OPTIMAL else "FEASIBLE"
-            logger.info(f"[ConstraintSolver.solve_session] Result: {status_str}")
+            logger.info(f"[ConstraintSolver._solve_session_internal] Result: {status_str}")
             logger.info(f"  Selected movements: {len(selected_movements)}")
             logger.info(f"  Selected circuits: {len(selected_circuits)}")
             logger.info(f"  Total fatigue: {total_fatigue:.2f}")
@@ -331,6 +461,70 @@ class ConstraintSolver:
                 estimated_duration=estimated_duration,
                 status=status_str
             )
-        
-        logger.warning("[ConstraintSolver.solve_session] No feasible solution found, returning INFEASIBLE")
+
+        logger.warning("[ConstraintSolver._solve_session_internal] No feasible solution found, returning INFEASIBLE")
         return OptimizationResult([], [], 0, 0, 0, "INFEASIBLE")
+
+    def solve_session(self, request: OptimizationRequest) -> OptimizationResult:
+        """
+        Backward-compatible wrapper for original solve_session method.
+        Uses progressive constraint relaxation with multiple passes.
+        """
+        # Entry logging with input parameters summary
+        logger.info("=" * 80)
+        logger.info("[ConstraintSolver.solve_session] Starting optimization session")
+        logger.info(f"  Input parameters summary:")
+        logger.info(f"    Available movements: {len(request.available_movements)}")
+        logger.info(f"    Available circuits: {len(request.available_circuits)}")
+        logger.info(f"    Target muscle volumes: {request.target_muscle_volumes}")
+        logger.info(f"    Max fatigue: {request.max_fatigue}")
+        logger.info(f"    Min stimulus: {request.min_stimulus}")
+        logger.info(f"    User skill level: {request.user_skill_level}")
+        logger.info(f"    Excluded movement IDs: {request.excluded_movement_ids}")
+        logger.info(f"    Required movement IDs: {request.required_movement_ids}")
+        logger.info(f"    Session duration: {request.session_duration_minutes} minutes")
+        logger.info(f"    Allow complex lifts: {request.allow_complex_lifts}")
+        logger.info(f"    Allow circuits: {request.allow_circuits}")
+        logger.info(f"    Goal weights: {request.goal_weights}")
+        logger.info(f"    Preferred movement IDs: {request.preferred_movement_ids}")
+        logger.info("=" * 80)
+
+        try:
+            # Solve with progressive constraint relaxation
+            result = self.solve_session_with_progressive_relaxation(request)
+
+            # Status logging when solution is returned
+            logger.info("=" * 80)
+            logger.info(f"[ConstraintSolver.solve_session] Optimization completed")
+            logger.info(f"  Solution status: {result.status}")
+            logger.info(f"  Selected movements: {len(result.selected_movements)}")
+            logger.info(f"  Selected circuits: {len(result.selected_circuits)}")
+            logger.info(f"  Total fatigue: {result.total_fatigue:.2f}")
+            logger.info(f"  Total stimulus: {result.total_stimulus:.2f}")
+            logger.info(f"  Estimated duration: {result.estimated_duration} minutes")
+            logger.info(f"  Pass number: {result.pass_number}")
+            logger.info(f"  Pass config: {result.pass_config}")
+            logger.info("=" * 80)
+
+            if result.status == "OPTIMAL":
+                logger.info("[ConstraintSolver.solve_session] Solution found: OPTIMAL - Best possible solution found")
+            elif result.status == "FEASIBLE":
+                logger.info("[ConstraintSolver.solve_session] Solution found: FEASIBLE - Valid solution found, may not be optimal")
+            elif result.status == "INFEASIBLE":
+                logger.warning("[ConstraintSolver.solve_session] Solution status: INFEASIBLE - No valid solution exists")
+            else:
+                logger.warning(f"[ConstraintSolver.solve_session] Solution status: {result.status} - Unknown status")
+
+            return result
+
+        except Exception as e:
+            # Error logging if exception occurs
+            logger.error("=" * 80)
+            logger.error("[ConstraintSolver.solve_session] Exception occurred during optimization")
+            logger.error(f"  Error type: {type(e).__name__}")
+            logger.error(f"  Error message: {str(e)}")
+            logger.error(f"  Input parameters: available_movements={len(request.available_movements)}, "
+                        f"available_circuits={len(request.available_circuits)}, "
+                        f"session_duration={request.session_duration_minutes}")
+            logger.error("=" * 80)
+            raise

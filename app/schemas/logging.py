@@ -139,7 +139,6 @@ class CustomWorkoutCreate(BaseModel):
     cooldown: list[CustomExerciseCreate] | None = None
     
     # Circuits
-    main_circuit_id: int | None = None
     finisher_circuit_id: int | None = None
 
 

@@ -176,7 +176,6 @@ class Session(Base):
     
     # Circuit Integration
     # If this session IS a circuit (Hyrox/Crossfit day), these fields are used
-    main_circuit_id = Column(Integer, ForeignKey("circuit_templates.id"), nullable=True)
     finisher_circuit_id = Column(Integer, ForeignKey("circuit_templates.id"), nullable=True)
     has_circuits = Column(Boolean, default=False, nullable=False, index=True)
     
@@ -204,7 +203,6 @@ class Session(Base):
     workout_logs = relationship("WorkoutLog", back_populates="session")
     
     # Circuit Relationships
-    main_circuit = relationship("CircuitTemplate", foreign_keys=[main_circuit_id])
     finisher_circuit = relationship("CircuitTemplate", foreign_keys=[finisher_circuit_id])
 
     def __repr__(self):

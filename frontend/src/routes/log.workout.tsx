@@ -134,8 +134,6 @@ function LogWorkoutPage() {
       finisher: workoutData.finisher.filter(i => i.type === 'movement').map(toApiExercise),
       cooldown: workoutData.cooldown.map(toApiExercise),
       
-      // Circuits
-      main_circuit_id: workoutData.circuit[0]?.circuit?.id, // Take first circuit in "Circuit" section
       finisher_circuit_id: workoutData.finisher.find(i => i.type === 'circuit')?.circuit?.id,
     };
 

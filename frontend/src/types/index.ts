@@ -290,8 +290,6 @@ export interface Session {
   warmup?: ExerciseBlock[];
   main?: ExerciseBlock[];
   accessory?: ExerciseBlock[];
-  circuit?: CircuitBlock;
-  finisher?: FinisherBlock;
   finisher_circuit?: CircuitBlock;
   cooldown?: ExerciseBlock[];
   estimated_duration_minutes?: number;
@@ -302,7 +300,6 @@ export interface Session {
   cooldown_duration_minutes?: number;
   coach_notes?: string;
   has_circuits?: boolean;
-  main_circuit_id?: number;
   finisher_circuit_id?: number;
 }
 
@@ -596,7 +593,6 @@ export interface CustomWorkoutCreate {
   finisher?: CustomExerciseCreate[];
   cooldown?: CustomExerciseCreate[];
   
-  main_circuit_id?: number;
   finisher_circuit_id?: number;
 }
 

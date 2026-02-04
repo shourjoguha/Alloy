@@ -78,8 +78,8 @@ class AdaptationService:
         if not session:
             raise ValueError(f"Session {session_id} not found")
         
-        # Check if session has circuits (mutually exclusive with accessories)
-        has_circuit = session.main_circuit_id or session.finisher_circuit_id
+        # Check if session has circuits
+        has_circuit = session.finisher_circuit_id
         
         if has_circuit:
             return await self._adapt_circuit_session(db, session, user_id, request)
@@ -158,8 +158,6 @@ class AdaptationService:
         
         # Get circuit IDs
         circuit_ids = []
-        if session.main_circuit_id:
-            circuit_ids.append(session.main_circuit_id)
         if session.finisher_circuit_id:
             circuit_ids.append(session.finisher_circuit_id)
         

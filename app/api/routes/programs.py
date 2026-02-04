@@ -3,7 +3,7 @@ from datetime import datetime, date
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -264,10 +264,6 @@ async def get_program(
                 selectinload(Microcycle.sessions)
                 .options(
                     selectinload(Session.exercises).selectinload(SessionExercise.movement),
-                    selectinload(Session.main_circuit)
-                        .selectinload(CircuitTemplate.melted_exercises),
-                    selectinload(Session.main_circuit)
-                        .selectinload(CircuitTemplate.macro_metrics),
                     selectinload(Session.finisher_circuit)
                         .selectinload(CircuitTemplate.melted_exercises),
                     selectinload(Session.finisher_circuit)
@@ -289,10 +285,6 @@ async def get_program(
                 selectinload(Microcycle.sessions)
                 .options(
                     selectinload(Session.exercises).selectinload(SessionExercise.movement),
-                    selectinload(Session.main_circuit)
-                        .selectinload(CircuitTemplate.melted_exercises),
-                    selectinload(Session.main_circuit)
-                        .selectinload(CircuitTemplate.macro_metrics),
                     selectinload(Session.finisher_circuit)
                         .selectinload(CircuitTemplate.melted_exercises),
                     selectinload(Session.finisher_circuit)
@@ -326,10 +318,6 @@ async def get_program(
                 )
                 .options(
                     selectinload(Session.exercises).selectinload(SessionExercise.movement),
-                    selectinload(Session.main_circuit)
-                        .selectinload(CircuitTemplate.melted_exercises),
-                    selectinload(Session.main_circuit)
-                        .selectinload(CircuitTemplate.macro_metrics),
                     selectinload(Session.finisher_circuit)
                         .selectinload(CircuitTemplate.melted_exercises),
                     selectinload(Session.finisher_circuit)

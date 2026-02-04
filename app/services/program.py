@@ -17,7 +17,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    Program, Microcycle, Session, User, Movement, UserProfile, UserMovementRule, ProgramDiscipline
+    Program, Microcycle, Session, User, Movement, UserProfile, UserMovementRule, ProgramDiscipline, SessionExercise
 )
 from app.schemas.program import ProgramCreate
 from app.models.enums import (
@@ -355,9 +355,11 @@ class ProgramService:
         program_id: int,
     ) -> None:
         from app.db.database import async_session_maker
-        
+
         logger.info(f"[generate_active_microcycle_sessions] START - program_id={program_id}")
         logger.info("[generate_active_microcycle_sessions] BACKGROUND TASK STARTED - creating new DB session")
+
+        microcycle_id = None
 
         async with async_session_maker() as db:
             program = await db.get(Program, program_id)
@@ -376,9 +378,19 @@ class ProgramService:
                 logger.error(f"[generate_active_microcycle_sessions] Active microcycle not found for program {program_id}")
                 return
 
-        logger.info(f"[generate_active_microcycle_sessions] Found active microcycle {microcycle.id}, starting generation...")
-        await self._generate_session_content_async(program_id, microcycle.id)
-        logger.info(f"[generate_active_microcycle_sessions] COMPLETED for program {program_id}")
+            microcycle_id = microcycle.id
+
+        if microcycle_id is None:
+            logger.error(f"[generate_active_microcycle_sessions] Failed to extract microcycle_id for program {program_id}")
+            return
+
+        try:
+            logger.info(f"[generate_active_microcycle_sessions] Found active microcycle {microcycle_id}, starting generation...")
+            await self._generate_session_content_async(program_id, microcycle_id)
+            logger.info(f"[generate_active_microcycle_sessions] COMPLETED for program {program_id}")
+        except Exception as e:
+            logger.exception(f"[generate_active_microcycle_sessions] FAILED for program {program_id}: {e}")
+            raise
     
     async def _generate_session_content_async(
         self,
@@ -475,55 +487,25 @@ class ProgramService:
                     previous_day_volume=previous_day_volume,
                 )
                 logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] populate_session_by_id completed for session {session.id}, volume={current_volume}")
+            except ValueError as ve:
+                logger.error(
+                    "ValueError while generating content for session %s: %s",
+                    session.id,
+                    ve,
+                )
+                # Apply fallback for ValueError (e.g., too many missing movements)
+                await self._apply_session_fallback(session.id, str(ve))
+                current_volume = {}
             except Exception as e:
                 logger.error(
                     "Failed to generate content for session %s: %s",
                     session.id,
                     e,
                 )
-                
-                # Robust Fallback: Mark session as failed but "content present" so spinner stops
-                try:
-                    from app.models.movement import Movement
-                    from app.models.program import SessionExercise, ExerciseRole
-                    
-                    async with async_session_maker() as db:
-                        failed_session = await db.get(Session, session.id)
-                        if failed_session:
-                            failed_session.coach_notes = f"Generation failed: {str(e)}. Please regenerate."
-                            failed_session.estimated_duration_minutes = 45
-                            
-                            # Find a safe fallback movement
-                            fallback_movement = await db.execute(
-                                select(Movement).where(Movement.name.ilike("%air%squat%"))
-                            )
-                            fallback_movement = fallback_movement.scalar_one_or_none()
-                            
-                            if fallback_movement:
-                                # Add placeholder SessionExercise objects to satisfy frontend hasContent check
-                                placeholder_exercise = SessionExercise(
-                                    session_id=failed_session.id,
-                                    movement_id=fallback_movement.id,
-                                    exercise_role=ExerciseRole.MAIN,
-                                    order_in_session=1,
-                                    target_sets=1,
-                                    target_rep_range_min=10,
-                                    target_rep_range_max=10,
-                                    notes=f"Generation error: {str(e)}"
-                                )
-                                db.add(placeholder_exercise)
-                            
-                            db.add(failed_session)
-                            await db.commit()
-                            logger.info(f"[_generate_session_content_async] Applied fallback placeholder for session {session.id}")
-                except Exception as fallback_error:
-                    logger.error(f"Failed to apply fallback for session {session.id}: {fallback_error}")
-
-                # Skip tracking for this session so others can still be generated
-                previous_day_volume = {}
-                logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] Finished error handling for session {session.id}, continuing to next")
-                continue
-            
+                # Apply fallback for general exceptions
+                await self._apply_session_fallback(session.id, str(e))
+                current_volume = {}
+              
             # Update previous volume for next iteration
             if current_volume is None:
                 logger.warning(f"[_generate_session_content_async] Session {session.id} returned None volume, using empty dict")
@@ -586,6 +568,53 @@ class ProgramService:
             logger.error(
                 f"[_generate_session_content_async] Failed to generate Jerome notes: {e}"
             )
+    
+    async def _apply_session_fallback(self, session_id: int, error_msg: str) -> None:
+        """
+        Apply fallback placeholder for a failed session generation.
+        
+        Args:
+            session_id: ID of the session that failed
+            error_msg: Error message to store in coach_notes
+        """
+        from app.models.movement import Movement
+        from app.models.program import SessionExercise, ExerciseRole
+        
+        logger.info(f"[_apply_session_fallback] Applying fallback for session {session_id}")
+        
+        async with async_session_maker() as db:
+            failed_session = await db.get(Session, session_id)
+            if not failed_session:
+                logger.warning(f"[_apply_session_fallback] Session {session_id} not found")
+                return
+            
+            failed_session.coach_notes = f"Generation failed: {error_msg}. Please regenerate."
+            failed_session.estimated_duration_minutes = 45
+            
+            # Find a safe fallback movement
+            fallback_movement = await db.execute(
+                select(Movement).where(Movement.name.ilike("%air%squat%"))
+            )
+            fallback_movement = fallback_movement.scalar_one_or_none()
+            
+            if fallback_movement:
+                placeholder_exercise = SessionExercise(
+                    session_id=failed_session.id,
+                    movement_id=fallback_movement.id,
+                    exercise_role=ExerciseRole.MAIN,
+                    order_in_session=1,
+                    target_sets=1,
+                    target_rep_range_min=10,
+                    target_rep_range_max=10,
+                    notes=f"Generation error: {error_msg}"
+                )
+                db.add(placeholder_exercise)
+            else:
+                logger.warning(f"[_apply_session_fallback] No fallback movement found for session {session_id}")
+            
+            db.add(failed_session)
+            await db.commit()
+            logger.info(f"[_apply_session_fallback] Applied fallback placeholder for session {session_id}")
     
     async def _apply_pattern_interference_rules(
         self,

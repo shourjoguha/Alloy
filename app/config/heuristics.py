@@ -874,3 +874,23 @@ DOMS_ATTRIBUTION: DomsAttributionConfig = {
         "no_recent_training": "low"
     }
 }
+
+SECTION_PATTERN_FILTERS: Dict[str, Any] = {
+    "warmup": {
+        "include": ["mobility", "plyometric", "cardio"],
+        "exclude": [],
+        "max_duration_minutes": 10,
+    },
+    "main": {
+        "exclude": ["mobility", "stretch", "cardio", "conditioning", "isolation"],
+        "min_compound": 2,
+    },
+    "accessory": {
+        "include": ["isolation"],
+        "exclude": [],
+    },
+    "cooldown": {
+        "include": ["stretch", "mobility"],
+        "max_duration_minutes": 10,
+    },
+}

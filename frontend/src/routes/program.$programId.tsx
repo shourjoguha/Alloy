@@ -48,20 +48,19 @@ function sessionHasContent(session: Session): boolean {
   const hasCooldown =
     !!session.cooldown && session.cooldown.length > 0;
 
-  const hasFinisherExercises =
-    !!session.finisher?.exercises &&
-    session.finisher.exercises.length > 0;
+  const hasFinisherCircuit =
+    !!session.finisher_circuit && session.finisher_circuit.exercises.length > 0;
 
-  const hasFinisherDuration =
-    !!session.finisher?.duration_minutes;
+  const hasCoachNotes =
+    !!session.coach_notes && session.coach_notes.length > 0;
 
   return (
     hasMain ||
     hasWarmup ||
     hasAccessory ||
     hasCooldown ||
-    hasFinisherExercises ||
-    hasFinisherDuration
+    hasFinisherCircuit ||
+    hasCoachNotes
   );
 }
 

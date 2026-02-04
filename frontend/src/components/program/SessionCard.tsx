@@ -200,6 +200,15 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
   const isGenerating = !isRestDay && !hasContent;
   const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
   const hasCircuit = session.circuit !== undefined && session.circuit !== null;
+  
+  // Detect error state from coach_notes
+  const isError = hasCoachNotes && session.coach_notes ? (
+    session.coach_notes.toLowerCase().includes('error') ||
+    session.coach_notes.toLowerCase().includes('failed') ||
+    session.coach_notes.toLowerCase().includes('issue') ||
+    session.coach_notes.toLowerCase().includes('problem') ||
+    session.coach_notes.toLowerCase().includes('unable')
+  ) : false;
 
   return (
     <Card variant="grouped"
@@ -208,6 +217,16 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
         isRestDay && "opacity-60"
       )}
     >
+      {/* Error banner */}
+      {isError && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span>Session generation failed. Please regenerate or contact support.</span>
+          </div>
+        </div>
+      )}
+      
       {/* Header - always visible */}
       <button
         onClick={() => hasContent && setIsExpanded(!isExpanded)}
@@ -288,55 +307,11 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
           <ExerciseList exercises={session.main} title="Main" />
           
           {/* Mutually exclusive: Either circuit block OR accessory block, never both */}
-          <CircuitDisplay circuit={session.circuit} title="Circuit Block" />
-          {!hasCircuit && <ExerciseList exercises={session.accessory} title="Accessory" />}
+          <ExerciseList exercises={session.accessory} title="Accessory" />
           
-          {/* Finisher */}
-          {session.finisher_circuit ? (
+          {/* Finisher - only finisher_circuit */}
+          {session.finisher_circuit && (
             <CircuitDisplay circuit={session.finisher_circuit} title="Finisher" />
-          ) : session.finisher && (
-            <div className="mt-3">
-              <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
-                <Flame className="h-3 w-3" />
-                Finisher
-              </h4>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-primary font-medium uppercase">
-                    {session.finisher.circuit_type || session.finisher.type}
-                  </span>
-                  {session.finisher.duration_minutes && (
-                    <span className="text-foreground-muted text-xs bg-background-input px-1.5 py-0.5 rounded">
-                      {session.finisher.duration_minutes} min
-                    </span>
-                  )}
-                </div>
-                {session.finisher.rounds && (
-                  <span className="text-xs text-foreground-muted font-medium bg-background-input px-2 py-0.5 rounded">
-                    {session.finisher.rounds}
-                  </span>
-                )}
-              </div>
-
-              {session.finisher.exercises && session.finisher.exercises.length > 0 && (
-                <div className="space-y-1.5 border-l-2 border-background-input pl-3">
-                  {session.finisher.exercises.map((ex, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{ex.movement}</span>
-                      <span className="text-foreground-muted text-xs font-mono">
-                        {ex.reps 
-                          ? `${ex.reps} reps`
-                          : ex.duration_seconds 
-                            ? `${ex.duration_seconds}s`
-                            : ex.rep_range_min && ex.rep_range_max
-                              ? `${ex.rep_range_min}-${ex.rep_range_max}`
-                              : ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           )}
 
           <ExerciseList exercises={session.cooldown} title="Cooldown" />

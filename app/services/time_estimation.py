@@ -1,6 +1,9 @@
 """Time estimation service for session duration calculation."""
+import logging
 from dataclasses import dataclass
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -340,10 +343,10 @@ class TimeEstimationService:
     def calculate_session_duration(self, session) -> SessionTimeBreakdown:
         """
         Estimate duration for a session object with relational exercises.
-        
+
         Args:
             session: Session model instance with exercises loaded
-            
+
         Returns:
             SessionTimeBreakdown
         """
@@ -353,10 +356,10 @@ class TimeEstimationService:
         accessory = []
         cooldown = []
         finisher_exercises = []
-        
+
         # Sort by order to ensure correct sequence
         exercises = sorted(session.exercises, key=lambda x: x.order_in_session)
-        
+
         for ex in exercises:
             # Convert to dict format expected by estimation methods
             ex_dict = {
@@ -368,9 +371,9 @@ class TimeEstimationService:
                 "superset_group": ex.superset_group,
                 "role": ex.exercise_role.value if hasattr(ex.exercise_role, 'value') else ex.exercise_role
             }
-            
+
             section = ex.exercise_role.value if hasattr(ex.exercise_role, 'value') else ex.exercise_role
-            
+
             if section == "warmup":
                 warmup.append(ex_dict)
             elif section == "main":
@@ -381,7 +384,7 @@ class TimeEstimationService:
                 cooldown.append(ex_dict)
             elif section == "finisher":
                 finisher_exercises.append(ex_dict)
-        
+
         # Construct finisher dict if needed
         finisher = None
         if finisher_exercises:
@@ -389,21 +392,21 @@ class TimeEstimationService:
             c_type = "circuit"
             c_rounds = 1
             c_duration = None
-            
+
             if hasattr(session, 'finisher_circuit') and session.finisher_circuit:
                 fc = session.finisher_circuit
                 c_type = fc.circuit_type.value if hasattr(fc.circuit_type, 'value') else fc.circuit_type
                 c_rounds = fc.default_rounds or 1
                 if fc.default_duration_seconds:
                     c_duration = fc.default_duration_seconds // 60
-            
+
             finisher = {
                 "type": c_type,
                 "exercises": finisher_exercises,
                 "rounds": c_rounds,
                 "duration_minutes": c_duration
             }
-            
+
         return self.estimate_session_time(
             warmup=warmup,
             main=main,
@@ -413,7 +416,107 @@ class TimeEstimationService:
             intent=session.intent_tags[0] if session.intent_tags else "hypertrophy"
         )
 
-    async def estimate_session_duration(
+    def estimate_session_time_with_transitions(
+        self,
+        warmup: list[dict] | None = None,
+        main: list[dict] | None = None,
+        accessory: list[dict] | None = None,
+        circuit: dict | None = None,
+        finisher: dict | None = None,
+        cooldown: list[dict] | None = None,
+        intent: str = "hypertrophy",
+        block_order: list[str] | None = None
+    ) -> SessionTimeBreakdown:
+        """
+        Estimate total session time accounting for transitions between blocks.
+
+        Args:
+            warmup: Warmup exercises
+            main: Main exercises
+            accessory: Accessory exercises
+            circuit: Circuit block
+            finisher: Finisher block
+            cooldown: Cooldown stretches
+            intent: Training intent
+            block_order: List of block types in order (e.g., ["warmup", "main", "circuit", "cooldown"])
+
+        Returns:
+            SessionTimeBreakdown with component and total times including transitions
+        """
+        # Calculate individual block times
+        warmup_time = self.estimate_warmup_time(warmup or [])
+        main_time = self.estimate_block_time(main or [], "main", intent)
+
+        # Mutually exclusive: either circuit OR accessory, never both
+        if circuit:
+            circuit_time = self.estimate_circuit_time(circuit)
+            accessory_time = 0
+        else:
+            accessory_time = self.estimate_block_time(accessory or [], "accessory", intent)
+            circuit_time = 0
+
+        finisher_time = self.estimate_finisher_time(finisher)
+        cooldown_time = self.estimate_cooldown_time(cooldown or [])
+
+        # Calculate transitions between blocks (2 minutes per transition)
+        transition_seconds = 120  # 2 minutes in seconds
+        transition_minutes = 0
+
+        if block_order:
+            # Count number of transitions = number of blocks - 1
+            num_blocks = len([b for b in block_order if b and b != "empty"])
+            if num_blocks > 1:
+                transition_minutes = (num_blocks - 1) * (transition_seconds // 60)
+                logger.info(f"[TimeEstimationService.estimate_session_time_with_transitions] {num_blocks} blocks, {transition_minutes} min transitions")
+
+        total = warmup_time + main_time + circuit_time + accessory_time + finisher_time + cooldown_time + transition_minutes
+
+        return SessionTimeBreakdown(
+            warmup_minutes=warmup_time,
+            main_minutes=main_time,
+            accessory_minutes=accessory_time,
+            circuit_minutes=circuit_time,
+            finisher_minutes=finisher_time,
+            cooldown_minutes=cooldown_time,
+            total_minutes=total
+        )
+
+    def estimate_block_time_by_type(
+        self,
+        exercises: list[dict],
+        block_type: str,
+        intent: str = "hypertrophy"
+    ) -> int:
+        """
+        Estimate time for a block based on its type.
+
+        Args:
+            exercises: List of exercise dicts
+            block_type: Block type (warmup, main, accessory, cooldown, circuit)
+            intent: Training intent
+
+        Returns:
+            Time in minutes
+        """
+        if not exercises:
+            return 0
+
+        if block_type == "warmup":
+            return self.estimate_warmup_time(exercises)
+        elif block_type == "cooldown":
+            return self.estimate_cooldown_time(exercises)
+        elif block_type == "circuit":
+            # For circuits, the first dict may have circuit metadata
+            if exercises and isinstance(exercises[0], dict):
+                circuit_data = exercises[0].get("circuit_metadata", {})
+                return self.estimate_circuit_time(circuit_data)
+            return 0
+        else:
+            # main, accessory, finisher use block_time
+            role = "main" if block_type == "main" else block_type
+            return self.estimate_block_time(exercises, role, intent)
+            
+    async def estimate_session_duration_async(
         self,
         db: Any,
         user_id: int,
@@ -425,21 +528,65 @@ class TimeEstimationService:
         Returns dict matching SessionTimeBreakdown fields.
         """
         from sqlalchemy import select
-        from app.models.program import Session
+        from sqlalchemy.orm import selectinload
+        from app.models.program import Session, SessionExercise, ExerciseRole
+        from app.models.circuit import CircuitTemplate
         
-        result = await db.execute(select(Session).where(Session.id == session_id))
+        result = await db.execute(
+            select(Session)
+            .options(
+                selectinload(Session.exercises).selectinload(SessionExercise.movement),
+                selectinload(Session.finisher_circuit).selectinload(CircuitTemplate.melted_exercises)
+            )
+            .where(Session.id == session_id)
+        )
         session = result.scalar_one_or_none()
         
         if not session:
             return {"total_minutes": 0}
             
+        # Convert SessionExercise to ExerciseBlock format
+        def session_exercise_to_block(ex: SessionExercise) -> dict:
+            return {
+                "movement": ex.movement.name if ex.movement else "Unknown",
+                "sets": ex.target_sets,
+                "rep_range_min": ex.target_rep_range_min,
+                "rep_range_max": ex.target_rep_range_max,
+                "target_rpe": ex.target_rpe,
+                "duration_seconds": ex.target_duration_seconds,
+                "rest_seconds": ex.default_rest_seconds,
+                "notes": ex.notes
+            }
+        
+        # Organize exercises by role
+        warmup = []
+        main = []
+        accessory = []
+        cooldown = []
+        finisher = None
+        
+        for ex in session.exercises or []:
+            block = session_exercise_to_block(ex)
+            if ex.exercise_role == ExerciseRole.WARMUP:
+                warmup.append(block)
+            elif ex.exercise_role == ExerciseRole.MAIN:
+                main.append(block)
+            elif ex.exercise_role == ExerciseRole.ACCESSORY:
+                accessory.append(block)
+            elif ex.exercise_role == ExerciseRole.COOLDOWN:
+                cooldown.append(block)
+            elif ex.exercise_role == ExerciseRole.FINISHER:
+                if not finisher:
+                    finisher = {"exercises": []}
+                finisher["exercises"].append(block)
+        
         breakdown = self.estimate_session_time(
-            warmup=session.warmup_json,
-            main=session.main_json,
-            accessory=session.accessory_json,
+            warmup=warmup,
+            main=main,
+            accessory=accessory,
             circuit=None,
-            finisher=session.finisher_json,
-            cooldown=session.cooldown_json,
+            finisher=finisher,
+            cooldown=cooldown,
             intent="hypertrophy"
         )
         

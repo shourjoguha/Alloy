@@ -47,7 +47,7 @@ class CircuitAssignmentService:
         3. Calculate order_in_session for new exercises
         4. Optionally remove conflicting existing exercises
         5. Insert all new SessionExercise records
-        6. Update session.main_circuit_id or finisher_circuit_id
+        6. Update session.finisher_circuit_id
         7. Update session duration estimates and has_circuits flag
         8. Commit transaction (all-or-nothing)
         
@@ -55,7 +55,7 @@ class CircuitAssignmentService:
             db: Database session
             session_id: Session to assign circuit to
             circuit_id: Circuit template to assign
-            circuit_role: Either "MAIN_CIRCUIT" or "FINISHER_CIRCUIT"
+            circuit_role: Only "FINISHER_CIRCUIT" is supported
             rounds: Optional override for circuit rounds
             replace_existing: Whether to replace existing exercises of same role
         
@@ -166,10 +166,7 @@ class CircuitAssignmentService:
                 new_exercises.append(exercise)
             
             # 9. Update session circuit references
-            if circuit_role == "MAIN_CIRCUIT":
-                session.main_circuit_id = circuit_id
-            else:
-                session.finisher_circuit_id = circuit_id
+            session.finisher_circuit_id = circuit_id
             
             # 10. Update session has_circuits flag
             session.has_circuits = True
@@ -178,11 +175,9 @@ class CircuitAssignmentService:
             circuit_duration = macro.estimated_duration_seconds if macro else circuit.default_duration_seconds or 1500
             circuit_minutes = circuit_duration / 60
             
-            if circuit_role == "MAIN_CIRCUIT":
-                session.main_duration_minutes = circuit_minutes
-            else:
-                session.finisher_duration_minutes = circuit_minutes
+            session.finisher_duration_minutes = circuit_minutes
             
+            # 12. Update total duration
             session.estimated_duration_minutes = (
                 (session.warmup_duration_minutes or 0) +
                 (session.main_duration_minutes or 0) +
@@ -191,7 +186,7 @@ class CircuitAssignmentService:
                 (session.cooldown_duration_minutes or 0)
             )
             
-            # 12. Commit transaction
+            # 13. Commit transaction
             await db.commit()
             
             logger.info(
@@ -199,7 +194,7 @@ class CircuitAssignmentService:
                 f"with {len(new_exercises)} exercises"
             )
             
-            # 13. Build response
+            # 14. Build response
             return {
                 "session_id": session_id,
                 "circuit_id": circuit_id,

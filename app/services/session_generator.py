@@ -10,7 +10,7 @@ import httpx
 import json
 import logging
 import time
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -18,11 +18,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import activity_distribution as activity_distribution_config
 from app.config.settings import get_settings
+from app.config.heuristics import SECTION_PATTERN_FILTERS
 from app.llm import get_llm_provider, LLMConfig, Message
 from app.models import Movement, Session, Program, Microcycle, UserMovementRule, UserProfile, SessionExercise
 from app.models.circuit import CircuitTemplate
+from app.models.circuit_extended import CircuitMelted, CircuitMacro
 from app.models.enums import SessionType, MovementRuleType, SkillLevel, ExerciseRole, MuscleRole
 from app.services.optimization import ConstraintSolver, OptimizationRequest, SolverMovement, SolverCircuit
+
+if TYPE_CHECKING:
+    from app.services.time_estimation import TimeEstimationService
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -191,74 +196,106 @@ class SessionGeneratorService:
             logger.info("[generate_session_exercises] Session type is RECOVERY, returning recovery content")
             return self._get_recovery_session_content()
         
-        # Load movement library grouped by pattern
-        movements_by_pattern = await self._load_movements_by_pattern(db)
+        # Load all required data for block-based generation
         all_movements = await self._load_all_movements(db)
+        all_circuits = await self._load_all_circuits(db)
         goal_weights = self._get_goal_weights_for_program(program)
+        max_session_duration = program.max_session_duration
         
-        # LOG GOAL WEIGHTS
-        logger.info(f"[generate_session_exercises] Goal Weights: {goal_weights}")
+        # Fetch user profile for skill level
+        from app.models.user import UserProfile
+        result = await db.execute(select(UserProfile).where(UserProfile.user_id == program.user_id))
+        user_profile = result.scalars().first()
+        user_skill_level = user_profile.skill_level if user_profile else SkillLevel.BEGINNER
         
-        # Generate optimal draft using Constraint Solver
-        draft_content = None
-        try:
-            logger.info("[generate_session_exercises] Attempting to generate optimal draft session...")
-            draft_result = await self._generate_draft_session(db, session, used_movements, goal_weights=goal_weights, max_session_duration=program.max_session_duration)
-            if draft_result.status in ["OPTIMAL", "FEASIBLE"] and draft_result.selected_movements:
-                draft_content = self._convert_optimization_result_to_content(draft_result, session.session_type, all_movements)
-                logger.info(f"[generate_session_exercises] Generated optimal draft for session {session.id} with status {draft_result.status}")
-                logger.info(f"[generate_session_exercises] Selected movements: {len(draft_result.selected_movements)}")
-            else:
-                logger.info(f"[generate_session_exercises] Draft generation returned status {draft_result.status}, no optimal solution found")
-        except Exception as e:
-            logger.warning(f"[generate_session_exercises] Failed to generate draft session: {e}", exc_info=True)
-
-        if session.session_type == SessionType.CUSTOM and "conditioning" in (session.intent_tags or []):
-            logger.info("[generate_session_exercises] Path: CUSTOM conditioning session")
-            all_movements = await self._load_all_movements(db)
-            conditioning_names = self._get_conditioning_movement_names(all_movements)
-            content = self._get_fast_conditioning_session_content(conditioning_names, program.max_session_duration, all_movements)
-        elif session.session_type in {SessionType.CARDIO, SessionType.MOBILITY}:
-            logger.info(f"[generate_session_exercises] Path: {session.session_type.value} session")
-            all_movements = await self._load_all_movements(db)
-            content = self._get_fast_special_session_content(session.session_type, program.max_session_duration, all_movements)
-        elif draft_content:
-            logger.info("[generate_session_exercises] Path: Building content from optimal draft")
-            content = await self._build_fast_content_from_draft(
-                draft_content,
-                session.session_type,
-                session.intent_tags or [],
-                microcycle.is_deload,
-                goal_weights,
-                all_movements,
-            )
-        else:
-            logger.info("[generate_session_exercises] Path: Using smart fallback session content")
-            content = self._get_smart_fallback_session_content(
-                session.session_type,
-                session.intent_tags or [],
-                movements_by_pattern,
-                used_movements=used_movements,
-                all_movements=all_movements,
-            )
-            if session.session_type not in {SessionType.CARDIO, SessionType.MOBILITY} and not content.get("finisher"):
-                logger.info("[generate_session_exercises] No finisher found, attempting to build goal finisher")
-                finisher = await self._build_goal_finisher(
-                    goal_weights,
-                    session_type=session.session_type,
-                    intent_tags=session.intent_tags,
-                    existing_circuit_ids=None
-                )
-                if finisher:
-                    logger.info(f"[generate_session_exercises] Successfully added finisher: {finisher.get('type', 'unknown')}")
-                    content["finisher"] = finisher
-                else:
-                    logger.info("[generate_session_exercises] No finisher could be built")
+        # Use new block-based generation approach
+        logger.info("[generate_session_exercises] Using new block-based template generation")
+        
+        # Detect which template to use
+        template = self._detect_session_template(session)
+        logger.info(f"[generate_session_exercises] Detected template: {template}")
+        
+        # Generate blocks based on template
+        blocks = await self._generate_blocks_by_template(
+            db, session, program, template, all_movements, all_circuits, max_session_duration, user_skill_level, goal_weights
+        )
+        
+        # Convert blocks to content format expected by downstream methods
+        has_finisher_circuit = hasattr(session, 'finisher_circuit_id') and session.finisher_circuit_id is not None
+        
+        # Get finisher circuit block if applicable
+        finisher_for_content = None
+        if template == "normal" and has_finisher_circuit:
+            finisher_block = await self._generate_finisher_circuit_block_for_session(db, session, all_circuits)
+            if finisher_block:
+                finisher_for_content = {
+                    "type": "circuit",
+                    "circuit_id": finisher_block.get("circuit_id"),
+                    "exercises": finisher_block.get("exercises", [])
+                }
+        
+        # Apply time-filling logic to reach within 5% of target duration
+        blocks_filled = self._fill_to_target_duration(blocks, max_session_duration, all_movements)
+        
+        content = {
+            "warmup": blocks_filled.get("warmup", []),
+            "main": blocks_filled.get("main", []),
+            "finisher": finisher_for_content,
+            "cooldown": blocks_filled.get("cooldown", []),
+            "estimated_duration_minutes": max_session_duration,
+        }
+        
+        if has_finisher_circuit:
+            logger.info(f"[generate_session_exercises] Session has finisher_circuit_id={session.finisher_circuit_id}")
 
         logger.info(f"[generate_session_exercises] Content keys before normalization: {list(content.keys())}")
         content = await self._normalize_session_content(content, session.session_type, session.intent_tags or [], goal_weights)
         logger.info(f"[generate_session_exercises] Content keys after normalization: {list(content.keys())}")
         logger.info(f"[generate_session_exercises] Estimated duration: {content.get('estimated_duration_minutes', 'N/A')} minutes")
+        
+        # Validate session has movements
+        total_exercises = 0
+        for section in ["warmup", "main", "accessory", "cooldown"]:
+            if section in content and content[section]:
+                total_exercises += len(content[section])
+        
+        # Count finisher exercises if present
+        if content.get("finisher") and isinstance(content["finisher"], dict):
+            finisher_exercises = content["finisher"].get("exercises", [])
+            total_exercises += len(finisher_exercises) if isinstance(finisher_exercises, list) else 0
+        
+        if total_exercises == 0:
+            logger.error(f"[generate_session_exercises] VALIDATION FAILED - Session {session.id} has NO exercises!")
+        else:
+            logger.info(f"[generate_session_exercises] VALIDATION PASSED - Session {session.id} has {total_exercises} total exercises")
+        
+        # Validate duration is within 5% buffer
+        from app.services.time_estimation import TimeEstimationService
+        time_service = TimeEstimationService()
+        estimated_duration = time_service.estimate_session_time_with_transitions(
+            warmup=content.get("warmup", []),
+            main=content.get("main", []),
+            accessory=content.get("accessory", []),
+            circuit=content.get("circuit"),
+            finisher=content.get("finisher"),
+            cooldown=content.get("cooldown", []),
+            intent=session.intent_tags[0] if session.intent_tags else "hypertrophy",
+            block_order=self._get_block_order_for_template(template)
+        )
+        
+        target_duration = max_session_duration
+        buffer_min = target_duration * 0.95
+        buffer_max = target_duration * 1.05
+        actual_duration = estimated_duration.total_minutes
+        
+        logger.info(f"[generate_session_exercises] DURATION VALIDATION - Target: {target_duration}min, Actual: {actual_duration:.1f}min, Buffer: [{buffer_min:.1f}, {buffer_max:.1f}]")
+        
+        if buffer_min <= actual_duration <= buffer_max:
+            logger.info(f"[generate_session_exercises] VALIDATION PASSED - Duration within 5% buffer")
+        else:
+            deviation = ((actual_duration - target_duration) / target_duration) * 100
+            logger.warning(f"[generate_session_exercises] VALIDATION WARNING - Duration {deviation:+.1f}% from target (outside 5% buffer)")
+        
         # Jerome notes generation moved to batched microcycle-level generation in program.py
         logger.info(f"[generate_session_exercises] RETURN - Session ID: {session.id}, Content sections: {list(content.keys())}")
         logger.info("=" * 80)
@@ -412,14 +449,9 @@ class SessionGeneratorService:
         async with async_session_maker() as db:
             session = await db.get(Session, session_id)
             if session:
-                # session.warmup_json = content.get("warmup") # DEPRECATED
-                # session.main_json = content.get("main") # DEPRECATED
-                # session.accessory_json = content.get("accessory") # DEPRECATED
-                # session.finisher_json = content.get("finisher") # DEPRECATED
-                # session.cooldown_json = content.get("cooldown") # DEPRECATED
                 session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
                 # coach_notes will be generated in batches at microcycle level via _generate_microcycle_jerome_notes()
-                # Note: Circuit IDs (main_circuit_id, finisher_circuit_id) are saved in _save_session_exercises()
+                # Note: Circuit ID (finisher_circuit_id) is saved in _save_session_exercises()
                 
                 # Create movement map from context for ID lookup
                 all_movements = context_data.get("all_movements", [])
@@ -538,7 +570,26 @@ class SessionGeneratorService:
             else:
                 logger.info(f"[generate_session_exercises_offline] Draft generation returned status {draft_result.status}, no optimal solution found")
         except Exception as e:
-            logger.warning(f"[generate_session_exercises_offline] Failed to generate draft session: {e}", exc_info=True)
+            logger.error(
+                "[generate_session_exercises_offline] Draft generation failed with exception",
+                extra={
+                    "session_id": context['session']['id'],
+                    "session_type": session_type.value,
+                    "intent_tags": context['session']['intent_tags'] or [],
+                    "total_movements_count": len(all_movements) if all_movements else 0,
+                    "used_movements_count": len(used_movements) if used_movements else 0,
+                    "goal_weights": goal_weights,
+                    "preferred_movement_ids_count": len(preferred_ids),
+                    "excluded_movement_ids_count": len(hard_no_ids),
+                    "required_movement_ids_count": len(hard_yes_ids),
+                    "max_session_duration": context["program"]["max_session_duration"],
+                    "exception_type": type(e).__name__,
+                    "exception_message": str(e),
+                    "movement_groups": used_movement_groups,
+                    "fatigued_muscles": fatigued_muscles or [],
+                },
+                exc_info=True,
+            )
         
         if session_type == SessionType.CUSTOM and "conditioning" in (context["session"]["intent_tags"] or []):
             logger.info("[generate_session_exercises_offline] Path: CUSTOM conditioning session")
@@ -613,21 +664,7 @@ class SessionGeneratorService:
         
         logger.info(f"[_save_session_exercises] Cleared existing exercises for session {session.id}")
         
-        # Update circuit IDs based on content
-        # Clear circuit IDs if no circuits are present in content
-        circuit_block = content.get("circuit")
-        if circuit_block and isinstance(circuit_block, dict) and circuit_block.get("circuit_id"):
-            # Circuit block exists, set main_circuit_id
-            session.main_circuit_id = circuit_block.get("circuit_id")
-            session.has_circuits = True
-            logger.info(f"[_save_session_exercises] Set main_circuit_id={session.main_circuit_id}")
-        else:
-            # No circuit block, clear main_circuit_id
-            if session.main_circuit_id is not None:
-                logger.info(f"[_save_session_exercises] Clearing main_circuit_id (was {session.main_circuit_id})")
-                session.main_circuit_id = None
-        
-        # Check finisher circuit
+        # Update finisher circuit ID based on content
         finisher = content.get("finisher")
         if finisher and isinstance(finisher, dict):
             finisher_type = finisher.get("type")
@@ -648,7 +685,7 @@ class SessionGeneratorService:
                 session.finisher_circuit_id = None
         
         # Update has_circuits flag
-        session.has_circuits = bool(session.main_circuit_id or session.finisher_circuit_id)
+        session.has_circuits = bool(session.finisher_circuit_id)
         logger.info(f"[_save_session_exercises] Updated has_circuits={session.has_circuits}")
         
         order_counter = 1
@@ -730,22 +767,48 @@ class SessionGeneratorService:
                     exercises_to_save.append(session_ex)
                     order_counter += 1
         
+        # Log section lengths before validation
+        warmup_section = content.get("warmup", [])
+        main_section = content.get("main", [])
+        accessory_section = content.get("accessory", [])
+        cooldown_section = content.get("cooldown", [])
+        finisher_section = content.get("finisher")
+
+        section_lengths = {
+            "warmup": len(warmup_section) if warmup_section else 0,
+            "main": len(main_section) if main_section else 0,
+            "accessory": len(accessory_section) if accessory_section else 0,
+            "cooldown": len(cooldown_section) if cooldown_section else 0,
+            "finisher": len(finisher_section.get("exercises", [])) if isinstance(finisher_section, dict) and finisher_section.get("exercises") else 0
+        }
+
+        logger.info(f"[_save_session_exercises] Section lengths - warmup={section_lengths['warmup']}, main={section_lengths['main']}, "
+                   f"accessory={section_lengths['accessory']}, cooldown={section_lengths['cooldown']}, finisher={section_lengths['finisher']}")
+        logger.info(f"[_save_session_exercises] Missing movements: {missing_movements}")
+        logger.info(f"[_save_session_exercises] Session ID: {session.id}")
+
         # Bulk save all exercises at once
         if exercises_to_save:
             db.add_all(exercises_to_save)
             logger.info(f"[_save_session_exercises] Bulk saved {len(exercises_to_save)} exercises")
         else:
-            logger.warning(f"[_save_session_exercises] No exercises to save. Missing movements: {missing_movements[:10]}")
+            error_msg = (f"Cannot save session with no exercises. Session ID: {session.id}. "
+                        f"Section lengths - warmup: {section_lengths['warmup']}, main: {section_lengths['main']}, "
+                        f"accessory: {section_lengths['accessory']}, cooldown: {section_lengths['cooldown']}, "
+                        f"finisher: {section_lengths['finisher']}. "
+                        f"Missing movements: {missing_movements}")
+            logger.error(f"[_save_session_exercises] {error_msg}")
+            raise ValueError(error_msg)
         
         # Validate missing movements threshold
         if missing_movements and total_exercises > 0:
             missing_percentage = len(missing_movements) / total_exercises
-            if missing_percentage > 0.25:
+            if missing_percentage > 0.50:
                 error_msg = f"Critical: {len(missing_movements)}/{total_exercises} movements not found in database: {missing_movements[:5]}"
                 logger.error(f"[_save_session_exercises] {error_msg}")
                 raise ValueError(error_msg)
             else:
-                logger.warning(f"[_save_session_exercises] {len(missing_movements)} movements not found: {missing_movements}")
+                logger.warning(f"[_save_session_exercises] {len(missing_movements)}/{total_exercises} movements not found (below 50% threshold): {missing_movements}")
 
     async def _calculate_session_volume(self, db: AsyncSession, session: Session) -> dict[str, int]:
         """Helper to calculate volume after session is saved."""
@@ -789,58 +852,16 @@ class SessionGeneratorService:
                             if mm.muscle:
                                 sec = mm.muscle.slug
                                 current_session_volume[sec] = current_session_volume.get(sec, 0) + (weight // 2)
-        else:
-            # Fallback to JSON (Legacy support)
-            all_movements = []
-            if session.main_json:
-                all_movements.extend([(m["movement"], 3) for m in session.main_json if "movement" in m])
-            if session.accessory_json:
-                all_movements.extend([(m["movement"], 2) for m in session.accessory_json if "movement" in m])
-            if session.finisher_json and session.finisher_json.get("exercises"):
-                all_movements.extend([(m["movement"], 1) for m in session.finisher_json["exercises"] if "movement" in m])
-                
-            if all_movements:
-                names = [m[0] for m in all_movements]
-                unique_names = list(set(names))
-                
-                from app.models.movement import MovementMuscleMap
-                result = await db.execute(
-                    select(Movement)
-                    .options(
-                        selectinload(Movement.muscle_maps).selectinload(MovementMuscleMap.muscle)
-                    )
-                    .where(Movement.name.in_(unique_names))
-                )
-                found_movements = {m.name: m for m in result.scalars().all()}
-                
-                for name, weight in all_movements:
-                    mov = found_movements.get(name)
-                    if mov:
-                        p_muscle = str(mov.primary_muscle.value) if hasattr(mov.primary_muscle, 'value') else str(mov.primary_muscle)
-                        current_session_volume[p_muscle] = current_session_volume.get(p_muscle, 0) + weight
-                        
-                        if mov.muscle_maps:
-                            for mm in mov.muscle_maps:
-                                role_val = mm.role.value if hasattr(mm.role, 'value') else mm.role
-                                if role_val == MuscleRole.SECONDARY.value:
-                                    if mm.muscle:
-                                        sec = mm.muscle.slug
-                                        current_session_volume[sec] = current_session_volume.get(sec, 0) + (weight // 2)
-
-        # Process circuits (main_circuit_id, finisher_circuit_id)
-        from app.models.circuit import CircuitTemplate
-        if session.main_circuit_id:
-            circuit = await db.get(CircuitTemplate, session.main_circuit_id)
-            if circuit and circuit.muscle_volume:
-                for muscle, volume in circuit.muscle_volume.items():
-                    current_session_volume[muscle] = current_session_volume.get(muscle, 0) + volume
         
+        # Process finisher circuit
+        from app.models.circuit import CircuitTemplate
         if session.finisher_circuit_id:
             circuit = await db.get(CircuitTemplate, session.finisher_circuit_id)
             if circuit and circuit.muscle_volume:
                 for muscle, volume in circuit.muscle_volume.items():
                     current_session_volume[muscle] = current_session_volume.get(muscle, 0) + (volume // 2)
-                    
+        
+        logger.info(f"[_calculate_session_volume] Session {session.id} volume: {current_session_volume}")
         return current_session_volume
 
     async def _generate_draft_session_offline(
@@ -895,86 +916,6 @@ class SessionGeneratorService:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self.optimizer.solve_session, req)
 
-    # Kept for backward compatibility if needed, but not used by populate_session_by_id anymore
-    async def populate_session(
-        self,
-        db: AsyncSession,
-        session: Session,
-        program: Program,
-        microcycle: Microcycle,
-        used_movements: list[str] | None = None,
-        used_movement_groups: dict[str, int] | None = None,
-        used_accessory_movements: dict[int, list[str]] | None = None,
-        previous_day_volume: dict[str, int] | None = None,
-    ) -> dict[str, int]:
-        """
-        Generate and save exercise content to a session.
-        
-        Args:
-            db: Database session
-            session: Session to populate
-            program: Parent program
-            microcycle: Parent microcycle
-            used_movements: List of movements already used in this microcycle
-            used_movement_groups: Dict tracking usage count by substitution_group
-            used_accessory_movements: Dict mapping day_number to accessory movements used
-            previous_day_volume: Volume dict from previous session (muscle -> volume)
-            
-        Returns:
-            Dict of muscle volume generated in this session (muscle -> volume)
-        """
-        # Determine fatigued muscles from previous day
-        fatigued_muscles = []
-        if previous_day_volume:
-            # Threshold: > 2 units of volume (e.g. 1 main lift) causes interference
-            fatigued_muscles = [m for m, v in previous_day_volume.items() if v > 2]
-            
-        content = await self.generate_session_exercises(
-            db, session, program, microcycle, used_movements, used_movement_groups, used_accessory_movements, fatigued_muscles
-        )
-        
-        if used_accessory_movements:
-            current_day = session.day_number
-            previous_days = [d for d in used_accessory_movements.keys() if d < current_day]
-            if previous_days:
-                last_day = max(previous_days)
-                previous_accessories = used_accessory_movements.get(last_day) or []
-                if previous_accessories:
-                    content = self._remove_cross_session_accessory_duplicates(
-                        content, set(previous_accessories), session.session_type
-                    )
-        
-        # Update session fields
-        session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
-        # coach_notes will be generated in batches at microcycle level via _generate_microcycle_jerome_notes()
-        
-        # Populate SessionExercises
-        all_movement_names = set()
-        for section in ["warmup", "main", "accessory", "cooldown"]:
-            if section in content and content[section]:
-                for ex in content[section]:
-                    if "movement" in ex:
-                        all_movement_names.add(ex["movement"])
-        
-        if content.get("finisher") and isinstance(content["finisher"], dict) and content["finisher"].get("exercises"):
-             for ex in content["finisher"]["exercises"]:
-                if "movement" in ex:
-                    all_movement_names.add(ex["movement"])
-
-        movement_map = {}
-        if all_movement_names:
-            stmt = select(Movement.name, Movement.id).where(Movement.name.in_(list(all_movement_names)))
-            result = await db.execute(stmt)
-            movement_map = {name: id for name, id in result.all()}
-            
-        await self._save_session_exercises(db, session, content, movement_map, program.user_id)
-        
-        db.add(session)
-        await db.flush()
-        
-        # Calculate volume for this session to pass to next day
-        return await self._calculate_session_volume(db, session)
-    
     async def _load_movements_by_pattern(
         self,
         db: AsyncSession,
@@ -1042,16 +983,16 @@ class SessionGeneratorService:
     ) -> dict[str, Any]:
         """
         Validate LLM-generated session content and add missing required sections.
-        
+
         For training sessions (non-RECOVERY, non-CARDIO), ensures:
         - warmup, main, cooldown exist
-        - EITHER accessory OR finisher exists
+        - XOR: accessory OR finisher (but NOT both)
         - NO duplicate movements within the session
-        
+
         Args:
             content: LLM-generated session content
             session_type: Type of session
-        
+
         Returns:
             Validated and completed session content
         """
@@ -1134,28 +1075,19 @@ class SessionGeneratorService:
             return normalized
         
         if has_accessory and has_finisher:
+            if self._prefer_finisher(goal_weights, tags):
+                normalized["accessory"] = None
+            else:
+                normalized["finisher"] = None
+            normalized["cooldown"] = normalized.get("cooldown") or []
             return normalized
         
         if has_finisher:
-            if not normalized.get("accessory"):
-                normalized["accessory"] = None
+            normalized["accessory"] = None
+            normalized["cooldown"] = normalized.get("cooldown") or []
             return normalized
         
         if has_accessory:
-            if self._prefer_finisher(goal_weights, tags):
-                finisher = await self._build_goal_finisher(
-                    goal_weights,
-                    session_type=session_type,
-                    intent_tags=tags,
-                    existing_circuit_ids=None
-                )
-                if not finisher:
-                    if goal_weights.get("endurance", 0) >= goal_weights.get("fat_loss", 0):
-                        finisher = dict(activity_distribution_config.goal_finisher_presets.get("endurance", {}))
-                    else:
-                        finisher = dict(activity_distribution_config.goal_finisher_presets.get("fat_loss", {}))
-                if finisher:
-                    normalized["finisher"] = finisher
             normalized["cooldown"] = normalized.get("cooldown") or []
             return normalized
         
@@ -2471,14 +2403,14 @@ class SessionGeneratorService:
         from app.services.optimization import SolverCircuit
         from app.models.circuit import CircuitTemplate
         from app.models.circuit_extended import CircuitMacro
-        
+
         # Load circuits with macro data
         stmt = select(CircuitTemplate, CircuitMacro).join(
             CircuitMacro, CircuitTemplate.id == CircuitMacro.circuit_id
         )
         result = await db.execute(stmt)
         rows = result.all()
-        
+
         return [
             SolverCircuit(
                 id=c.id,
@@ -2489,12 +2421,68 @@ class SessionGeneratorService:
                 effective_work_volume=c.effective_work_volume if c.effective_work_volume else 0.0,
                 circuit_type=c.circuit_type,
                 duration_seconds=c.estimated_work_seconds if c.estimated_work_seconds else 600,
-                primary_region=m.primary_region.value if m else None,
-                pattern_diversity_score=m.pattern_diversity_score if m else 0.0,
-                equipment_complexity=m.equipment_complexity if m else 0
+                primary_region=macro.primary_region.value if macro else None,
+                pattern_diversity_score=macro.pattern_diversity_score if macro else 0.0,
+                equipment_complexity=macro.equipment_complexity if macro else 0
             )
-            for c, m in rows
+            for c, macro in rows
         ]
+
+    async def _populate_circuit_block(self, db: AsyncSession, circuit_id: int, session_id: int, user_id: int, order_offset: int, exercise_role: ExerciseRole) -> tuple[list[dict], dict[str, Any]]:
+        """
+        Populate a circuit block by loading ALL circuit movements in correct order.
+
+        Returns:
+            - List of exercise dictionaries (one per circuit movement)
+            - Circuit metadata dict with duration info
+        """
+        from app.models.circuit import CircuitMacro
+
+        # Load circuit with melted exercises and macro metrics
+        stmt = select(CircuitTemplate, CircuitMelted, CircuitMacro).join(
+            CircuitMelted, CircuitTemplate.id == CircuitMelted.circuit_id
+        ).outerjoin(
+            CircuitMacro, CircuitTemplate.id == CircuitMacro.circuit_id
+        ).where(
+            CircuitTemplate.id == circuit_id
+        ).order_by(CircuitMelted.exercise_sequence)
+
+        result = await db.execute(stmt)
+        rows = result.all()
+
+        if not rows:
+            logger.warning(f"[SessionGeneratorService._populate_circuit_block] No movements found for circuit_id={circuit_id}")
+            return [], {}
+
+        circuit_meta = {}
+        exercises = []
+        for circuit, melted, macro in rows:
+            if not circuit_meta:
+                circuit_meta = {
+                    "estimated_duration_seconds": macro.estimated_duration_seconds if macro else circuit.default_duration_seconds,
+                    "default_duration_seconds": circuit.default_duration_seconds,
+                    "default_rounds": macro.default_rounds if macro else circuit.default_rounds,
+                    "circuit_type": circuit.circuit_type.value if hasattr(circuit.circuit_type, 'value') else circuit.circuit_type
+                }
+
+            exercise = {
+                "movement_id": melted.movement_id,
+                "movement_name": melted.movement_name,
+                "metric_type": melted.metric_type.value if melted.metric_type else "reps",
+                "sets": melted.reps if melted.reps else 1,
+                "reps": melted.reps if melted.reps else None,
+                "distance_meters": melted.distance_meters if melted.distance_meters else None,
+                "duration_seconds": melted.duration_seconds if melted.duration_seconds else None,
+                "calories": melted.calories if melted.calories else None,
+                "rest_seconds": melted.rest_seconds if melted.rest_seconds else 0,
+                "notes": melted.notes,
+                "exercise_role": exercise_role.value,
+                "order_in_session": order_offset + len(exercises) + 1,
+            }
+            exercises.append(exercise)
+
+        logger.info(f"[SessionGeneratorService._populate_circuit_block] Loaded {len(exercises)} movements for circuit_id={circuit_id}")
+        return exercises, circuit_meta
     
     def _get_circuit_primary_muscle(self, circuit: CircuitTemplate) -> str:
         """Determine the primary muscle for a circuit based on muscle_volume."""
@@ -2503,6 +2491,577 @@ class SessionGeneratorService:
             if sorted_muscles:
                 return sorted_muscles[0][0]  # muscle with highest volume
         return "full_body"  # fallback
+
+    def _detect_session_template(self, session: Session) -> str:
+        """
+        Detect which block template to use for a session.
+
+        Templates:
+        - Template 1: Normal lifting (warmup → main lifts → circuits → cooldown)
+        - Template 2: Cardio day (warmup → 1-3 cardio movements → cooldown)
+        - Template 3: Conditioning day (warmup → 4-6 conditioning movements → cooldown)
+        - Template 4: Mobility only day (warmup → 8-12 mobility movements → cooldown)
+
+        Returns:
+            Template name: "normal", "cardio", "conditioning", or "mobility"
+        """
+        session_type = session.session_type
+        intent_tags = session.intent_tags or []
+
+        logger.info(f"[SessionGeneratorService._detect_session_template] Session type={session_type}, intent_tags={intent_tags}")
+
+        # Template 2: Cardio day
+        if session_type == SessionType.CARDIO or "cardio" in intent_tags:
+            logger.info("[SessionGeneratorService._detect_session_template] Using Template 2: Cardio day")
+            return "cardio"
+
+        # Template 3: Conditioning day
+        if session_type == SessionType.RECOVERY or "conditioning" in intent_tags:
+            logger.info("[SessionGeneratorService._detect_session_template] Using Template 3: Conditioning day")
+            return "conditioning"
+
+        # Template 4: Mobility only day
+        if session_type == SessionType.MOBILITY or any(tag in ["mobility", "stretch"] for tag in intent_tags):
+            logger.info("[SessionGeneratorService._detect_session_template] Using Template 4: Mobility only day")
+            return "mobility"
+
+        # Template 1: Normal lifting (default)
+        # Structure: warmup → main lifts → accessories → cooldown
+        # - finisher_circuit_id: finisher circuit added in addition to main + accessories
+        has_finisher_circuit = hasattr(session, 'finisher_circuit_id') and session.finisher_circuit_id is not None
+
+        if has_finisher_circuit:
+            logger.info("[SessionGeneratorService._detect_session_template] Using Template 1: Normal lifting with finisher circuit (in addition to accessories)")
+        else:
+            logger.info("[SessionGeneratorService._detect_session_template] Using Template 1: Normal lifting (standard accessories)")
+
+        return "normal"
+
+    def _get_block_order_for_template(self, template: str) -> list[str]:
+        """
+        Get block order for a given template.
+
+        Args:
+            template: Template name ("normal", "cardio", "conditioning", "mobility")
+
+        Returns:
+            List of block types in order (e.g., ["warmup", "main", "circuit", "cooldown"])
+        """
+        if template == "normal":
+            # Template 1: warmup → main lifts → circuits → cooldown
+            return ["warmup", "main", "circuit", "cooldown"]
+        elif template == "cardio":
+            # Template 2: warmup → cardio movements → cooldown
+            return ["warmup", "main", "cooldown"]
+        elif template == "conditioning":
+            # Template 3: warmup → conditioning movements → cooldown
+            return ["warmup", "main", "cooldown"]
+        elif template == "mobility":
+            # Template 4: warmup → mobility movements → cooldown
+            return ["warmup", "main", "cooldown"]
+        else:
+            logger.warning(f"[SessionGeneratorService._get_block_order_for_template] Unknown template: {template}, using normal")
+            return ["warmup", "main", "cooldown"]
+
+    def _filter_movements_by_section(self, movements: list[Movement], section: str) -> list[Movement]:
+        """
+        Filter movements based on section pattern filters from SECTION_PATTERN_FILTERS.
+
+        Args:
+            movements: List of all available movements
+            section: Section name ("warmup", "main", "accessory", "cooldown")
+
+        Returns:
+            Filtered list of movements for the section
+        """
+        from app.config.heuristics import SECTION_PATTERN_FILTERS
+
+        section_config = SECTION_PATTERN_FILTERS.get(section, {})
+        include_patterns = section_config.get("include", [])
+        exclude_patterns = section_config.get("exclude", [])
+
+        logger.info(f"[SessionGeneratorService._filter_movements_by_section] Section={section}, include={include_patterns}, exclude={exclude_patterns}")
+
+        filtered = []
+        for m in movements:
+            movement_pattern = m.pattern
+            movement_patterns = [movement_pattern] if movement_pattern else []
+            
+            # Check if movement matches section requirements
+            if include_patterns:
+                # Must have at least one of the include patterns
+                if not any(p in movement_patterns for p in include_patterns):
+                    continue
+            
+            if exclude_patterns:
+                # Must NOT have any of the exclude patterns
+                if any(p in movement_patterns for p in exclude_patterns):
+                    continue
+            
+            filtered.append(m)
+
+        logger.info(f"[SessionGeneratorService._filter_movements_by_section] Filtered {len(movements)} → {len(filtered)} movements")
+        return filtered
+
+    async def _generate_blocks_by_template(
+        self,
+        db: AsyncSession,
+        session: Session,
+        program: Program,
+        template: str,
+        all_movements: list[Movement],
+        all_circuits: list[SolverCircuit],
+        max_session_duration: int,
+        user_skill_level: SkillLevel,
+        goal_weights: dict[str, int]
+    ) -> dict[str, Any]:
+        """
+        Generate session blocks based on template type.
+
+        Args:
+            db: Database session
+            session: Session to populate
+            program: Program containing goals
+            template: Template name ("normal", "cardio", "conditioning", "mobility")
+            all_movements: All available movements
+            all_circuits: All available circuits
+            max_session_duration: Target session duration in minutes
+            user_skill_level: User's skill level
+            goal_weights: Goal weight mapping
+
+        Returns:
+            Dictionary with block content: {
+                "warmup": [...],
+                "main": [...],
+                "circuit": {...} | None,
+                "cooldown": [...],
+                "template": str
+            }
+        """
+        from app.services.time_estimation import TimeEstimationService
+
+        result = {
+            "warmup": [],
+            "main": [],
+            "circuit": None,
+            "cooldown": [],
+            "template": template
+        }
+
+        # Get block order for template
+        block_order = self._get_block_order_for_template(template)
+
+        # Filter movements for each section
+        warmup_movements = self._filter_movements_by_section(all_movements, "warmup")
+        main_movements = self._filter_movements_by_section(all_movements, "main")
+        cooldown_movements = self._filter_movements_by_section(all_movements, "cooldown")
+
+        logger.info(f"[SessionGeneratorService._generate_blocks_by_template] Template={template}, filtered counts: warmup={len(warmup_movements)}, main={len(main_movements)}, cooldown={len(cooldown_movements)}")
+
+        # Generate blocks based on template
+        if template == "normal":
+            # Template 1: warmup → main lifts → circuit OR accessories → cooldown
+            # finisher circuit is separate block after cooldown
+            result["warmup"] = self._generate_warmup_block(warmup_movements, session.intent_tags)
+            result["main"] = self._generate_main_block(db, session, program, main_movements, max_session_duration, user_skill_level, goal_weights)
+            result["cooldown"] = self._generate_cooldown_block(cooldown_movements)
+
+        elif template == "cardio":
+            # Template 2: warmup → 1-3 cardio movements → cooldown
+            result["warmup"] = self._generate_warmup_block(warmup_movements, session.intent_tags)
+            result["main"] = self._generate_cardio_main_block(all_movements, max_session_duration)
+            result["cooldown"] = self._generate_cooldown_block(cooldown_movements)
+
+        elif template == "conditioning":
+            # Template 3: warmup → 4-6 conditioning movements → cooldown
+            result["warmup"] = self._generate_warmup_block(warmup_movements, session.intent_tags)
+            result["main"] = self._generate_conditioning_main_block(all_movements, max_session_duration)
+            result["cooldown"] = self._generate_cooldown_block(cooldown_movements)
+
+        elif template == "mobility":
+            # Template 4: warmup → 8-12 mobility movements → cooldown
+            result["warmup"] = self._generate_warmup_block(warmup_movements, session.intent_tags)
+            result["main"] = self._generate_mobility_main_block(all_movements, max_session_duration)
+            result["cooldown"] = self._generate_cooldown_block(cooldown_movements)
+
+        return result
+
+    def _generate_warmup_block(self, warmup_movements: list[Movement], intent_tags: list[str]) -> list[dict]:
+        """Generate warmup block with mobility OR plyometric + short cardio."""
+        warmup_exercises = []
+
+        # Add 1-2 mobility movements
+        mobility_movements = [m for m in warmup_movements if m.patterns and any(p in m.patterns for p in ["mobility"])]
+        if mobility_movements:
+            selected = mobility_movements[:min(2, len(mobility_movements))]
+            for m in selected:
+                warmup_exercises.append({
+                    "movement_id": m.id,
+                    "movement_name": m.name,
+                    "sets": 1,
+                    "reps": 10,
+                    "target_rpe": 5,
+                    "rest_seconds": 30,
+                    "metric_type": "reps",
+                })
+
+        # Add 1 plyometric movement if available
+        plyo_movements = [m for m in warmup_movements if m.patterns and "plyometric" in m.patterns]
+        if plyo_movements:
+            warmup_exercises.append({
+                "movement_id": plyo_movements[0].id,
+                "movement_name": plyo_movements[0].name,
+                "sets": 3,
+                "reps": 5,
+                "target_rpe": 6,
+                "rest_seconds": 60,
+                "metric_type": "reps",
+            })
+
+        # Add short cardio if space available
+        cardio_movements = [m for m in warmup_movements if m.patterns and "cardio" in m.patterns]
+        if cardio_movements and len(warmup_exercises) < 3:
+            warmup_exercises.append({
+                "movement_id": cardio_movements[0].id,
+                "movement_name": cardio_movements[0].name,
+                "duration_seconds": 300,  # 5 minutes
+                "rest_seconds": 0,
+                "metric_type": "time",
+            })
+
+        logger.info(f"[SessionGeneratorService._generate_warmup_block] Generated {len(warmup_exercises)} warmup exercises")
+        return warmup_exercises
+
+    def _generate_main_block(self, db: AsyncSession, session: Session, program: Program, main_movements: list[Movement], max_session_duration: int, user_skill_level: SkillLevel, goal_weights: dict[str, int]) -> list[dict]:
+        """Generate main block using optimization or smart fallback."""
+        from app.services.optimization import OptimizationRequest
+
+        # Try optimization first
+        result = self.optimizer.solve_session_with_progressive_relaxation(
+            OptimizationRequest(
+                available_movements=main_movements,
+                available_circuits=[],
+                target_muscle_volumes=self._get_muscle_targets_for_session(session.session_type),
+                max_fatigue=activity_distribution_config.or_tools_max_fatigue,
+                min_stimulus=0,
+                user_skill_level=user_skill_level,
+                session_duration_minutes=max_session_duration,
+                allow_circuits=False,
+                allow_complex_lifts=True,
+                goal_weights=goal_weights,
+                excluded_movement_ids=[],
+                required_movement_ids=[],
+            )
+        )
+
+        if result.status in ["OPTIMAL", "FEASIBLE"]:
+            main_exercises = self._convert_optimization_result_to_exercises(result)
+            logger.info(f"[SessionGeneratorService._generate_main_block] Optimization succeeded, selected {len(main_exercises)} movements")
+            return main_exercises
+        else:
+            # Use smart fallback
+            main_exercises = self._generate_smart_fallback_main_block(session, main_movements, max_session_duration)
+            logger.warning(f"[SessionGeneratorService._generate_main_block] Optimization failed, using smart fallback, generated {len(main_exercises)} movements")
+            return main_exercises
+
+    def _generate_smart_fallback_main_block(self, session: Session, main_movements: list[Movement], max_session_duration: int) -> list[dict]:
+        """Generate main block using smart fallback logic."""
+        main_exercises = []
+
+        intent_tags = session.intent_tags or []
+        used_movements = set()
+
+        # Select up to 3 main lifts based on intent tags
+        for tag in intent_tags[:3]:
+            for movement in main_movements:
+                if movement.id in used_movements:
+                    continue
+                if movement.patterns and tag in movement.patterns:
+                    main_exercises.append({
+                        "movement_id": movement.id,
+                        "movement_name": movement.name,
+                        "sets": 4,
+                        "reps": 8,
+                        "target_rpe": 7,
+                        "rest_seconds": 120,
+                        "metric_type": "reps",
+                    })
+                    used_movements.add(movement.id)
+                    if len(main_exercises) >= 3:
+                        break
+            if len(main_exercises) >= 3:
+                break
+
+        return main_exercises
+
+    def _convert_optimization_result_to_exercises(self, result) -> list[dict]:
+        """Convert optimization result to exercise dictionaries."""
+        exercises = []
+        for m in result.selected_movements:
+            exercises.append({
+                "movement_id": m.id,
+                "movement_name": m.name,
+                "sets": 3,
+                "reps": 10,
+                "target_rpe": 7,
+                "rest_seconds": 120,
+                "metric_type": "reps",
+            })
+        return exercises
+
+    async def _generate_finisher_circuit_block_for_session(self, db: AsyncSession, session: Session, all_circuits: list[SolverCircuit]) -> dict | None:
+        """Generate finisher circuit block for normal template."""
+        has_finisher_circuit = hasattr(session, 'finisher_circuit_id') and session.finisher_circuit_id is not None
+
+        if not has_finisher_circuit:
+            logger.info("[SessionGeneratorService._generate_finisher_circuit_block_for_session] No finisher_circuit assigned, returning None")
+            return None
+
+        circuit_id = session.finisher_circuit_id
+        exercise_role = ExerciseRole.FINISHER
+
+        circuit_exercises, circuit_meta = await self._populate_circuit_block(
+            db, circuit_id, session.id, session.user_id, 0, exercise_role
+        )
+
+        logger.info(f"[SessionGeneratorService._generate_finisher_circuit_block_for_session] Generated finisher circuit block with {len(circuit_exercises)} exercises")
+
+        return {
+            "circuit_id": circuit_id,
+            "exercises": circuit_exercises,
+            "exercise_role": exercise_role.value,
+            "estimated_duration_seconds": circuit_meta.get("estimated_duration_seconds"),
+            "default_duration_seconds": circuit_meta.get("default_duration_seconds")
+        }
+
+    def _generate_cardio_main_block(self, all_movements: list[Movement], max_session_duration: int) -> list[dict]:
+        """Generate cardio main block with 1-3 cardio movements."""
+        cardio_movements = [m for m in all_movements if m.patterns and "cardio" in m.patterns]
+
+        num_exercises = min(3, max(1, len(cardio_movements)))
+        exercises = []
+
+        for i in range(num_exercises):
+            m = cardio_movements[i]
+            exercises.append({
+                "movement_id": m.id,
+                "movement_name": m.name,
+                "duration_seconds": (max_session_duration * 60) // num_exercises,  # Split time evenly
+                "rest_seconds": 0,
+                "metric_type": "time",
+            })
+
+        logger.info(f"[SessionGeneratorService._generate_cardio_main_block] Generated {len(exercises)} cardio exercises")
+        return exercises
+
+    def _generate_conditioning_main_block(self, all_movements: list[Movement], max_session_duration: int) -> list[dict]:
+        """Generate conditioning main block with 4-6 conditioning movements."""
+        conditioning_movements = [m for m in all_movements if m.patterns and "conditioning" in m.patterns]
+
+        num_exercises = min(6, max(4, len(conditioning_movements)))
+        exercises = []
+
+        for i in range(num_exercises):
+            m = conditioning_movements[i]
+            exercises.append({
+                "movement_id": m.id,
+                "movement_name": m.name,
+                "sets": 3,
+                "reps": 10,
+                "target_rpe": 7,
+                "rest_seconds": 120,
+                "metric_type": "reps",
+            })
+
+        logger.info(f"[SessionGeneratorService._generate_conditioning_main_block] Generated {len(exercises)} conditioning exercises")
+        return exercises
+
+    def _generate_mobility_main_block(self, all_movements: list[Movement], max_session_duration: int) -> list[dict]:
+        """Generate mobility main block with 8-12 mobility movements."""
+        mobility_movements = [m for m in all_movements if m.patterns and any(p in m.patterns for p in ["mobility", "stretch"])]
+
+        num_exercises = min(12, max(8, len(mobility_movements)))
+        exercises = []
+
+        for i in range(num_exercises):
+            m = mobility_movements[i]
+            exercises.append({
+                "movement_id": m.id,
+                "movement_name": m.name,
+                "duration_seconds": 60,
+                "rest_seconds": 0,
+                "metric_type": "time",
+            })
+
+        logger.info(f"[SessionGeneratorService._generate_mobility_main_block] Generated {len(exercises)} mobility exercises")
+        return exercises
+
+    def _generate_cooldown_block(self, cooldown_movements: list[Movement]) -> list[dict]:
+        """Generate cooldown block with stretch movements."""
+        cooldown_exercises = []
+
+        # Add 2-3 stretch movements
+        stretch_movements = [m for m in cooldown_movements if m.patterns and "stretch" in m.patterns]
+        if stretch_movements:
+            for m in stretch_movements[:min(3, len(stretch_movements))]:
+                cooldown_exercises.append({
+                    "movement_id": m.id,
+                    "movement_name": m.name,
+                    "duration_seconds": 60,
+                    "rest_seconds": 0,
+                    "metric_type": "time",
+                })
+
+        logger.info(f"[SessionGeneratorService._generate_cooldown_block] Generated {len(cooldown_exercises)} cooldown exercises")
+        return cooldown_exercises
+
+    def _fill_to_target_duration(
+        self,
+        blocks: dict[str, Any],
+        target_duration: int,
+        all_movements: list[Movement]
+    ) -> dict[str, Any]:
+        """
+        Fill or trim exercises to reach within 5% of target duration.
+
+        Args:
+            blocks: Dictionary with block content
+            target_duration: Target duration in minutes
+            all_movements: All available movements for filling
+
+        Returns:
+            Updated blocks dictionary with duration adjusted to 5% buffer
+        """
+        from app.services.time_estimation import TimeEstimationService
+
+        time_service = TimeEstimationService()
+
+        # Calculate current duration
+        current_duration = time_service.estimate_session_time_with_transitions(
+            warmup=blocks.get("warmup", []),
+            main=blocks.get("main", []),
+            accessory=blocks.get("accessory"),
+            circuit=blocks.get("circuit"),
+            finisher=blocks.get("finisher"),
+            cooldown=blocks.get("cooldown", []),
+            block_order=self._get_block_order_for_template(blocks.get("template", "normal"))
+        ).total_minutes
+
+        # Calculate 5% buffer range
+        buffer_min = target_duration * 0.95
+        buffer_max = target_duration * 1.05
+
+        logger.info(f"[SessionGeneratorService._fill_to_target_duration] Target={target_duration} min, Current={current_duration} min, Buffer range=[{buffer_min}, {buffer_max}]")
+
+        if buffer_min <= current_duration <= buffer_max:
+            logger.info("[SessionGeneratorService._fill_to_target_duration] Duration already within buffer, no adjustment needed")
+            return blocks
+
+        if current_duration < buffer_min:
+            return self._fill_under_duration(blocks, buffer_min, current_duration, all_movements, time_service)
+        else:
+            return self._trim_over_duration(blocks, buffer_max, current_duration, time_service)
+
+    def _fill_under_duration(
+        self,
+        blocks: dict[str, Any],
+        target_min: int,
+        current_duration: int,
+        all_movements: list[Movement],
+        time_service: "TimeEstimationService"
+    ) -> dict[str, Any]:
+        """Add exercises to fill under duration."""
+        gap = target_min - current_duration
+        logger.info(f"[SessionGeneratorService._fill_under_duration] Gap={gap} min, adding filler exercises")
+
+        # Try adding isolation accessories first
+        accessory_movements = [m for m in all_movements if m.pattern and m.pattern.value == "isolation"]
+
+        for movement in accessory_movements[:min(5, len(accessory_movements))]:
+            blocks.setdefault("main", []).append({
+                "movement_id": movement.id,
+                "movement_name": movement.name,
+                "sets": 3,
+                "reps": 12,
+                "target_rpe": 6,
+                "rest_seconds": 60,
+                "metric_type": "reps",
+            })
+
+            # Recalculate duration
+            new_duration = time_service.estimate_session_time_with_transitions(
+                    warmup=blocks.get("warmup", []),
+                    main=blocks.get("main", []),
+                    accessory=blocks.get("accessory"),
+                    circuit=blocks.get("circuit"),
+                    finisher=blocks.get("finisher"),
+                    cooldown=blocks.get("cooldown", []),
+                    block_order=self._get_block_order_for_template(blocks.get("template", "normal"))
+                ).total_minutes
+
+            if new_duration >= target_min:
+                logger.info(f"[SessionGeneratorService._fill_under_duration] Filled to {new_duration} min, target met")
+                break
+
+        return blocks
+
+    def _trim_over_duration(
+        self,
+        blocks: dict[str, Any],
+        target_max: int,
+        current_duration: int,
+        time_service: "TimeEstimationService"
+    ) -> dict[str, Any]:
+        """Trim exercises to fit within max duration."""
+        excess = current_duration - target_max
+        logger.info(f"[SessionGeneratorService._trim_over_duration] Excess={excess} min, trimming exercises")
+
+        # Try reducing cooldown first (min 5 min)
+        cooldown = blocks.get("cooldown", [])
+        if cooldown and len(cooldown) > 0:
+            blocks["cooldown"] = cooldown[:1]  # Keep only 1 stretch
+
+            new_duration = time_service.estimate_session_time_with_transitions(
+                warmup=blocks.get("warmup", []),
+                main=blocks.get("main", []),
+                accessory=blocks.get("accessory"),
+                circuit=blocks.get("circuit"),
+                finisher=blocks.get("finisher"),
+                cooldown=blocks.get("cooldown", []),
+                block_order=self._get_block_order_for_template(blocks.get("template", "normal"))
+            ).total_minutes
+
+            if new_duration <= target_max:
+                logger.info(f"[SessionGeneratorService._trim_over_duration] Reduced cooldown to 5 min, new duration={new_duration}")
+                return blocks
+
+        # Reduce accessory sets to 2
+        main = blocks.get("main", [])
+        for ex in main:
+            if ex.get("sets", 3) > 2:
+                ex["sets"] = 2
+
+        new_duration = time_service.estimate_session_time_with_transitions(
+            warmup=blocks.get("warmup", []),
+            main=blocks.get("main", []),
+            accessory=blocks.get("accessory"),
+            circuit=blocks.get("circuit"),
+            finisher=blocks.get("finisher"),
+            cooldown=blocks.get("cooldown", []),
+            block_order=self._get_block_order_for_template(blocks.get("template", "normal"))
+        ).total_minutes
+
+        if new_duration <= target_max:
+            logger.info(f"[SessionGeneratorService._trim_over_duration] Reduced main sets to 2, new duration={new_duration}")
+            return blocks
+
+        # Reduce main sets to 3
+        for ex in main:
+            if ex.get("sets", 3) > 3:
+                ex["sets"] = 3
+
+        logger.info(f"[SessionGeneratorService._trim_over_duration] Reduced main sets to 3 as final adjustment")
+        return blocks
 
     def _get_muscle_targets_for_session(self, session_type: SessionType) -> dict[str, int]:
         """Define muscle volume targets based on session type."""

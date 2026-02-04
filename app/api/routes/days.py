@@ -90,8 +90,10 @@ async def get_daily_plan(
         )
         .options(
             selectinload(Session.exercises).selectinload(SessionExercise.movement),
-            selectinload(Session.main_circuit).selectinload(CircuitTemplate.melted_exercises),
-            selectinload(Session.finisher_circuit).selectinload(CircuitTemplate.melted_exercises)
+            selectinload(Session.finisher_circuit)
+                .selectinload(CircuitTemplate.melted_exercises),
+            selectinload(Session.finisher_circuit)
+                .selectinload(CircuitTemplate.macro_metrics)
         )
     )
     session = session_result.scalar_one_or_none()
@@ -590,12 +592,10 @@ async def update_circuit_assignment(
         if not session or session.user_id != user_id:
             raise HTTPException(status_code=404, detail="Session not found")
         
-        if circuit_role == "MAIN_CIRCUIT":
-            session.main_circuit_id = None
-        elif circuit_role == "FINISHER_CIRCUIT":
+        if circuit_role == "FINISHER_CIRCUIT":
             session.finisher_circuit_id = None
         else:
-            raise HTTPException(status_code=400, detail="Invalid circuit_role")
+            raise HTTPException(status_code=400, detail="Invalid circuit_role - only FINISHER_CIRCUIT is supported")
         
         await db.execute(
             SessionExercise.__table__.delete().where(

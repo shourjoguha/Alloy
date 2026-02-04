@@ -10,20 +10,40 @@ Provides:
 import pytest
 import pytest_asyncio
 from datetime import date, datetime, timedelta
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, TypeDecorator, JSON
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
+from sqlalchemy.types import TEXT
 
 from app.db.database import Base
 from app.models.user import User, UserMovementRule, UserEnjoyableActivity, UserSettings
 from app.models.program import Program, Microcycle, Session
 from app.models.movement import Movement
 from app.models.logging import WorkoutLog, TopSetLog, SorenessLog, RecoverySignal, PatternExposure
+from app.models.circuit import CircuitTemplate
+from app.models.circuit_extended import CircuitMacro, CircuitMelted
 from app.models.enums import (
     ExperienceLevel, PersonaTone, PersonaAggression, Goal, SplitTemplate as SplitTemplateEnum,
     ProgressionStyle, SessionType, MovementRuleType, RuleCadence, EnjoyableActivity,
     MovementPattern, PrimaryMuscle, E1RMFormula, RecoverySource, MicrocycleStatus, PrimaryRegion, SkillLevel, CNSLoad
 )
+
+
+# SQLite doesn't support JSONB, so we use a custom type that stores as JSON for SQLite
+class SQLiteJSONB(TypeDecorator):
+    """Platform-independent JSONB type.
+    
+    Uses JSONB for PostgreSQL, falls back to JSON for other databases.
+    """
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            from sqlalchemy.dialects.postgresql import JSONB
+            return dialect.type_descriptor(JSONB())
+        else:
+            return dialect.type_descriptor(JSON())
 
 
 @pytest.fixture
@@ -47,6 +67,13 @@ async def async_db_session():
         poolclass=StaticPool,
         echo=False,
     )
+    
+    # Replace JSONB with JSON for SQLite (since SQLite doesn't support JSONB)
+    from sqlalchemy.dialects.postgresql import JSONB as PGJSONB
+    for table in Base.metadata.tables.values():
+        for column in table.columns:
+            if isinstance(column.type, PGJSONB):
+                column.type = SQLiteJSONB()
     
     # Create tables
     async with engine.begin() as conn:

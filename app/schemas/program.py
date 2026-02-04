@@ -304,14 +304,12 @@ class SessionResponse(BaseModel):
     intent_tags: list[str] = []
     
     # Circuit blocks (populated from circuit relationships)
-    circuit: CircuitBlock | None = None
     finisher_circuit: CircuitBlock | None = None
     
     # Sections (populated from exercises relationship)
     warmup: list[ExerciseBlock] | None = None
     main: list[ExerciseBlock] | None = None
     accessory: list[ExerciseBlock] | None = None
-    finisher: FinisherBlock | None = None
     cooldown: list[ExerciseBlock] | None = None
     
     # Time estimation
@@ -343,10 +341,6 @@ class SessionResponse(BaseModel):
         main = []
         accessory = []
         cooldown = []
-        finisher = None
-        
-        # Circuit blocks
-        circuit = None
         finisher_circuit = None
         
         # Helper to convert SessionExercise to ExerciseBlock
@@ -456,35 +450,13 @@ class SessionResponse(BaseModel):
                 cooldown.append(block)
             elif section_val == ExerciseRole.FINISHER.value:
                 # For finisher, we might have multiple exercises in a circuit
-                # This logic assumes simple mapping for now. 
+                # This logic assumes simple mapping for now.
                 pass
 
-        # Extract main_circuit data with complete circuit information
-        if hasattr(data, 'main_circuit') and data.main_circuit:
-            circuit = circuit_to_block(data.main_circuit)
-        
         # Extract finisher_circuit data with complete circuit information
         # When finisher_circuit exists, it provides complete circuit data with proper metric values
         if hasattr(data, 'finisher_circuit') and data.finisher_circuit:
             finisher_circuit = circuit_to_block(data.finisher_circuit)
-            # Create simple finisher block that references circuit
-            # Frontend will use finisher_circuit for display
-            finisher = {
-                "type": finisher_circuit.get("circuit_type", "circuit"),
-                "rounds": finisher_circuit.get("default_rounds", 1),
-                "duration_minutes": finisher_circuit.get("estimated_duration_seconds", 0) // 60 if finisher_circuit.get("estimated_duration_seconds") else None,
-            }
-        # Legacy finisher: Only create if no finisher_circuit exists (fallback for old finisher exercises)
-        else:
-            finisher_exercises = [ex for ex in sorted_exercises if (ex.exercise_role.value if hasattr(ex.exercise_role, 'value') else ex.exercise_role) == ExerciseRole.FINISHER.value]
-            if finisher_exercises:
-                 # Legacy finisher without circuit - use simple type
-                 finisher = {
-                     "type": "circuit",
-                     "rounds": 1,
-                     "duration_minutes": None,
-                     "exercises": [to_block(ex) for ex in finisher_exercises]
-                 }
 
         # Better approach: Return a dict with all fields populated
         result = {
@@ -494,12 +466,10 @@ class SessionResponse(BaseModel):
             "day_number": data.day_number,
             "session_type": data.session_type,
             "intent_tags": data.intent_tags,
-            "circuit": circuit,
             "finisher_circuit": finisher_circuit,
             "warmup": warmup,
             "main": main,
             "accessory": accessory,
-            "finisher": finisher,
             "cooldown": cooldown,
             "estimated_duration_minutes": data.estimated_duration_minutes,
             "warmup_duration_minutes": data.warmup_duration_minutes,
@@ -507,7 +477,8 @@ class SessionResponse(BaseModel):
             "accessory_duration_minutes": data.accessory_duration_minutes,
             "finisher_duration_minutes": data.finisher_duration_minutes,
             "cooldown_duration_minutes": data.cooldown_duration_minutes,
-            "coach_notes": data.coach_notes
+            "coach_notes": data.coach_notes,
+            "has_circuits": bool(data.finisher_circuit_id),
         }
         return result
 

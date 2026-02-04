@@ -164,8 +164,6 @@ async def create_custom_workout_log(
             current_order += 1
         return current_order
 
-    if log.main_circuit_id:
-        order_counter = await process_circuit(log.main_circuit_id, ExerciseRole.MAIN_LIFT, order_counter)
     if log.finisher:
         order_counter = await process_exercises(log.finisher, ExerciseRole.FINISHER, order_counter)
     if log.finisher_circuit_id:
