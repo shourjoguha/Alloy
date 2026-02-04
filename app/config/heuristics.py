@@ -9,6 +9,10 @@ All configurations are read-only constants imported at module load time.
 from typing import TypedDict, Dict, Any, List
 
 
+TIME_CONSTRAINT_TOLERANCE_PERCENT = 5
+DEFAULT_CIRCUIT_DURATION_MINUTES = 15
+
+
 class GoalDoseConfig(TypedDict):
     """Configuration for a single training goal."""
     intensity_range: List[float]
@@ -63,6 +67,8 @@ class TimeEstimationConfig(TypedDict):
     rest_seconds_by_role: RestConfig
     superset_rest_reduction_percent: int
     circuit_rest_between_rounds_seconds: int
+    circuit_default_duration_seconds: int
+    tolerance_percent: int
 
 
 class CnsDailyBudgetConfig(TypedDict):
@@ -556,7 +562,9 @@ TIME_ESTIMATION: TimeEstimationConfig = {
         "cooldown": 15
     },
     "superset_rest_reduction_percent": 50,
-    "circuit_rest_between_rounds_seconds": 60
+    "circuit_rest_between_rounds_seconds": 60,
+    "circuit_default_duration_seconds": DEFAULT_CIRCUIT_DURATION_MINUTES * 60,
+    "tolerance_percent": TIME_CONSTRAINT_TOLERANCE_PERCENT
 }
 
 CNS_LOAD_BUDGET: CnsLoadBudgetConfig = {

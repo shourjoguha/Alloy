@@ -14,6 +14,8 @@ from app.models.program import Session, SessionExercise
 from app.models.circuit import CircuitTemplate
 from app.models.circuit_extended import CircuitMelted, CircuitMacro
 from app.models.program import ExerciseRole
+from app.config.heuristics import DEFAULT_CIRCUIT_DURATION_MINUTES, TIME_ESTIMATION
+from app.services.time_estimation import TimeEstimationService
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class CircuitAssignmentService:
         try:
             # 1. Validate session exists
             session_result = await db.execute(
-                select(Session).where(Session.id == session_id)
+                select(Session).where(Session.id == session_id).with_for_update()
             )
             session = session_result.scalar_one_or_none()
             if not session:
@@ -171,19 +173,38 @@ class CircuitAssignmentService:
             # 10. Update session has_circuits flag
             session.has_circuits = True
             
-            # 11. Update duration estimates
-            circuit_duration = macro.estimated_duration_seconds if macro else circuit.default_duration_seconds or 1500
+            # 10. Update duration estimates using TimeEstimationService
+            time_service = TimeEstimationService()
+            
+            # Priority: Macro Time Cap > Heuristic Default (15 mins)
+            if macro and macro.estimated_duration_seconds:
+                circuit_duration = macro.estimated_duration_seconds
+            else:
+                circuit_duration = DEFAULT_CIRCUIT_DURATION_MINUTES * 60
+            
             circuit_minutes = circuit_duration / 60
             
             session.finisher_duration_minutes = circuit_minutes
             
-            # 12. Update total duration
+            # 12. Update total duration using existing component durations
+            # Note: Component durations (warmup, main, accessory, cooldown) are already calculated
+            # and stored on session from session_generator. We only need to update finisher (circuit).
             session.estimated_duration_minutes = (
                 (session.warmup_duration_minutes or 0) +
                 (session.main_duration_minutes or 0) +
                 (session.accessory_duration_minutes or 0) +
                 (session.finisher_duration_minutes or 0) +
                 (session.cooldown_duration_minutes or 0)
+            )
+            
+            logger.info(
+                f"Circuit duration: {circuit_minutes} min, "
+                f"Session total: {session.estimated_duration_minutes} min "
+                f"(warmup: {session.warmup_duration_minutes or 0}, "
+                f"main: {session.main_duration_minutes or 0}, "
+                f"accessory: {session.accessory_duration_minutes or 0}, "
+                f"finisher: {session.finisher_duration_minutes or 0}, "
+                f"cooldown: {session.cooldown_duration_minutes or 0})"
             )
             
             # 13. Commit transaction
@@ -352,7 +373,7 @@ class CircuitAssignmentService:
                     "muscle_overlap": 0.0,
                     "equipment_needed": macro.required_equipment if macro else [],
                     "estimated_total_duration": (session.estimated_duration_minutes or 0) + (
-                        (macro.estimated_duration_seconds / 60) if macro else 25
+                        (macro.estimated_duration_seconds / 60) if (macro and macro.estimated_duration_seconds) else DEFAULT_CIRCUIT_DURATION_MINUTES
                     ),
                 })
             
@@ -443,7 +464,11 @@ class CircuitAssignmentService:
                 warnings.append("Session has accessories - they will be removed if circuit is assigned")
             
             # Calculate impact
-            circuit_duration = (macro.estimated_duration_seconds if macro else 1500) / 60
+            if macro and macro.estimated_duration_seconds:
+                circuit_duration = macro.estimated_duration_seconds / 60
+            else:
+                circuit_duration = DEFAULT_CIRCUIT_DURATION_MINUTES
+
             new_duration = (session.estimated_duration_minutes or 0) + circuit_duration
             
             if new_duration > 60:

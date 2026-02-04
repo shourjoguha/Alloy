@@ -2,6 +2,7 @@
 import logging
 from dataclasses import dataclass
 from typing import Any
+from app.config.heuristics import TIME_ESTIMATION
 
 logger = logging.getLogger(__name__)
 
@@ -28,51 +29,11 @@ class TimeEstimationService:
         Args:
             config: Time estimation config from heuristic_configs
         """
-        self.config = config or self._default_config()
+        self.config = config or TIME_ESTIMATION
     
     def _default_config(self) -> dict:
         """Default time estimation configuration."""
-        return {
-            "warmup": {
-                "base_minutes": 5,
-                "per_exercise_minutes": 1
-            },
-            "cooldown": {
-                "base_minutes": 5,
-                "per_stretch_minutes": 1
-            },
-            "transition_between_exercises_seconds": 45,
-            "set_execution_time": {
-                "by_rep_range": {
-                    "1-3": 15,
-                    "4-6": 25,
-                    "7-10": 35,
-                    "11-15": 45,
-                    "16-20": 55,
-                    "21+": 70
-                },
-                "by_metric_type": {
-                    "reps": "use_rep_range",
-                    "time": "use_target_duration",
-                    "time_under_tension": "use_target_duration",
-                    "distance": 60
-                }
-            },
-            "rest_seconds_by_role": {
-                "warmup": 30,
-                "main": {
-                    "strength": 180,
-                    "hypertrophy": 90,
-                    "endurance": 45
-                },
-                "accessory": 60,
-                "skill": 90,
-                "finisher": 30,
-                "cooldown": 15
-            },
-            "superset_rest_reduction_percent": 50,
-            "circuit_rest_between_rounds_seconds": 60
-        }
+        return TIME_ESTIMATION
     
     def _get_set_execution_time(
         self,
@@ -322,7 +283,8 @@ class TimeEstimationService:
         """
         Estimate duration for a circuit block.
         
-        Uses the circuit's estimated_duration_seconds for accurate time calculation.
+        Uses the circuit's estimated_duration_seconds (from macro) for accurate time calculation.
+        Falls back to global heuristic default (15 mins) if no time cap is present.
         
         Args:
             circuit: Circuit block dict with circuit metadata
@@ -333,12 +295,15 @@ class TimeEstimationService:
         if not circuit:
             return 0
         
+        # 1. Use CircuitMacro time cap if available
         duration_seconds = circuit.get("estimated_duration_seconds")
         if duration_seconds:
             return int(duration_seconds / 60)
         
-        default_duration = circuit.get("default_duration_seconds", 1500)
-        return int(default_duration / 60)
+        # 2. Fall back to Heuristic Default (15 mins)
+        # We ignore circuit.default_duration_seconds from template as per requirements
+        fallback_default = self.config.get("circuit_default_duration_seconds", 900)
+        return int(fallback_default / 60)
 
     def calculate_session_duration(self, session) -> SessionTimeBreakdown:
         """

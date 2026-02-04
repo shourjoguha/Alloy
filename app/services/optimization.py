@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from ortools.sat.python import cp_model
 from app.models.enums import SkillLevel, CircuitType
 from app.config import activity_distribution as activity_distribution_config
+from app.config.heuristics import TIME_ESTIMATION
+from app.services.time_estimation import TimeEstimationService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -315,29 +317,61 @@ class ConstraintSolver:
         logger.info(f"  Max fatigue constraint: {max_fatigue_limit / 100:.2f} (multiplier: {fatigue_multiplier})")
         model.Add(fatigue_expr <= max_fatigue_limit)
 
-        # D. Max Duration Constraint
-        # Assume 1 set = 2 mins + 2 mins rest = 4 mins
-        # Variable sets: 2-5 sets = 8-20 mins per movement
-        # Use average 3.5 sets for duration calculation
-        AVG_SETS_PER_MOVEMENT = (MIN_SETS_PER_MOVEMENT + MAX_SETS_PER_MOVEMENT) / 2
-        MINS_PER_MOVEMENT = int(AVG_SETS_PER_MOVEMENT * 4)
+        # D. Max Duration Constraint (TimeEstimationService logic)
+        # Uses TimeEstimationService for accurate time estimation
+        time_estimator = TimeEstimationService()
         
-        movement_duration = sum(
-            movement_vars[m.id] * MINS_PER_MOVEMENT
+        # Estimate time per movement based on realistic set counts and rest periods
+        avg_sets = (MIN_SETS_PER_MOVEMENT + MAX_SETS_PER_MOVEMENT) / 2
+        avg_sets_int = int(avg_sets)
+        strength_weight = (request.goal_weights or {}).get("strength", 0)
+        hypertrophy_weight = (request.goal_weights or {}).get("hypertrophy", 0)
+        intent = "strength" if strength_weight > hypertrophy_weight else "hypertrophy"
+        
+        # Use TimeEstimationService for accurate exercise time calculation
+        seconds_per_movement = time_estimator.estimate_exercise_time(
+            sets=avg_sets_int,
+            reps=8,  # Default rep range
+            rest_seconds=TIME_ESTIMATION["rest_seconds_by_role"]["main"].get(intent, 90),
+            role="main",
+            intent=intent,
+            metric_type="reps",
+            is_superset=False
+        )
+        
+        # Add transition time only between movements (not after last one)
+        transition_seconds = TIME_ESTIMATION.get("transition_between_exercises_seconds", 45)
+        total_seconds_per_movement = seconds_per_movement + transition_seconds
+        
+        # Convert to tenths of a minute for OR-Tools (requires integer coefficients)
+        # 1 minute = 10 tenths, so we multiply by 10/60 = 1/6
+        tenths_per_movement = round(total_seconds_per_movement / 6)  # 6 seconds = 0.1 minute = 1 tenth
+        
+        # Log for debugging
+        minutes_per_movement = tenths_per_movement / 10
+        logger.info(f"[ConstraintSolver] Time calculation: sets={avg_sets_int}, reps=8, rest={TIME_ESTIMATION['rest_seconds_by_role']['main'].get(intent, 90)}s, transition={transition_seconds}s")
+        logger.info(f"[ConstraintSolver] seconds_per_movement={seconds_per_movement}s + {transition_seconds}s transition = {total_seconds_per_movement}s = {minutes_per_movement} minutes per movement")
+        
+        # Use tenths of minute for integer constraints
+        movement_duration_tenths = sum(
+            movement_vars[m.id] * tenths_per_movement
             for m in request.available_movements
             if m.id in movement_vars
         )
         
-        circuit_duration = 0
+        circuit_duration_tenths = 0
         if request.allow_circuits and request.available_circuits:
-            circuit_duration = sum(
-                circuit_vars[c.id] * (c.duration_seconds / 60)  # convert to minutes
+            circuit_duration_tenths = sum(
+                circuit_vars[c.id] * round((c.duration_seconds / 60) * 10)  # convert to tenths of minute
                 for c in request.available_circuits
                 if c.id in circuit_vars
             )
         
-        duration_expr = movement_duration + circuit_duration
-        model.Add(duration_expr <= request.session_duration_minutes)
+        # Total duration in tenths of minute
+        duration_expr_tenths = movement_duration_tenths + circuit_duration_tenths
+        # Convert session duration to tenths of minute
+        session_duration_tenths = request.session_duration_minutes * 10
+        model.Add(duration_expr_tenths <= session_duration_tenths)
         
         # E. Compound Movement Constraints
         # Ensure minimum compound movements based on pass config
@@ -450,7 +484,7 @@ class ConstraintSolver:
             logger.info(f"  Selected circuits: {len(selected_circuits)}")
             logger.info(f"  Total fatigue: {total_fatigue:.2f}")
             logger.info(f"  Total stimulus: {total_stimulus:.2f}")
-            estimated_duration = (len(selected_movements) * MINS_PER_MOVEMENT) + (sum(c.duration_seconds for c in selected_circuits) // 60)
+            estimated_duration = (len(selected_movements) * minutes_per_movement) + (sum(c.duration_seconds for c in selected_circuits) // 60)
             logger.info(f"  Estimated duration: {estimated_duration} minutes")
             logger.info("=" * 80)
             return OptimizationResult(

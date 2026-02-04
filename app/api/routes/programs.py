@@ -332,7 +332,7 @@ async def get_program(
             raise HTTPException(status_code=500, detail="Internal server error") from e
     
     # Convert upcoming sessions to response format with duration estimates
-    # Use simple estimation to avoid N+1 query problem
+    # Use TimeEstimationService for accurate duration calculation
     session_responses = []
     for session in upcoming_sessions:
         if not session.estimated_duration_minutes:
@@ -346,9 +346,9 @@ async def get_program(
                 session.cooldown_duration_minutes = breakdown.cooldown_minutes
             except Exception as e:
                 logger.warning("Error calculating duration for session %s: %s", session.id, e)
-                # Simple estimation: 4 mins per exercise + 10 mins warmup
-                exercise_count = len(session.exercises) if session.exercises else 0
-                session.estimated_duration_minutes = 10 + (exercise_count * 4)
+                # Leave estimated_duration_minutes as None if calculation fails
+                # Do not use fallback calculation as it doesn't respect user's max_session_duration
+                pass
         
         try:
             print(f"DEBUG: Validating session {session.id}")
@@ -379,9 +379,9 @@ async def get_program(
                     session.estimated_duration_minutes = breakdown.total_minutes
                 except Exception as e:
                     logger.warning("Error calculating duration for microcycle session %s: %s", session.id, e)
-                    # Simple estimation: 4 mins per exercise + 10 mins warmup
-                    exercise_count = len(session.exercises) if session.exercises else 0
-                    session.estimated_duration_minutes = 10 + (exercise_count * 4)
+                    # Leave estimated_duration_minutes as None if calculation fails
+                    # Do not use fallback calculation as it doesn't respect user's max_session_duration
+                    pass
 
             try:
                 print(f"DEBUG: Validating microcycle session {session.id}")

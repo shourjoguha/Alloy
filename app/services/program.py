@@ -589,7 +589,8 @@ class ProgramService:
                 return
             
             failed_session.coach_notes = f"Generation failed: {error_msg}. Please regenerate."
-            failed_session.estimated_duration_minutes = 45
+            parent_program = await db.get(Program, failed_session.program_id)
+            failed_session.estimated_duration_minutes = parent_program.max_session_duration if parent_program and parent_program.max_session_duration else 45
             
             # Find a safe fallback movement
             fallback_movement = await db.execute(
