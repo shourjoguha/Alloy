@@ -6,18 +6,20 @@ from app.services.program import ProgramService
 from app.services.session_generator import SessionGeneratorService
 
 
-def test_build_goal_finisher_uses_config():
+@pytest.mark.asyncio
+async def test_build_goal_finisher_uses_config():
     svc = SessionGeneratorService()
-    finisher = svc._build_goal_finisher({"fat_loss": 6, "endurance": 0, "strength": 0, "hypertrophy": 4, "mobility": 0})
+    finisher = await svc._build_goal_finisher({"fat_loss": 6, "endurance": 0, "strength": 0, "hypertrophy": 4, "mobility": 0})
     assert finisher is not None
     assert finisher.get("type") == "circuit"
 
-    finisher2 = svc._build_goal_finisher({"fat_loss": 0, "endurance": 6, "strength": 4, "hypertrophy": 0, "mobility": 0})
+    finisher2 = await svc._build_goal_finisher({"fat_loss": 0, "endurance": 6, "strength": 4, "hypertrophy": 0, "mobility": 0})
     assert finisher2 is not None
     assert finisher2.get("type") == "interval"
 
 
-def test_normalize_session_enforces_accessory_xor_finisher():
+@pytest.mark.asyncio
+async def test_normalize_session_enforces_accessory_xor_finisher():
     svc = SessionGeneratorService()
     content = {
         "warmup": [{"movement": "Warmup", "duration_seconds": 60}],
@@ -26,16 +28,17 @@ def test_normalize_session_enforces_accessory_xor_finisher():
         "finisher": {"type": "circuit", "duration_minutes": 8, "exercises": [{"movement": "Burpee", "reps": 10}]},
         "cooldown": [{"movement": "Cooldown", "duration_seconds": 60}],
     }
-    normalized = svc._normalize_session_content(content, SessionType.UPPER, ["prefer_accessory"], {"strength": 6, "hypertrophy": 4, "fat_loss": 0, "endurance": 0, "mobility": 0})
+    normalized = await svc._normalize_session_content(content, SessionType.UPPER, ["prefer_accessory"], {"strength": 6, "hypertrophy": 4, "fat_loss": 0, "endurance": 0, "mobility": 0})
     assert normalized.get("accessory")
     assert normalized.get("finisher") is None
 
-    normalized2 = svc._normalize_session_content(content, SessionType.UPPER, ["prefer_finisher"], {"strength": 0, "hypertrophy": 0, "fat_loss": 6, "endurance": 4, "mobility": 0})
+    normalized2 = await svc._normalize_session_content(content, SessionType.UPPER, ["prefer_finisher"], {"strength": 0, "hypertrophy": 0, "fat_loss": 6, "endurance": 4, "mobility": 0})
     assert normalized2.get("finisher") is not None
     assert normalized2.get("accessory") is None
 
 
-def test_normalize_session_converts_accessory_to_finisher_when_preferred():
+@pytest.mark.asyncio
+async def test_normalize_session_converts_accessory_to_finisher_when_preferred():
     svc = SessionGeneratorService()
     content = {
         "warmup": [{"movement": "Warmup", "duration_seconds": 60}],
@@ -44,7 +47,7 @@ def test_normalize_session_converts_accessory_to_finisher_when_preferred():
         "finisher": None,
         "cooldown": [{"movement": "Cooldown", "duration_seconds": 60}],
     }
-    normalized = svc._normalize_session_content(
+    normalized = await svc._normalize_session_content(
         content,
         SessionType.UPPER,
         ["prefer_finisher"],
@@ -54,7 +57,8 @@ def test_normalize_session_converts_accessory_to_finisher_when_preferred():
     assert normalized.get("accessory") is None
 
 
-def test_conditioning_only_session_has_no_accessory_or_finisher():
+@pytest.mark.asyncio
+async def test_conditioning_only_session_has_no_accessory_or_finisher():
     svc = SessionGeneratorService()
     content = {
         "warmup": [{"movement": "Warmup", "duration_seconds": 60}],
@@ -63,7 +67,7 @@ def test_conditioning_only_session_has_no_accessory_or_finisher():
         "finisher": {"type": "circuit", "duration_minutes": 8, "exercises": [{"movement": "Burpee", "reps": 10}]},
         "cooldown": [{"movement": "Cooldown", "duration_seconds": 60}],
     }
-    normalized = svc._normalize_session_content(content, SessionType.CUSTOM, ["conditioning"], {"fat_loss": 6, "endurance": 0, "strength": 4, "hypertrophy": 0, "mobility": 0})
+    normalized = await svc._normalize_session_content(content, SessionType.CUSTOM, ["conditioning"], {"fat_loss": 6, "endurance": 0, "strength": 4, "hypertrophy": 0, "mobility": 0})
     assert normalized.get("accessory") is None
     assert normalized.get("finisher") is None
 
@@ -213,22 +217,5 @@ def test_avoid_cardio_days_uses_conditioning_for_endurance_heavy_force():
     assert any((d.get("type") == "conditioning") for d in out["structure"])
 
 
-@pytest.mark.asyncio
-async def test_jerome_notes_are_trimmed(monkeypatch):
-    svc = SessionGeneratorService()
-
-    class FakeProvider:
-        async def chat(self, messages, config):
-            class Resp:
-                content = "x" * 500
-            return Resp()
-
-    monkeypatch.setattr("app.services.session_generator.get_llm_provider", lambda: FakeProvider())
-    note = await svc._generate_jerome_notes(
-        session_type=SessionType.UPPER,
-        intent_tags=["squat"],
-        goal_weights={"fat_loss": 6, "endurance": 0, "strength": 4, "hypertrophy": 0, "mobility": 0},
-        content={"main": [{"movement": "Bench Press"}], "accessory": None, "finisher": None},
-        is_deload=False,
-    )
-    assert len(note) <= 200
+# Note: test_jerome_notes_are_trimmed removed - _generate_jerome_notes function was moved
+# to batched microcycle-level generation in program.py (_generate_microcycle_jerome_notes)

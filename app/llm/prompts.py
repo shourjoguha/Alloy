@@ -1,5 +1,10 @@
-"""System prompts for LLM-powered features."""
+"""System prompts for LLM-powered features.
 
+DEPRECATED: The functions in this module are legacy from when LLM directly generated sessions.
+Session generation now uses Optimization Engine (OR-Tools) via app/services/optimization.py.
+The build_optimized_session_prompt function is not called in the active codebase.
+"""
+import warnings
 from app.llm.optimization import LLMOptimizer
 from app.models.enums import SessionType, Goal
 
@@ -92,15 +97,17 @@ def build_optimized_session_prompt(
     max_session_duration: int | None = None,
 ) -> str:
     """
-    Build optimized session generation prompt with reduced token count and structured constraints.
-    
-    Optimizations:
-    1. Pre-filtered movement lists (60-80% reduction)
-    2. Heuristic constraints (reduces LLM decision space)
-    3. Structured metadata (faster parsing)
-    4. Cached components (warmup/cooldown)
-    5. Goal-specific suggestions
+    DEPRECATED: Build optimized session generation prompt with reduced token count.
+
+    This function is legacy from when LLM directly generated sessions.
+    Session generation now uses Optimization Engine (OR-Tools) via app/services/optimization.py.
     """
+    warnings.warn(
+        "build_optimized_session_prompt() is deprecated and not called in active codebase. "
+        "Session generation uses Optimization Engine (OR-Tools) which respects max_session_duration.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     # Convert string session_type to enum for optimization
     session_type_enum = SessionType(session_type)
     

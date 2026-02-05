@@ -28,7 +28,7 @@ def circuit_comparison_service(async_db_session: AsyncSession) -> CircuitCompari
 
 
 @pytest.fixture
-async def sample_circuits(db_session: AsyncSession):
+async def sample_circuits(async_db_session: AsyncSession):
     """Create sample circuits for testing."""
     from app.models.circuit import CircuitTemplate
     
@@ -47,8 +47,8 @@ async def sample_circuits(db_session: AsyncSession):
             {"movement_id": 2, "reps": 8},
         ]
     )
-    db_session.add(c1)
-    await db_session.flush()
+    async_db_session.add(c1)
+    await async_db_session.flush()
     
     m1 = CircuitMacro(
         circuit_id=c1.id,
@@ -75,7 +75,7 @@ async def sample_circuits(db_session: AsyncSession):
         circuit_type_intensity="medium",
         data_completeness_score=1.0
     )
-    db_session.add(m1)
+    async_db_session.add(m1)
     circuits.append((c1, m1))
     
     # Circuit 2: Lower body, squat-heavy
@@ -91,8 +91,8 @@ async def sample_circuits(db_session: AsyncSession):
             {"movement_id": 4, "reps": 10},
         ]
     )
-    db_session.add(c2)
-    await db_session.flush()
+    async_db_session.add(c2)
+    await async_db_session.flush()
     
     m2 = CircuitMacro(
         circuit_id=c2.id,
@@ -119,7 +119,7 @@ async def sample_circuits(db_session: AsyncSession):
         circuit_type_intensity="medium",
         data_completeness_score=1.0
     )
-    db_session.add(m2)
+    async_db_session.add(m2)
     circuits.append((c2, m2))
     
     # Circuit 3: Full body, mixed patterns
@@ -136,8 +136,8 @@ async def sample_circuits(db_session: AsyncSession):
             {"movement_id": 5, "reps": 8},
         ]
     )
-    db_session.add(c3)
-    await db_session.flush()
+    async_db_session.add(c3)
+    await async_db_session.flush()
     
     m3 = CircuitMacro(
         circuit_id=c3.id,
@@ -164,7 +164,7 @@ async def sample_circuits(db_session: AsyncSession):
         circuit_type_intensity="high",
         data_completeness_score=1.0
     )
-    db_session.add(m3)
+    async_db_session.add(m3)
     circuits.append((c3, m3))
     
     # Circuit 4: Upper body, similar to circuit 1
@@ -180,8 +180,8 @@ async def sample_circuits(db_session: AsyncSession):
             {"movement_id": 2, "reps": 10},
         ]
     )
-    db_session.add(c4)
-    await db_session.flush()
+    async_db_session.add(c4)
+    await async_db_session.flush()
     
     m4 = CircuitMacro(
         circuit_id=c4.id,
@@ -208,10 +208,10 @@ async def sample_circuits(db_session: AsyncSession):
         circuit_type_intensity="medium",
         data_completeness_score=1.0
     )
-    db_session.add(m4)
+    async_db_session.add(m4)
     circuits.append((c4, m4))
     
-    await db_session.commit()
+    await async_db_session.commit()
     
     return {c.id: (c, m) for c, m in circuits}
 

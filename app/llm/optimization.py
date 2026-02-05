@@ -1,15 +1,27 @@
 """
 LLM optimization utilities for faster session generation.
+
+DEPRECATED: This module is legacy from when LLM directly generated sessions.
+Session generation now uses the Optimization Engine (OR-Tools) via app/services/optimization.py.
+The duration_targets below are deprecated and not used in the active codebase.
 """
+import warnings
 from typing import Dict, List, Any
 from app.models.enums import SessionType, Goal
 
 
 class LLMOptimizer:
     """
-    Optimizes LLM calls through heuristics, caching, and structured metadata.
+    DEPRECATED: Optimizes LLM calls through heuristics, caching, and structured metadata.
+
+    This class is legacy from when LLM directly generated session content.
+    The current architecture uses the Optimization Engine (OR-Tools) for session generation,
+    which respects max_session_duration from the Program model.
+
+    The build_guidance_context and get_guidance_structure methods are deprecated and not called
+    in the active session generation flow.
     """
-    
+
     # Cached heuristic rules to reduce LLM decision-making
     HEURISTIC_RULES = {
         "main_lift_counts": {
@@ -28,8 +40,10 @@ class LLMOptimizer:
             SessionType.PULL: 3,
             SessionType.LEGS: 3,
         },
+        # DEPRECATED: duration_targets are no longer used. Session duration is controlled by
+        # Program.max_session_duration which flows through to OptimizationRequest.session_duration_minutes
         "duration_targets": {
-            SessionType.FULL_BODY: 60,  # Target durations
+            SessionType.FULL_BODY: 60,  # Target durations (DEPRECATED)
             SessionType.UPPER: 55,
             SessionType.LOWER: 50,
             SessionType.PUSH: 45,
@@ -106,36 +120,44 @@ class LLMOptimizer:
     
     @classmethod
     def get_guidance_structure(
-        cls, 
-        session_type: SessionType, 
-        goals: List[Goal], 
+        cls,
+        session_type: SessionType,
+        goals: List[Goal],
         is_deload: bool,
         goal_weights: Dict[str, int] = None
     ) -> Dict[str, Any]:
         """
-        Generate guidance structure (not hard constraints) for LLM decision-making.
-        Provides suggestions while preserving LLM flexibility.
+        DEPRECATED: Generate guidance structure for LLM decision-making.
+
+        This method is legacy from when LLM directly generated sessions.
+        Session generation now uses Optimization Engine (OR-Tools) via app/services/optimization.py.
         """
+        warnings.warn(
+            "LLMOptimizer.get_guidance_structure() is deprecated and not used in active codebase. "
+            "Session generation uses Optimization Engine (OR-Tools) which respects max_session_duration.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         main_count = cls.HEURISTIC_RULES["main_lift_counts"].get(session_type, 2)
         accessory_count = cls.HEURISTIC_RULES["accessory_counts"].get(session_type, 3)
         target_duration = cls.HEURISTIC_RULES["duration_targets"].get(session_type, 55)
-        
+
         # Adjust for deload (guidance only)
         if is_deload:
             main_count = max(1, main_count - 1)
             accessory_count = max(2, accessory_count - 1)
             target_duration = int(target_duration * 0.8)
-        
+
         # Default goal weights if not provided
         if not goal_weights:
             goal_weights = {
-                'strength': 1,
-                'hypertrophy': 1,
-                'endurance': 1,
-                'fat_loss': 1,
-                'mobility': 1
+                'strength':1,
+                'hypertrophy':1,
+                'endurance':1,
+                'fat_loss':1,
+                'mobility':1
             }
-        
+
         guidance = {
             "suggested_main_lifts": main_count,
             "suggested_accessories": accessory_count,
@@ -143,31 +165,31 @@ class LLMOptimizer:
             "finisher_guidance": "Consider finisher for fat_loss/endurance goals or crossfit disciplines",
             "superset_guidance": "Use supersets for hypertrophy goals to increase volume efficiency",
         }
-        
+
         # Goal-specific guidance with weight-aware logic
         if goal_weights.get('hypertrophy', 0) >= 5:
             guidance["accessory_note"] = "Consider additional accessories for muscle growth"
         if goal_weights.get('strength', 0) >= 5:
             guidance["main_lift_note"] = "Focus on compound movements with progressive overload"
-        
+
         # Endurance goal logic (weight >= 6 = high priority)
         if goal_weights.get('endurance', 0) >= 6:
             guidance["cardio_note"] = "Include cardio block (10-15min) for endurance - running, rowing, or cycling"
             guidance["high_rep_note"] = "Use higher rep ranges (15-20+) for endurance adaptation"
         elif goal_weights.get('endurance', 0) >= 4:
             guidance["conditioning_note"] = "Include finisher for metabolic conditioning"
-        
+
         # Mobility goal logic (weight >= 5 = medium-high priority)
         if goal_weights.get('mobility', 0) >= 5:
             guidance["mobility_note"] = "Add dedicated mobility work (5-10min) to cooldown: stretching, foam rolling"
             guidance["dynamic_stretch_note"] = "Include dynamic stretching in warmup for mobility goals"
         elif goal_weights.get('mobility', 0) >= 3:
             guidance["mobility_light_note"] = "Consider adding brief mobility work to cooldown"
-        
+
         # Fat loss goal logic
         if goal_weights.get('fat_loss', 0) >= 5:
             guidance["metabolic_note"] = "Include metabolic finisher or cardio block for fat loss"
-        
+
         return guidance
     
     @classmethod
@@ -211,28 +233,36 @@ class LLMOptimizer:
         goal_weights: Dict[str, int] = None,
     ) -> str:
         """
-        Build guidance context (suggestions, not hard constraints) for LLM.
-        Preserves LLM decision-making while providing helpful guidance.
+        DEPRECATED: Build guidance context (suggestions, not hard constraints) for LLM.
+
+        This method is legacy from when LLM directly generated sessions.
+        Session generation now uses Optimization Engine (OR-Tools) via app/services/optimization.py.
         """
+        warnings.warn(
+            "LLMOptimizer.build_guidance_context() is deprecated and not used in active codebase. "
+            "Session generation uses Optimization Engine (OR-Tools) which respects max_session_duration.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         guidance = cls.get_guidance_structure(session_type, goals, is_deload, goal_weights)
         suggested_accessories = cls.get_goal_specific_accessories(goals, session_type)
-        
+
         # Filter out used accessories from suggestions
         if used_accessories:
             suggested_accessories = [a for a in suggested_accessories if a not in used_accessories]
-        
+
         guidance_text = f"""## Guidance & Suggestions (Use Your Judgment)
 - Main lifts: ~{guidance['suggested_main_lifts']} exercises from patterns: {', '.join(intent_tags[:2])}
 - Accessories: ~{guidance['suggested_accessories']} exercises, consider: {', '.join(suggested_accessories[:guidance['suggested_accessories']])}
 - Target duration: ~{guidance['target_duration']} minutes (flexible based on needs)
 - {guidance['finisher_guidance']}
 - {guidance['superset_guidance']}"""
-        
+
         # Add goal-specific notes
         for key, value in guidance.items():
             if key.endswith('_note'):
                 guidance_text += f"\n- {value}"
-        
+
         return guidance_text
 
 

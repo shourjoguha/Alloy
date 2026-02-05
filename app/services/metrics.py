@@ -171,25 +171,6 @@ class MetricsService:
         total = sum(exp.e1rm_value for exp in exposures)
         return total / len(exposures)
     
-    async def calculate_all_psi(
-        self,
-        db: AsyncSession,
-        user_id: int,
-        lookback_microcycles: int = 2
-    ) -> dict[MovementPattern, float | None]:
-        """
-        Calculate PSI for all movement patterns.
-        
-        Returns:
-            Dict mapping pattern to PSI value (None if insufficient data)
-        """
-        result = {}
-        for pattern in MovementPattern:
-            result[pattern] = await self.calculate_psi(
-                db, user_id, pattern, lookback_microcycles
-            )
-        return result
-    
     async def detect_psi_trend(
         self,
         db: AsyncSession,

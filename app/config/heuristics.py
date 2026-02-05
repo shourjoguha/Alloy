@@ -9,7 +9,15 @@ All configurations are read-only constants imported at module load time.
 from typing import TypedDict, Dict, Any, List
 
 
+# Global time constraint tolerance - sessions must be within this % of target duration
+# Example: 60 min session with 5% tolerance = 57-63 min acceptable range
 TIME_CONSTRAINT_TOLERANCE_PERCENT = 5
+
+# Default session duration fallback when no explicit value is provided
+# This should match the default in ProgramCreate schema (schemas/program.py line 90)
+DEFAULT_SESSION_DURATION_MINUTES = 60
+
+# Default circuit duration when no time cap is available from circuit macro
 DEFAULT_CIRCUIT_DURATION_MINUTES = 15
 
 
@@ -386,7 +394,7 @@ GOAL_DOSE_HEURISTICS: Dict[str, GoalDoseConfig] = {
         "intensity_range": [0.0, 0.50],
         "rep_range": [8, 15],
         "sets_per_muscle_group_weekly": [6, 12],
-        "rest_seconds": [30, 60],
+        "rest_seconds": [10, 15],
         "preferred_patterns": ["mobility", "isometric", "core"],
         "preferred_disciplines": ["mobility", "yoga", "rehabilitation"],
         "tempo": "slow_controlled",
@@ -564,7 +572,10 @@ TIME_ESTIMATION: TimeEstimationConfig = {
     "superset_rest_reduction_percent": 50,
     "circuit_rest_between_rounds_seconds": 60,
     "circuit_default_duration_seconds": DEFAULT_CIRCUIT_DURATION_MINUTES * 60,
-    "tolerance_percent": TIME_CONSTRAINT_TOLERANCE_PERCENT
+    # Note: tolerance_percent is now referenced via TIME_CONSTRAINT_TOLERANCE_PERCENT constant
+    # Kept here for backwards compatibility with existing code that reads from this dict
+    "tolerance_percent": TIME_CONSTRAINT_TOLERANCE_PERCENT,
+    "default_session_duration_minutes": DEFAULT_SESSION_DURATION_MINUTES
 }
 
 CNS_LOAD_BUDGET: CnsLoadBudgetConfig = {

@@ -40,7 +40,7 @@ from app.schemas.circuit import (
 from app.llm import get_llm_provider, LLMConfig, Message, PromptBuilder
 from app.services.adaptation import adaptation_service
 from app.services.deload import deload_service
-from app.services.time_estimation import time_estimation_service
+from app.services.time_estimation import time_estimation_service, get_default_session_duration
 from app.services.circuit_assignment import circuit_assignment_service
 from app.api.routes.dependencies import get_current_user_id
 
@@ -360,7 +360,7 @@ async def adapt_session(
             accessory=adapted_plan.get("accessory"),
             finisher=adapted_plan.get("finisher"),
             cooldown=adapted_plan.get("cooldown"),
-            estimated_duration_minutes=adapted_plan.get("estimated_duration_minutes", 60),
+            estimated_duration_minutes=adapted_plan.get("estimated_duration_minutes", get_default_session_duration()),
             reasoning=adapted_plan.get("reasoning", ""),
             trade_offs=adapted_plan.get("trade_offs"),
         ),

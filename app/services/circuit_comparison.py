@@ -498,13 +498,6 @@ class CircuitComparisonService:
             equipment_overlap * self.COMPLEMENTARY_EQUIPMENT
         )
         
-        logger.debug(f"[_calculate_complementarity_score] Ref circuit {reference.circuit_id} vs Cand circuit {candidate.circuit_id}")
-        logger.debug(f"[_calculate_complementarity_score] Pattern diversity: {pattern_diversity:.3f} (overlap: {pattern_overlap:.3f})")
-        logger.debug(f"[_calculate_complementarity_score] Region diversity: {region_diversity:.3f} (ref={reference.primary_region.value}, cand={candidate.primary_region.value})")
-        logger.debug(f"[_calculate_complementarity_score] Muscle diversity: {muscle_diversity:.3f} (overlap: {muscle_overlap:.3f})")
-        logger.debug(f"[_calculate_complementarity_score] Equipment overlap: {equipment_overlap:.3f}")
-        logger.debug(f"[_calculate_complementarity_score] Final complementarity: {complementarity:.3f}")
-        
         return complementarity
     
     def _calculate_finisher_similarity_score(
@@ -561,13 +554,6 @@ class CircuitComparisonService:
             muscle_overlap * self.SIMILARITY_MUSCLE +
             equipment_overlap * self.SIMILARITY_EQUIPMENT
         )
-        
-        logger.debug(f"[_calculate_finisher_similarity_score] Ref circuit {reference.circuit_id} vs Cand circuit {candidate.circuit_id}")
-        logger.debug(f"[_calculate_finisher_similarity_score] Pattern similarity: {pattern_overlap:.3f}")
-        logger.debug(f"[_calculate_finisher_similarity_score] Region similarity: {region_similarity:.3f} (ref={reference.primary_region.value}, cand={candidate.primary_region.value})")
-        logger.debug(f"[_calculate_finisher_similarity_score] Muscle similarity: {muscle_overlap:.3f}")
-        logger.debug(f"[_calculate_finisher_similarity_score] Equipment overlap: {equipment_overlap:.3f}")
-        logger.debug(f"[_calculate_finisher_similarity_score] Final similarity: {similarity:.3f}")
         
         return similarity
     
@@ -647,128 +633,66 @@ class CircuitComparisonService:
             >>>     limit=5
             >>> )
         """
-        logger.info("=" * 80)
-        logger.info("[CircuitComparisonService.recommend_circuits_for_session] ENTRY POINT")
-        logger.info("[CircuitComparisonService] circuit_ids={circuit_ids}")
-        logger.info(f"[CircuitComparisonService] target_regions={target_regions}")
-        logger.info(f"[CircuitComparisonService] target_patterns={target_patterns}")
-        logger.info(f"[CircuitComparisonService] difficulty_tier={difficulty_tier}")
-        logger.info(f"[CircuitComparisonService] max_equipment={max_equipment}")
-        logger.info(f"[CircuitComparisonService] limit={limit}")
-        logger.info(f"[CircuitComparisonService] is_finisher={is_finisher}")
-        logger.info("=" * 80)
+        logger.debug(
+            f"[recommend_circuits_for_session] circuit_ids={circuit_ids}, regions={target_regions}, "
+            f"patterns={target_patterns}, tier={difficulty_tier}, is_finisher={is_finisher}"
+        )
         
         try:
             # Build query with filters
             stmt = select(CircuitMacro)
             
             # Apply filters
-            filters_applied = []
             if target_regions:
                 stmt = stmt.where(CircuitMacro.primary_region.in_(target_regions))
-                filters_applied.append(f"target_regions={target_regions}")
-                logger.info(f"[CircuitComparisonService] Applied filter: target_regions={target_regions}")
             
             if difficulty_tier:
                 tier_value = MovementTier(difficulty_tier).value
                 stmt = stmt.where(CircuitMacro.difficulty_tier <= tier_value)
-                filters_applied.append(f"difficulty_tier={difficulty_tier} (value={tier_value})")
-                logger.info(f"[CircuitComparisonService] Applied filter: difficulty_tier={difficulty_tier} (value={tier_value})")
             
             if max_equipment is not None:
                 stmt = stmt.where(CircuitMacro.equipment_complexity <= max_equipment)
-                filters_applied.append(f"max_equipment={max_equipment}")
-                logger.info(f"[CircuitComparisonService] Applied filter: max_equipment={max_equipment}")
             
             if circuit_ids:
                 stmt = stmt.where(CircuitMacro.circuit_id.notin_(circuit_ids))
-                filters_applied.append(f"excluding circuit_ids={circuit_ids}")
-                logger.info(f"[CircuitComparisonService] Applied filter: excluding circuit_ids={circuit_ids}")
-            
-            logger.info(f"[CircuitComparisonService] Filters applied: {filters_applied if filters_applied else 'none'}")
             
             # Execute query
-            logger.info("[CircuitComparisonService] Executing database query...")
             result = await self.db.execute(stmt)
             candidates = result.scalars().all()
-            logger.info(f"[CircuitComparisonService] Database query returned {len(candidates)} candidate circuits")
-            
-            if len(candidates) > 0:
-                # Log details of first few candidates for debugging
-                for i, c in enumerate(candidates[:3]):
-                    logger.info(f"[CircuitComparisonService] Candidate {i+1}: circuit_id={c.circuit_id}, primary_region={c.primary_region.value}, difficulty_tier={c.difficulty_tier.value}, total_exercises={c.total_exercises}")
             
             # Filter by target patterns (JSONB filtering is complex, do in Python)
             if target_patterns:
-                candidates_before_filter = len(candidates)
                 candidates = [
                     c for c in candidates
                     if any(p in c.movement_pattern_counts for p in target_patterns)
                 ]
-                logger.info(
-                    f"[CircuitComparisonService] After target_patterns filter ({target_patterns}): "
-                    f"{len(candidates)} candidates (was {candidates_before_filter})"
-                )
-                
-                if len(candidates) > 0:
-                    # Log which patterns matched for first candidate
-                    for i, c in enumerate(candidates[:3]):
-                        matched_patterns = [p for p in target_patterns if p in c.movement_pattern_counts]
-                        logger.info(f"[CircuitComparisonService] Candidate {c.circuit_id} matched patterns: {matched_patterns}")
             
             if len(candidates) == 0:
-                logger.warning("[CircuitComparisonService] No candidates remaining after filters, returning empty list")
-                logger.info("=" * 80)
+                logger.debug("[recommend_circuits_for_session] No candidates after filters")
                 return []
             
             # Score candidates
-            logger.info(f"[CircuitComparisonService] Scoring {len(candidates)} candidates...")
             recommendations = []
             
             # Get reference circuit if provided
             reference = None
             if circuit_ids:
-                logger.info(f"[CircuitComparisonService] Fetching reference circuit with id={circuit_ids[0]}")
                 reference_stmt = select(CircuitMacro).where(
                     CircuitMacro.circuit_id == circuit_ids[0]
                 )
                 result = await self.db.execute(reference_stmt)
                 reference = result.scalar_one_or_none()
-                if reference:
-                    logger.info(f"[CircuitComparisonService] Reference circuit found: circuit_id={reference.circuit_id}, primary_region={reference.primary_region.value}, difficulty_tier={reference.difficulty_tier.value}")
-                    logger.info(f"[CircuitComparisonService] Reference primary_muscles: {reference.primary_muscles}")
-                else:
-                    logger.warning(f"[CircuitComparisonService] Reference circuit {circuit_ids[0]} not found in database")
-            
-            scoring_method = "finisher_similarity" if (is_finisher and reference) else ("complementarity" if reference else "default")
-            logger.info(f"[CircuitComparisonService] Scoring method: {scoring_method}")
             
             for candidate in candidates:
                 score = 0.0
                 
                 if reference:
                     if is_finisher:
-                        # Similarity score for finishers (same muscles/region is better)
-                        score = self._calculate_finisher_similarity_score(
-                            reference, candidate
-                        )
-                        logger.debug(
-                            f"[CircuitComparisonService] Calculated finisher similarity for circuit {candidate.circuit_id}: "
-                            f"score={score:.3f}"
-                        )
+                        score = self._calculate_finisher_similarity_score(reference, candidate)
                     else:
-                        # Complementarity score for variety (different is better)
-                        score = self._calculate_complementarity_score(
-                            reference, candidate
-                        )
-                        logger.debug(
-                        f"[CircuitComparisonService] Calculated complementarity for circuit {candidate.circuit_id}: "
-                        f"score={score:.3f}"
-                    )
+                        score = self._calculate_complementarity_score(reference, candidate)
                 else:
-                    # Relevance score based on filters
-                    score = 1.0  # Default for unfiltered queries
-                    logger.debug("[CircuitComparisonService] No circuit_ids provided, using default score=1.0")
+                    score = 1.0
                 
                 recommendations.append(CircuitRecommendation(
                     circuit_id=candidate.circuit_id,
@@ -782,45 +706,16 @@ class CircuitComparisonService:
                     }
                 ))
             
-            # Log scored recommendations
-            for i, rec in enumerate(recommendations[:5]):
-                logger.info(
-                    f"[CircuitComparisonService] Scored recommendation {i+1}: circuit_id={rec.circuit_id}, "
-                    f"similarity_score={rec.similarity_score:.3f}, complementary_score={rec.complementary_score:.3f}, "
-                    f"region={rec.metadata['primary_region']}, tier={rec.metadata['difficulty_tier']}"
-                )
-            
             # Sort by score (descending) and limit
             if is_finisher:
                 recommendations.sort(key=lambda x: x.similarity_score, reverse=True)
-                logger.info("[CircuitComparisonService] Sorted by similarity_score (descending)")
             else:
                 recommendations.sort(key=lambda x: x.complementary_score, reverse=True)
-                logger.info("[CircuitComparisonService] Sorted by complementary_score (descending)")
             
-            final_recommendations = recommendations[:limit]
-            logger.info(
-                f"[CircuitComparisonService] RETURN - {len(final_recommendations)} recommendations "
-                f"(requested limit={limit}, is_finisher={is_finisher})"
-            )
-            
-            # Log final recommendations
-            for i, rec in enumerate(final_recommendations):
-                logger.info(
-                    f"[CircuitComparisonService] Final recommendation {i+1}: circuit_id={rec.circuit_id}, "
-                    f"reason={rec.reason}, similarity={rec.similarity_score:.3f}, complementary={rec.complementary_score:.3f}, "
-                    f"metadata={rec.metadata}"
-                )
-            
-            logger.info("=" * 80)
-            return final_recommendations
+            return recommendations[:limit]
             
         except Exception as e:
-            logger.error(
-                f"[CircuitComparisonService] ERROR in recommend_circuits_for_session: {e}",
-                exc_info=True
-            )
-            logger.info("=" * 80)
+            logger.error(f"[recommend_circuits_for_session] Error: {e}", exc_info=True)
             raise
 
 

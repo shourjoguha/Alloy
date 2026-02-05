@@ -10,12 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 
-from app.models.program import Session, SessionExercise
+from app.models.program import Session, SessionExercise, Program
 from app.models.circuit import CircuitTemplate
 from app.models.circuit_extended import CircuitMelted, CircuitMacro
 from app.models.program import ExerciseRole
-from app.config.heuristics import DEFAULT_CIRCUIT_DURATION_MINUTES, TIME_ESTIMATION
-from app.services.time_estimation import TimeEstimationService
+from app.config.heuristics import DEFAULT_CIRCUIT_DURATION_MINUTES
 
 logger = logging.getLogger(__name__)
 
@@ -174,8 +173,6 @@ class CircuitAssignmentService:
             session.has_circuits = True
             
             # 10. Update duration estimates using TimeEstimationService
-            time_service = TimeEstimationService()
-            
             # Priority: Macro Time Cap > Heuristic Default (15 mins)
             if macro and macro.estimated_duration_seconds:
                 circuit_duration = macro.estimated_duration_seconds
@@ -429,6 +426,15 @@ class CircuitAssignmentService:
             )
             session = session_result.scalar_one_or_none()
             
+            if not session:
+                raise ValueError(f"Session {session_id} not found")
+            
+            # Load program to get max_session_duration
+            program_result = await db.execute(
+                select(Program).where(Program.id == session.program_id)
+            )
+            program = program_result.scalar_one_or_none()
+            
             circuit_result = await db.execute(
                 select(CircuitTemplate).where(CircuitTemplate.id == circuit_id)
             )
@@ -471,8 +477,11 @@ class CircuitAssignmentService:
 
             new_duration = (session.estimated_duration_minutes or 0) + circuit_duration
             
-            if new_duration > 60:
-                warnings.append(f"Session will exceed 60 minutes by {new_duration - 60:.0f} minutes")
+            # Use program's max_session_duration if available, otherwise default to 60
+            max_allowed_duration = program.max_session_duration if program else 60
+            
+            if new_duration > max_allowed_duration:
+                warnings.append(f"Session will exceed {max_allowed_duration} minutes by {new_duration - max_allowed_duration:.0f} minutes")
             
             return {
                 "preview": {

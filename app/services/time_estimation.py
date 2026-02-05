@@ -1,10 +1,102 @@
 """Time estimation service for session duration calculation."""
 import logging
 from dataclasses import dataclass
-from typing import Any
-from app.config.heuristics import TIME_ESTIMATION
+from typing import Any, Tuple
+from app.config.heuristics import (
+    TIME_ESTIMATION,
+    TIME_CONSTRAINT_TOLERANCE_PERCENT,
+    DEFAULT_SESSION_DURATION_MINUTES,
+    DEFAULT_CIRCUIT_DURATION_MINUTES,
+)
 
 logger = logging.getLogger(__name__)
+
+
+# ============== Global Time Constraint Helper Functions ==============
+# These functions provide consistent time tolerance calculations across the codebase
+
+def get_tolerance_buffer(target_minutes: int) -> Tuple[float, float]:
+    """
+    Calculate the acceptable time range for a session based on tolerance percentage.
+    
+    The tolerance buffer defines the minimum and maximum acceptable session durations
+    based on the user's selected target duration and the global tolerance percentage.
+    
+    Args:
+        target_minutes: The target session duration in minutes (from user's program settings)
+        
+    Returns:
+        Tuple of (min_minutes, max_minutes) representing the acceptable range.
+        
+    Example:
+        >>> get_tolerance_buffer(60)  # 5% tolerance
+        (57.0, 63.0)  # Session can be 57-63 minutes
+        
+        >>> get_tolerance_buffer(45)  # 5% tolerance  
+        (42.75, 47.25)  # Session can be ~43-47 minutes
+    """
+    tolerance_pct = TIME_CONSTRAINT_TOLERANCE_PERCENT
+    tolerance_factor = tolerance_pct / 100.0
+    min_minutes = target_minutes * (1 - tolerance_factor)
+    max_minutes = target_minutes * (1 + tolerance_factor)
+    return (min_minutes, max_minutes)
+
+
+def is_within_tolerance(actual_minutes: float, target_minutes: int) -> bool:
+    """
+    Check if an actual session duration is within the acceptable tolerance range.
+    
+    Args:
+        actual_minutes: The actual or estimated session duration
+        target_minutes: The target session duration from program settings
+        
+    Returns:
+        True if actual_minutes is within the tolerance buffer, False otherwise.
+        
+    Example:
+        >>> is_within_tolerance(58, 60)  # 58 min actual, 60 min target
+        True  # Within 5% tolerance (57-63 range)
+        
+        >>> is_within_tolerance(50, 60)  # 50 min actual, 60 min target  
+        False  # Outside 5% tolerance
+    """
+    min_minutes, max_minutes = get_tolerance_buffer(target_minutes)
+    return min_minutes <= actual_minutes <= max_minutes
+
+
+def get_default_session_duration() -> int:
+    """
+    Get the default session duration from centralized heuristics.
+    
+    This should be used instead of hardcoded fallback values (30, 45, 60 minutes)
+    scattered throughout the codebase.
+    
+    Returns:
+        Default session duration in minutes (currently 60).
+    """
+    return DEFAULT_SESSION_DURATION_MINUTES
+
+
+def get_default_circuit_duration_minutes() -> int:
+    """
+    Get the default circuit duration from centralized heuristics.
+    
+    This should be used instead of hardcoded 15-minute fallback values.
+    
+    Returns:
+        Default circuit duration in minutes (currently 15).
+    """
+    return DEFAULT_CIRCUIT_DURATION_MINUTES
+
+
+def get_tolerance_percent() -> int:
+    """
+    Get the global time constraint tolerance percentage.
+    
+    Returns:
+        Tolerance percentage (currently 5%).
+    """
+    return TIME_CONSTRAINT_TOLERANCE_PERCENT
 
 
 @dataclass

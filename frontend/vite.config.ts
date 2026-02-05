@@ -65,6 +65,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: true,  // Bind to all interfaces (0.0.0.0) to support both IPv4 and IPv6
     port: 5173,
     proxy: {
       '/api': {

@@ -17,17 +17,6 @@ class MovementQueryService:
     """Optimized query functions for movement attributes."""
     
     @staticmethod
-    async def get_movements_by_tier(
-        db: AsyncSession,
-        tier: MovementTier
-    ) -> List[Movement]:
-        """Get movements by tier (uses indexed tier column)."""
-        result = await db.execute(
-            select(Movement).where(Movement.tier == tier)
-        )
-        return list(result.scalars().all())
-    
-    @staticmethod
     async def get_movements_by_disciplines(
         db: AsyncSession,
         disciplines: List[DisciplineType],
@@ -81,24 +70,6 @@ class MovementQueryService:
         """Get all Olympic weightlifting movements (snatch, clean & jerk)."""
         return await MovementQueryService.get_movements_by_disciplines(
             db, [DisciplineType.OLYMPIC_WEIGHTLIFTING]
-        )
-    
-    @staticmethod
-    async def get_crossfit_movements(
-        db: AsyncSession
-    ) -> List[Movement]:
-        """Get all CrossFit movements."""
-        return await MovementQueryService.get_movements_by_disciplines(
-            db, [DisciplineType.CROSSFIT]
-        )
-    
-    @staticmethod
-    async def get_bodybuilding_movements(
-        db: AsyncSession
-    ) -> List[Movement]:
-        """Get all bodybuilding movements."""
-        return await MovementQueryService.get_movements_by_disciplines(
-            db, [DisciplineType.BODYBUILDING]
         )
     
     @staticmethod
@@ -320,94 +291,6 @@ class MovementQueryService:
             .where(MovementTag.movement_id == movement_id)
         )
         return [row[0] for row in result.all()]
-    
-    @staticmethod
-    async def filter_by_disciplines_and_equipment(
-        db: AsyncSession,
-        disciplines: Optional[List[DisciplineType]] = None,
-        equipment_names: Optional[List[str]] = None,
-        match_all_disciplines: bool = False,
-        match_all_equipment: bool = False
-    ) -> List[Movement]:
-        """
-        Complex filter combining disciplines and equipment requirements.
-        
-        Uses EXISTS subqueries for optimal performance.
-        
-        Args:
-            db: Database session
-            disciplines: List of discipline types to filter by (optional)
-            equipment_names: List of equipment names to filter by (optional)
-            match_all_disciplines: Require all disciplines if True, any if False
-            match_all_equipment: Require all equipment if True, any if False
-        
-        Returns:
-            List of movements matching all criteria
-        """
-        query = select(Movement)
-        
-        if disciplines:
-            discipline_values = [d.value for d in disciplines]
-            
-            if match_all_disciplines:
-                for disc in discipline_values:
-                    query = query.where(
-                        select(MovementDiscipline.movement_id)
-                        .where(
-                            and_(
-                                MovementDiscipline.movement_id == Movement.id,
-                                MovementDiscipline.discipline == disc
-                            )
-                        )
-                        .exists()
-                    )
-            else:
-                query = query.where(
-                    select(MovementDiscipline.movement_id)
-                    .where(
-                        and_(
-                            MovementDiscipline.movement_id == Movement.id,
-                            MovementDiscipline.discipline.in_(discipline_values)
-                        )
-                    )
-                    .exists()
-                )
-        
-        if equipment_names:
-            from app.models.movement import Equipment
-            
-            if match_all_equipment:
-                for eq_name in equipment_names:
-                    query = query.where(
-                        select(MovementEquipment.movement_id)
-                        .where(
-                            and_(
-                                MovementEquipment.movement_id == Movement.id,
-                                select(Equipment.id)
-                                .where(Equipment.name == eq_name)
-                                .scalar_subquery() == MovementEquipment.equipment_id
-                            )
-                        )
-                        .exists()
-                    )
-            else:
-                query = query.where(
-                    select(MovementEquipment.movement_id)
-                    .where(
-                        and_(
-                            MovementEquipment.movement_id == Movement.id,
-                            select(Equipment.id)
-                            .where(Equipment.name.in_(equipment_names))
-                            .scalar_subquery() == MovementEquipment.equipment_id
-                        )
-                    )
-                    .exists()
-                )
-        
-        result = await db.execute(query)
-        return list(result.scalars().all())
-    
-
     
     @staticmethod
     async def get_movements_by_embedding_similarity(
@@ -642,30 +525,6 @@ class MovementQueryService:
         )
         
         return {row.name: row.count for row in result.all()}
-    
-    @staticmethod
-    async def get_movements_without_disciplines(
-        db: AsyncSession
-    ) -> List[Movement]:
-        """
-        Get movements that are not associated with any discipline.
-        
-        Uses NOT EXISTS with junction table.
-        
-        Args:
-            db: Database session
-        
-        Returns:
-            List of movements without discipline classifications
-        """
-        result = await db.execute(
-            select(Movement).where(
-                ~select(MovementDiscipline.movement_id)
-                .where(MovementDiscipline.movement_id == Movement.id)
-                .exists()
-            )
-        )
-        return list(result.scalars().all())
     
     @staticmethod
     async def get_movements_without_equipment(

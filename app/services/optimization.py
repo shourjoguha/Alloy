@@ -7,8 +7,12 @@ from dataclasses import dataclass
 from ortools.sat.python import cp_model
 from app.models.enums import SkillLevel, CircuitType
 from app.config import activity_distribution as activity_distribution_config
-from app.config.heuristics import TIME_ESTIMATION
-from app.services.time_estimation import TimeEstimationService
+from app.config.heuristics import TIME_ESTIMATION, TIME_CONSTRAINT_TOLERANCE_PERCENT
+from app.services.time_estimation import (
+    TimeEstimationService,
+    get_default_session_duration,
+    get_tolerance_buffer,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -369,8 +373,16 @@ class ConstraintSolver:
         
         # Total duration in tenths of minute
         duration_expr_tenths = movement_duration_tenths + circuit_duration_tenths
-        # Convert session duration to tenths of minute
-        session_duration_tenths = request.session_duration_minutes * 10
+        
+        # Apply tolerance buffer to duration constraint
+        # This allows the optimizer to find solutions within the acceptable range
+        # instead of requiring exact duration match
+        target_duration = request.session_duration_minutes or get_default_session_duration()
+        _, max_duration = get_tolerance_buffer(target_duration)
+        
+        # Convert max duration (with tolerance) to tenths of minute
+        session_duration_tenths = int(max_duration * 10)
+        logger.info(f"[ConstraintSolver] Duration constraint: target={target_duration} min, max_with_tolerance={max_duration:.1f} min ({TIME_CONSTRAINT_TOLERANCE_PERCENT}% buffer)")
         model.Add(duration_expr_tenths <= session_duration_tenths)
         
         # E. Compound Movement Constraints
