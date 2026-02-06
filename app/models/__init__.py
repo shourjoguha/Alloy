@@ -86,6 +86,7 @@ from app.models.config import (
     ExternalMetricStream,
 )
 from app.models.circuit import CircuitTemplate
+from app.models.circuit_extended import CircuitMelted, CircuitMacro
 
 __all__ = [
     # Enums
@@ -172,4 +173,6 @@ __all__ = [
     "ExternalActivityRecord",
     "ExternalMetricStream",
     "CircuitTemplate",
+    "CircuitMelted",
+    "CircuitMacro",
 ]

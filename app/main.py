@@ -54,6 +54,13 @@ def create_app() -> FastAPI:
     async def health_check():
         """Health check endpoint."""
         return {"status": "healthy", "app": settings.app_name}
+
+    # Optimization metrics endpoint
+    @app.get("/metrics/optimization")
+    async def optimization_metrics():
+        """Get optimization service metrics for monitoring."""
+        from app.services.optimization import get_optimization_metrics
+        return get_optimization_metrics()
     
     # LLM health check
     @app.get("/health/llm")

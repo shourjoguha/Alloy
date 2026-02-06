@@ -477,7 +477,7 @@ class ProgramService:
                 # Generate and populate session with exercises
                 # Each call creates its own DB session
                 logger.info(f"[_generate_session_content_async] [{idx+1}/{len(sessions)}] Calling populate_session_by_id for session {session.id}")
-                current_volume = await session_generator.populate_session_by_id(
+                current_volume, content = await session_generator.populate_session_by_id(
                     session.id,
                     program_id,
                     microcycle_id,
@@ -497,6 +497,7 @@ class ProgramService:
                 # Apply fallback for ValueError (e.g., too many missing movements)
                 await self._apply_session_fallback(session.id, str(ve))
                 current_volume = {}
+                content = {}
             except Exception as e:
                 logger.error(
                     "Failed to generate content for session %s: %s",
@@ -506,6 +507,7 @@ class ProgramService:
                 # Apply fallback for general exceptions
                 await self._apply_session_fallback(session.id, str(e))
                 current_volume = {}
+                content = {}
               
             # Update previous volume for next iteration
             if current_volume is None:
@@ -515,47 +517,62 @@ class ProgramService:
             logger.info(f"[_generate_session_content_async] Completed session {session.id}, volume={current_volume}")
             
             # Track used movements and movement groups
-            if current_volume:
-                # Re-fetch session to get updated content
+            if current_volume and content:
+                session_movements = []
+                main_patterns_used = []
+                accessory_movements_used = []
+                
+                # Track movements from content dict (no DB query needed)
+                main_exercises = content.get("main", [])
+                logger.debug(f"[_generate_session_content_async] Tracking {len(main_exercises)} main exercises")
+                for ex in main_exercises:
+                    if isinstance(ex, dict):
+                        name = ex.get("movement") or ex.get("movement_name")
+                        if name:
+                            session_movements.append(name)
+                            logger.debug(f"[_generate_session_content_async] Tracking main movement: {name}")
+                
+                # Track from accessory and finisher sections
+                accessory_exercises = content.get("accessory", [])
+                logger.debug(f"[_generate_session_content_async] Tracking {len(accessory_exercises)} accessory exercises")
+                for ex in accessory_exercises:
+                    if isinstance(ex, dict):
+                        name = ex.get("movement") or ex.get("movement_name")
+                        if name:
+                            session_movements.append(name)
+                            accessory_movements_used.append(name)
+                            logger.debug(f"[_generate_session_content_async] Tracking accessory movement: {name}")
+                
+                # Track from finisher section
+                finisher = content.get("finisher")
+                if isinstance(finisher, dict):
+                    finisher_exercises = finisher.get("exercises", [])
+                    logger.debug(f"[_generate_session_content_async] Tracking {len(finisher_exercises)} finisher exercises")
+                    for ex in finisher_exercises:
+                        if isinstance(ex, dict):
+                            name = ex.get("movement") or ex.get("movement_name")
+                            if name:
+                                session_movements.append(name)
+                                accessory_movements_used.append(name)
+                                logger.debug(f"[_generate_session_content_async] Tracking finisher movement: {name}")
+                
+                # Update tracking sets
+                for movement_name in session_movements:
+                    used_movements.add(movement_name)
+                
+                # Track main lift patterns for this session
+                if session.intent_tags:
+                    main_patterns_used = session.intent_tags[:2]
+                    used_main_patterns[session.day_number] = main_patterns_used
+                
+                # Track accessory movements for this session
+                used_accessory_movements[session.day_number] = accessory_movements_used
+                
+                # Update movement group usage counts (needs DB)
                 async with async_session_maker() as db:
-                    stmt = select(Session).options(
-                        selectinload(Session.exercises).selectinload(SessionExercise.movement)
-                    ).where(Session.id == session.id)
-                    result = await db.execute(stmt)
-                    updated_session = result.scalar_one_or_none()
-                    
-                    if updated_session:
-                        # Track individual movements
-                        session_movements = []
-                        main_patterns_used = []
-                        accessory_movements_used = []
-                        
-                        if updated_session.exercises:
-                            for ex in updated_session.exercises:
-                                if ex.movement:
-                                    name = ex.movement.name
-                                    session_movements.append(name)
-                                    
-                                    # Treat finisher as accessory for interference
-                                    if ex.exercise_role in [ExerciseRole.ACCESSORY, ExerciseRole.FINISHER]:
-                                        accessory_movements_used.append(name)
-                        
-                        # Update tracking sets
-                        for movement_name in session_movements:
-                            used_movements.add(movement_name)
-                        
-                        # Track main lift patterns for this session
-                        if updated_session.intent_tags:
-                            main_patterns_used = updated_session.intent_tags[:2]
-                            used_main_patterns[session.day_number] = main_patterns_used
-                        
-                        # Track accessory movements for this session
-                        used_accessory_movements[session.day_number] = accessory_movements_used
-                        
-                        # Update movement group usage counts
-                        await self._update_movement_group_usage(
-                            db, session_movements, used_movement_groups
-                        )
+                    await self._update_movement_group_usage(
+                        db, session_movements, used_movement_groups
+                    )
             
             logger.info(f"[_generate_session_content_async] ===== END OF ITERATION {idx+1}/{len(sessions)} =====")
         
@@ -578,6 +595,7 @@ class ProgramService:
             session_id: ID of the session that failed
             error_msg: Error message to store in coach_notes
         """
+        from app.db.database import async_session_maker
         from app.models.movement import Movement
         from app.models.program import SessionExercise, ExerciseRole
         
@@ -596,7 +614,7 @@ class ProgramService:
             
             # Find a safe fallback movement
             fallback_movement = await db.execute(
-                select(Movement).where(Movement.name.ilike("%air%squat%"))
+                select(Movement).where(Movement.name.ilike("%air%"))
             )
             fallback_movement = fallback_movement.scalar_one_or_none()
             

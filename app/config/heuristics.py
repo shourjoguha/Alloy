@@ -10,8 +10,8 @@ from typing import TypedDict, Dict, Any, List
 
 
 # Global time constraint tolerance - sessions must be within this % of target duration
-# Example: 60 min session with 5% tolerance = 57-63 min acceptable range
-TIME_CONSTRAINT_TOLERANCE_PERCENT = 5
+# Example: 60 min session with 12% tolerance = 52.8-67.2 min acceptable range
+TIME_CONSTRAINT_TOLERANCE_PERCENT = 12
 
 # Default session duration fallback when no explicit value is provided
 # This should match the default in ProgramCreate schema (schemas/program.py line 90)
@@ -901,7 +901,7 @@ SECTION_PATTERN_FILTERS: Dict[str, Any] = {
         "max_duration_minutes": 10,
     },
     "main": {
-        "exclude": ["mobility", "stretch", "cardio", "conditioning", "isolation"],
+        "exclude": ["mobility", "stretch", "cardio", "conditioning", "isolation", "carry", "core", "rotation", "isometric"],
         "min_compound": 2,
     },
     "accessory": {
@@ -912,4 +912,61 @@ SECTION_PATTERN_FILTERS: Dict[str, Any] = {
         "include": ["stretch", "mobility"],
         "max_duration_minutes": 10,
     },
+}
+
+DEFAULT_ACCESSORIES = {
+    "SessionType.UPPER": [
+        {"movement": "Lateral Raise", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60, "superset_with": "Face Pull"},
+        {"movement": "Face Pull", "sets": 3, "rep_range_min": 15, "rep_range_max": 20,
+         "target_rpe": 7, "rest_seconds": 60},
+        {"movement": "Bicep Curl", "sets": 3, "rep_range_min": 10, "rep_range_max": 12,
+         "target_rpe": 7, "rest_seconds": 60, "superset_with": "Tricep Extension"},
+        {"movement": "Tricep Extension", "sets": 3, "rep_range_min": 10, "rep_range_max": 12,
+         "target_rpe": 7, "rest_seconds": 60},
+    ],
+    "SessionType.LOWER": [
+        {"movement": "Leg Extension", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60, "superset_with": "Leg Curl"},
+        {"movement": "Leg Curl", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60},
+        {"movement": "Calf Raise", "sets": 4, "rep_range_min": 15, "rep_range_max": 20,
+         "target_rpe": 8, "rest_seconds": 45},
+    ],
+    "SessionType.PUSH": [
+        {"movement": "Lateral Raise", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60},
+        {"movement": "Tricep Extension", "sets": 3, "rep_range_min": 10, "rep_range_max": 12,
+         "target_rpe": 7, "rest_seconds": 60},
+    ],
+    "SessionType.PULL": [
+        {"movement": "Face Pull", "sets": 3, "rep_range_min": 15, "rep_range_max": 20,
+         "target_rpe": 7, "rest_seconds": 60},
+        {"movement": "Bicep Curl", "sets": 3, "rep_range_min": 10, "rep_range_max": 12,
+         "target_rpe": 7, "rest_seconds": 60, "superset_with": "Hammer Curl"},
+        {"movement": "Hammer Curl", "sets": 3, "rep_range_min": 10, "rep_range_max": 12,
+         "target_rpe": 7, "rest_seconds": 60},
+    ],
+    "SessionType.LEGS": [
+        {"movement": "Leg Extension", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60, "superset_with": "Leg Curl"},
+        {"movement": "Leg Curl", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60},
+        {"movement": "Calf Raise", "sets": 4, "rep_range_min": 15, "rep_range_max": 20,
+         "target_rpe": 8, "rest_seconds": 45},
+    ],
+    "SessionType.FULL_BODY": [
+        {"movement": "Lateral Raise", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60, "superset_with": "Face Pull"},
+        {"movement": "Face Pull", "sets": 3, "rep_range_min": 15, "rep_range_max": 20,
+         "target_rpe": 7, "rest_seconds": 60},
+        {"movement": "Leg Curl", "sets": 3, "rep_range_min": 12, "rep_range_max": 15,
+         "target_rpe": 7, "rest_seconds": 60},
+    ],
+}
+
+TIME_FILLING = {
+    "max_iterations": 10,
+    "default_isolation_minutes": 5,
+    "min_stimulus": 2.0,
 }
