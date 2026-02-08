@@ -122,6 +122,23 @@ class BiomechanicsProfileValidator(BaseModel):
         return v
 
 
+# ============== Scheduling Preferences Validator ==============
+
+class SchedulingPreferencesValidator(BaseModel):
+    """Validator for scheduling_preferences JSONB."""
+    
+    endurance_type: str
+    
+    @field_validator('endurance_type')
+    @classmethod
+    def validate_endurance_type(cls, v: str) -> str:
+        """Validate endurance_type against allowed values."""
+        valid_endurance_types = {"auto", "endurance_only", "cardio_only"}
+        if v not in valid_endurance_types:
+            raise ValueError(f"Invalid endurance_type '{v}'. Must be one of: {valid_endurance_types}")
+        return v
+
+
 # ============== User Settings Schemas ==============
 
 class UserSettingsUpdate(BaseModel):
@@ -166,6 +183,26 @@ class UserProfileUpdate(BaseModel):
     # Long Term Goals
     long_term_goal_category: str | None = None
     long_term_goal_description: str | None = None
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_scheduling_preferences(cls, data: Any) -> Any:
+        """Validate scheduling_preferences using SchedulingPreferencesValidator."""
+        # Handle both dict and model instances
+        if isinstance(data, dict):
+            scheduling_prefs = data.get('scheduling_preferences')
+        elif hasattr(data, 'scheduling_preferences'):
+            scheduling_prefs = data.scheduling_preferences
+        else:
+            return data
+        
+        if scheduling_prefs is not None:
+            try:
+                SchedulingPreferencesValidator(**scheduling_prefs)
+            except ValueError as e:
+                raise ValueError(f"Invalid scheduling_preferences: {e}")
+        
+        return data
 
 
 class UserProfileResponse(BaseModel):

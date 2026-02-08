@@ -719,9 +719,9 @@ export interface DisciplineExperience {
 export interface SchedulingPreferences {
   mix_disciplines: boolean;
   cardio_preference: 'dedicated_day' | 'finisher' | 'mixed' | 'none';
-  endurance_dedicated_cardio_day_policy?: 'default' | 'always' | 'never';
   microcycle_length_days?: 'auto' | number;
   split_template_preference?: 'none' | 'full_body' | 'upper_lower' | 'ppl' | 'hybrid';
+  endurance_type?: 'auto' | 'endurance_only' | 'cardio_only';
 }
 
 export interface UserProfile {

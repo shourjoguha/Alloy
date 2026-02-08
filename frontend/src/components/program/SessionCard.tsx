@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Clock, Flame, Coffee, Dumbbell } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, Flame, Coffee, Dumbbell, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Session, ExerciseBlock, CircuitExercise, CircuitBlock } from '@/types';
 
@@ -199,7 +199,6 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
   const isRestDay = session.session_type === 'recovery';
   const isGenerating = !isRestDay && !hasContent;
   const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
-  const hasCircuit = session.circuit !== undefined && session.circuit !== null;
   
   // Detect error state from coach_notes
   const isError = hasCoachNotes && session.coach_notes ? (

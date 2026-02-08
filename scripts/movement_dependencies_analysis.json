@@ -1,0 +1,956 @@
+{
+  "timestamp": "2026-02-02T19:09:36.031278",
+  "analysis_summary": {},
+  "movements": {
+    "basic_stats": {
+      "total_movements": 566,
+      "system_movements": 566,
+      "user_movements": 0,
+      "complex_lifts": 46,
+      "unilateral_movements": 17,
+      "compound_movements": 272,
+      "avg_fatigue_factor": 0.5524734982332168,
+      "avg_stimulus_factor": 0.757420494699649,
+      "avg_injury_risk_factor": 0.4613074204947009,
+      "avg_recovery_hours": "29.3003533568904594"
+    },
+    "by_pattern": [
+      {
+        "pattern": "mobility",
+        "count": 145,
+        "percentage": "25.62"
+      },
+      {
+        "pattern": "isolation",
+        "count": 139,
+        "percentage": "24.56"
+      },
+      {
+        "pattern": "core",
+        "count": 49,
+        "percentage": "8.66"
+      },
+      {
+        "pattern": "olympic",
+        "count": 43,
+        "percentage": "7.60"
+      },
+      {
+        "pattern": "vertical_push",
+        "count": 30,
+        "percentage": "5.30"
+      },
+      {
+        "pattern": "plyometric",
+        "count": 25,
+        "percentage": "4.42"
+      },
+      {
+        "pattern": "conditioning",
+        "count": 17,
+        "percentage": "3.00"
+      },
+      {
+        "pattern": "horizontal_push",
+        "count": 17,
+        "percentage": "3.00"
+      },
+      {
+        "pattern": "squat",
+        "count": 17,
+        "percentage": "3.00"
+      },
+      {
+        "pattern": "hinge",
+        "count": 16,
+        "percentage": "2.83"
+      },
+      {
+        "pattern": "lunge",
+        "count": 15,
+        "percentage": "2.65"
+      },
+      {
+        "pattern": "cardio",
+        "count": 14,
+        "percentage": "2.47"
+      },
+      {
+        "pattern": "vertical_pull",
+        "count": 11,
+        "percentage": "1.94"
+      },
+      {
+        "pattern": "isometric",
+        "count": 10,
+        "percentage": "1.77"
+      },
+      {
+        "pattern": "horizontal_pull",
+        "count": 9,
+        "percentage": "1.59"
+      },
+      {
+        "pattern": "carry",
+        "count": 8,
+        "percentage": "1.41"
+      },
+      {
+        "pattern": "rotation",
+        "count": 1,
+        "percentage": "0.18"
+      }
+    ],
+    "by_primary_region": [
+      {
+        "primary_region": "full body",
+        "count": 130,
+        "percentage": "22.97"
+      },
+      {
+        "primary_region": "posterior lower",
+        "count": 118,
+        "percentage": "20.85"
+      },
+      {
+        "primary_region": "anterior lower",
+        "count": 88,
+        "percentage": "15.55"
+      },
+      {
+        "primary_region": "anterior upper",
+        "count": 87,
+        "percentage": "15.37"
+      },
+      {
+        "primary_region": "posterior upper",
+        "count": 62,
+        "percentage": "10.95"
+      },
+      {
+        "primary_region": "shoulder",
+        "count": 26,
+        "percentage": "4.59"
+      },
+      {
+        "primary_region": "core",
+        "count": 24,
+        "percentage": "4.24"
+      },
+      {
+        "primary_region": "lower body",
+        "count": 22,
+        "percentage": "3.89"
+      },
+      {
+        "primary_region": "upper body",
+        "count": 9,
+        "percentage": "1.59"
+      }
+    ],
+    "by_primary_muscle": [
+      {
+        "primary_muscle": "quadriceps",
+        "count": 83,
+        "percentage": "14.66"
+      },
+      {
+        "primary_muscle": "core",
+        "count": 80,
+        "percentage": "14.13"
+      },
+      {
+        "primary_muscle": "full_body",
+        "count": 78,
+        "percentage": "13.78"
+      },
+      {
+        "primary_muscle": "hamstrings",
+        "count": 55,
+        "percentage": "9.72"
+      },
+      {
+        "primary_muscle": "chest",
+        "count": 51,
+        "percentage": "9.01"
+      },
+      {
+        "primary_muscle": "lats",
+        "count": 35,
+        "percentage": "6.18"
+      },
+      {
+        "primary_muscle": "glutes",
+        "count": 26,
+        "percentage": "4.59"
+      },
+      {
+        "primary_muscle": "triceps",
+        "count": 24,
+        "percentage": "4.24"
+      },
+      {
+        "primary_muscle": "lower_back",
+        "count": 20,
+        "percentage": "3.53"
+      },
+      {
+        "primary_muscle": "calves",
+        "count": 19,
+        "percentage": "3.36"
+      },
+      {
+        "primary_muscle": "side_delts",
+        "count": 15,
+        "percentage": "2.65"
+      },
+      {
+        "primary_muscle": "adductors",
+        "count": 14,
+        "percentage": "2.47"
+      },
+      {
+        "primary_muscle": "upper_back",
+        "count": 14,
+        "percentage": "2.47"
+      },
+      {
+        "primary_muscle": "front_delts",
+        "count": 13,
+        "percentage": "2.30"
+      },
+      {
+        "primary_muscle": "hip_flexors",
+        "count": 12,
+        "percentage": "2.12"
+      },
+      {
+        "primary_muscle": "forearms",
+        "count": 11,
+        "percentage": "1.94"
+      },
+      {
+        "primary_muscle": "biceps",
+        "count": 9,
+        "percentage": "1.59"
+      },
+      {
+        "primary_muscle": "rear_delts",
+        "count": 3,
+        "percentage": "0.53"
+      },
+      {
+        "primary_muscle": "abductors",
+        "count": 2,
+        "percentage": "0.35"
+      },
+      {
+        "primary_muscle": "obliques",
+        "count": 2,
+        "percentage": "0.35"
+      }
+    ],
+    "by_tier": [
+      {
+        "tier": "diamond",
+        "count": 38,
+        "percentage": "6.71"
+      },
+      {
+        "tier": "gold",
+        "count": 6,
+        "percentage": "1.06"
+      },
+      {
+        "tier": "bronze",
+        "count": 522,
+        "percentage": "92.23"
+      }
+    ],
+    "by_cns_load": [
+      {
+        "cns_load": "very_low",
+        "count": 29,
+        "percentage": "5.12"
+      },
+      {
+        "cns_load": "low",
+        "count": 81,
+        "percentage": "14.31"
+      },
+      {
+        "cns_load": "moderate",
+        "count": 338,
+        "percentage": "59.72"
+      },
+      {
+        "cns_load": "high",
+        "count": 60,
+        "percentage": "10.60"
+      },
+      {
+        "cns_load": "very_high",
+        "count": 58,
+        "percentage": "10.25"
+      }
+    ],
+    "by_skill_level": [
+      {
+        "skill_level": "beginner",
+        "count": 131,
+        "percentage": "23.14"
+      },
+      {
+        "skill_level": "intermediate",
+        "count": 395,
+        "percentage": "69.79"
+      },
+      {
+        "skill_level": "advanced",
+        "count": 10,
+        "percentage": "1.77"
+      },
+      {
+        "skill_level": "expert",
+        "count": 24,
+        "percentage": "4.24"
+      },
+      {
+        "skill_level": "elite",
+        "count": 6,
+        "percentage": "1.06"
+      }
+    ],
+    "by_metric_type": [
+      {
+        "metric_type": "reps",
+        "count": 451,
+        "percentage": "79.68"
+      },
+      {
+        "metric_type": "time",
+        "count": 55,
+        "percentage": "9.72"
+      },
+      {
+        "metric_type": "time_under_tension",
+        "count": 51,
+        "percentage": "9.01"
+      },
+      {
+        "metric_type": "distance",
+        "count": 8,
+        "percentage": "1.41"
+      },
+      {
+        "metric_type": "calories",
+        "count": 1,
+        "percentage": "0.18"
+      }
+    ],
+    "by_spinal_compression": [
+      {
+        "spinal_compression": "none",
+        "count": 424,
+        "percentage": "74.91"
+      },
+      {
+        "spinal_compression": "low",
+        "count": 103,
+        "percentage": "18.20"
+      },
+      {
+        "spinal_compression": "moderate",
+        "count": 4,
+        "percentage": "0.71"
+      },
+      {
+        "spinal_compression": "high",
+        "count": 35,
+        "percentage": "6.18"
+      }
+    ],
+    "with_embeddings": {
+      "movements_with_embeddings": 429,
+      "percentage": "75.80"
+    },
+    "with_substitution_group": {
+      "unique_substitution_groups": 327,
+      "movements_in_substitution_groups": 355
+    },
+    "by_movements_without_equipment": [
+      {
+        "movements_without_equipment": 48,
+        "percentage": "8.48"
+      }
+    ]
+  },
+  "equipment": {
+    "stats": {
+      "total_equipment": 28,
+      "unique_equipment_names": 28
+    },
+    "equipment_usage": [
+      {
+        "equipment_name": "none",
+        "movement_count": 220,
+        "total_associations": 220
+      },
+      {
+        "equipment_name": "barbell",
+        "movement_count": 78,
+        "total_associations": 78
+      },
+      {
+        "equipment_name": "other",
+        "movement_count": 68,
+        "total_associations": 68
+      },
+      {
+        "equipment_name": "dumbbell",
+        "movement_count": 40,
+        "total_associations": 40
+      },
+      {
+        "equipment_name": "cable",
+        "movement_count": 31,
+        "total_associations": 31
+      },
+      {
+        "equipment_name": "kettlebell",
+        "movement_count": 23,
+        "total_associations": 23
+      },
+      {
+        "equipment_name": "machine",
+        "movement_count": 22,
+        "total_associations": 22
+      },
+      {
+        "equipment_name": "foam roll",
+        "movement_count": 19,
+        "total_associations": 19
+      },
+      {
+        "equipment_name": "medicine_ball",
+        "movement_count": 9,
+        "total_associations": 9
+      },
+      {
+        "equipment_name": "band",
+        "movement_count": 8,
+        "total_associations": 8
+      },
+      {
+        "equipment_name": "pull_up_bar",
+        "movement_count": 7,
+        "total_associations": 7
+      },
+      {
+        "equipment_name": "bench",
+        "movement_count": 6,
+        "total_associations": 6
+      },
+      {
+        "equipment_name": "exercise ball",
+        "movement_count": 6,
+        "total_associations": 6
+      },
+      {
+        "equipment_name": "ez curl bar",
+        "movement_count": 5,
+        "total_associations": 5
+      },
+      {
+        "equipment_name": "rings",
+        "movement_count": 4,
+        "total_associations": 4
+      },
+      {
+        "equipment_name": "plyo_box",
+        "movement_count": 2,
+        "total_associations": 2
+      },
+      {
+        "equipment_name": "wall",
+        "movement_count": 2,
+        "total_associations": 2
+      },
+      {
+        "equipment_name": "rack",
+        "movement_count": 2,
+        "total_associations": 2
+      },
+      {
+        "equipment_name": "wall_ball",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "battle_rope",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "trap_bar",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "sled",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "ab_wheel",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "sandbag",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "box",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "rowing_machine",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "dip_station",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "equipment_name": "parallettes",
+        "movement_count": 1,
+        "total_associations": 1
+      }
+    ]
+  },
+  "tags": {
+    "stats": {
+      "total_tags": 30,
+      "unique_tag_names": 30
+    },
+    "tags_usage": [
+      {
+        "tag_name": "strength",
+        "movement_count": 168,
+        "total_associations": 168
+      },
+      {
+        "tag_name": "mobility",
+        "movement_count": 78,
+        "total_associations": 78
+      },
+      {
+        "tag_name": "stretching",
+        "movement_count": 71,
+        "total_associations": 71
+      },
+      {
+        "tag_name": "plyometrics",
+        "movement_count": 24,
+        "total_associations": 24
+      },
+      {
+        "tag_name": "athleticism",
+        "movement_count": 20,
+        "total_associations": 20
+      },
+      {
+        "tag_name": "hypertrophy",
+        "movement_count": 19,
+        "total_associations": 19
+      },
+      {
+        "tag_name": "crossfit",
+        "movement_count": 11,
+        "total_associations": 11
+      },
+      {
+        "tag_name": "cardio",
+        "movement_count": 11,
+        "total_associations": 11
+      },
+      {
+        "tag_name": "compound",
+        "movement_count": 8,
+        "total_associations": 8
+      },
+      {
+        "tag_name": "olympic_lifting",
+        "movement_count": 5,
+        "total_associations": 5
+      },
+      {
+        "tag_name": "olympic",
+        "movement_count": 5,
+        "total_associations": 5
+      },
+      {
+        "tag_name": "upper_body",
+        "movement_count": 5,
+        "total_associations": 5
+      },
+      {
+        "tag_name": "full_body",
+        "movement_count": 4,
+        "total_associations": 4
+      },
+      {
+        "tag_name": "fundamental",
+        "movement_count": 4,
+        "total_associations": 4
+      },
+      {
+        "tag_name": "endurance",
+        "movement_count": 4,
+        "total_associations": 4
+      },
+      {
+        "tag_name": "explosiveness",
+        "movement_count": 4,
+        "total_associations": 4
+      },
+      {
+        "tag_name": "rehabilitation",
+        "movement_count": 4,
+        "total_associations": 4
+      },
+      {
+        "tag_name": "back_dominant",
+        "movement_count": 3,
+        "total_associations": 3
+      },
+      {
+        "tag_name": "quad_dominant",
+        "movement_count": 2,
+        "total_associations": 2
+      },
+      {
+        "tag_name": "bodyweight",
+        "movement_count": 2,
+        "total_associations": 2
+      },
+      {
+        "tag_name": "athletic",
+        "movement_count": 2,
+        "total_associations": 2
+      },
+      {
+        "tag_name": "isometric",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "posterior_chain",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "anterior_chain",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "chest_dominant",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "power",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "supinated_grip",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "shoulder_dominant",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "explosive",
+        "movement_count": 1,
+        "total_associations": 1
+      },
+      {
+        "tag_name": "speed",
+        "movement_count": 1,
+        "total_associations": 1
+      }
+    ]
+  },
+  "muscles": {
+    "stats": {
+      "total_muscles": 22,
+      "unique_regions": 6,
+      "avg_stimulus_coefficient": 1.0,
+      "avg_fatigue_coefficient": 1.0
+    },
+    "muscles_by_region": [
+      {
+        "region": "anterior lower",
+        "count": 3
+      },
+      {
+        "region": "posterior lower",
+        "count": 4
+      },
+      {
+        "region": "shoulder",
+        "count": 1
+      },
+      {
+        "region": "anterior upper",
+        "count": 4
+      },
+      {
+        "region": "posterior upper",
+        "count": 4
+      },
+      {
+        "region": "full body",
+        "count": 3
+      },
+      {
+        "region": null,
+        "count": 3
+      }
+    ]
+  },
+  "junction_tables": {
+    "movement_equipment": {
+      "movement_equipment_stats": [
+        {
+          "total_associations": 562,
+          "movements_with_equipment": 518,
+          "equipment_used": 28,
+          "avg_equipment_per_movement": "1.1921708185053381"
+        }
+      ],
+      "movement_equipment_distribution": [
+        {
+          "equipment_count": 1,
+          "movement_count": 484,
+          "percentage": "93.44"
+        },
+        {
+          "equipment_count": 2,
+          "movement_count": 24,
+          "percentage": "4.63"
+        },
+        {
+          "equipment_count": 3,
+          "movement_count": 10,
+          "percentage": "1.93"
+        }
+      ]
+    },
+    "movement_muscle_map": {
+      "movement_muscle_map_stats": [
+        {
+          "total_associations": 1064,
+          "movements_with_muscles": 374,
+          "muscles_used": 21,
+          "avg_muscles_per_movement": "4.1428571428571429"
+        }
+      ],
+      "movement_muscle_distribution": [
+        {
+          "muscle_count": 1,
+          "movement_count": 101,
+          "percentage": "27.01"
+        },
+        {
+          "muscle_count": 2,
+          "movement_count": 91,
+          "percentage": "24.33"
+        },
+        {
+          "muscle_count": 3,
+          "movement_count": 90,
+          "percentage": "24.06"
+        },
+        {
+          "muscle_count": 4,
+          "movement_count": 40,
+          "percentage": "10.70"
+        },
+        {
+          "muscle_count": 5,
+          "movement_count": 13,
+          "percentage": "3.48"
+        },
+        {
+          "muscle_count": 6,
+          "movement_count": 17,
+          "percentage": "4.55"
+        },
+        {
+          "muscle_count": 7,
+          "movement_count": 4,
+          "percentage": "1.07"
+        },
+        {
+          "muscle_count": 8,
+          "movement_count": 8,
+          "percentage": "2.14"
+        },
+        {
+          "muscle_count": 9,
+          "movement_count": 8,
+          "percentage": "2.14"
+        },
+        {
+          "muscle_count": 10,
+          "movement_count": 2,
+          "percentage": "0.53"
+        }
+      ]
+    },
+    "movement_disciplines": {
+      "movement_disciplines_stats": [
+        {
+          "total_associations": 321,
+          "movements_with_disciplines": 298,
+          "unique_disciplines": 7,
+          "avg_disciplines_per_movement": "1.1806853582554517"
+        }
+      ]
+    },
+    "movement_tags": {
+      "movement_tags_stats": [
+        {
+          "total_associations": 463,
+          "movements_with_tags": 330,
+          "tags_used": 30,
+          "avg_tags_per_movement": "1.8509719222462203"
+        }
+      ]
+    },
+    "movement_coaching_cues": {
+      "movement_coaching_cues_stats": [
+        {
+          "total_cues": 1071,
+          "movements_with_cues": 272,
+          "avg_cues_per_movement": "4.4920634920634921"
+        }
+      ]
+    },
+    "movement_relationships": {
+      "movement_relationships_stats": [
+        {
+          "total_relationships": 176,
+          "movements_with_outgoing": 70,
+          "movements_with_incoming": 73,
+          "unique_pairs": 172
+        }
+      ]
+    }
+  },
+  "usage_tables": {
+    "session_exercises": {
+      "session_exercises_stats": [
+        {
+          "total_exercises": 462,
+          "unique_sessions": 88,
+          "unique_movements_used": 89,
+          "movement_coverage_percentage": "15.7243816254416961"
+        }
+      ]
+    },
+    "circuits_melted": {
+      "circuits_melted_stats": [
+        {
+          "total_circuit_movements": 133,
+          "unique_circuits": 26,
+          "unique_movements_used": 46,
+          "with_movement_id": 133,
+          "without_movement_id": 0
+        }
+      ],
+      "circuits_melted_orphaned_movements": [
+        {
+          "orphaned_count": 0,
+          "percentage": "0.00"
+        }
+      ]
+    },
+    "user_movement_rules": {
+      "user_movement_rules_stats": [
+        {
+          "total_rules": 11,
+          "unique_users": 2,
+          "unique_movements_with_rules": 10
+        }
+      ],
+      "user_movement_rules_orphaned_movements": [
+        {
+          "orphaned_count": 0,
+          "percentage": "0.00"
+        }
+      ],
+      "user_movement_rules_by_type": [
+        {
+          "rule_type": "HARD_YES",
+          "count": 10,
+          "percentage": "90.91"
+        },
+        {
+          "rule_type": "PREFERRED",
+          "count": 1,
+          "percentage": "9.09"
+        }
+      ]
+    },
+    "favorites": {
+      "favorites_stats": [
+        {
+          "total_favorites": 2,
+          "unique_users": 1,
+          "unique_movements_favorited": 2,
+          "movement_favorites": 2,
+          "program_favorites": 0
+        }
+      ],
+      "favorites_orphaned_movements": [
+        {
+          "orphaned_count": 0,
+          "percentage": "0.00"
+        }
+      ]
+    },
+    "top_set_logs": {
+      "top_set_logs_stats": [
+        {
+          "total_logs": 0,
+          "unique_workout_logs": 0,
+          "unique_movements_logged": 0,
+          "avg_weight": null,
+          "avg_reps": null,
+          "max_weight": null,
+          "max_reps": null
+        }
+      ]
+    }
+  },
+  "orphaned_references": {},
+  "name_analysis": {},
+  "completeness": {},
+  "top_set_logs_orphaned_movements_error": "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DivisionByZeroError'>: division by zero\n[SQL: \n        SELECT\n            COUNT(*) as orphaned_count,\n            ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM top_set_logs), 2) as percentage\n        FROM top_set_logs tsl\n        LEFT JOIN movements m ON tsl.movement_id = m.id\n        WHERE m.id IS NULL;\n    ]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)",
+  "all_orphaned_summary_error": "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InFailedSQLTransactionError'>: current transaction is aborted, commands ignored until end of transaction block\n[SQL: \n        WITH circuits_melted_orphans AS (\n            SELECT COUNT(*) as count FROM circuits_melted cm\n            LEFT JOIN movements m ON cm.movement_id = m.id\n            WHERE cm.movement_id IS NOT NULL AND m.id IS NULL\n        ),\n        user_movement_rules_orphans AS (\n            SELECT COUNT(*) as count FROM user_movement_rules umr\n            LEFT JOIN movements m ON umr.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        session_exercises_orphans AS (\n            SELECT COUNT(*) as count FROM session_exercises se\n            LEFT JOIN movements m ON se.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        top_set_logs_orphans AS (\n            SELECT COUNT(*) as count FROM top_set_logs tsl\n            LEFT JOIN movements m ON tsl.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        favorites_orphans AS (\n            SELECT COUNT(*) as count FROM favorites f\n            LEFT JOIN movements m ON f.movement_id = m.id\n            WHERE f.movement_id IS NOT NULL AND m.id IS NULL\n        ),\n        movement_disciplines_orphans AS (\n            SELECT COUNT(*) as count FROM movement_disciplines md\n            LEFT JOIN movements m ON md.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        movement_equipment_orphans AS (\n            SELECT COUNT(*) as count FROM movement_equipment me\n            LEFT JOIN movements m ON me.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        movement_tags_orphans AS (\n            SELECT COUNT(*) as count FROM movement_tags mt\n            LEFT JOIN movements m ON mt.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        movement_coaching_cues_orphans AS (\n            SELECT COUNT(*) as count FROM movement_coaching_cues mcc\n            LEFT JOIN movements m ON mcc.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        movement_muscle_map_orphans AS (\n            SELECT COUNT(*) as count FROM movement_muscle_map mmm\n            LEFT JOIN movements m ON mmm.movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        movement_relationships_source_orphans AS (\n            SELECT COUNT(*) as count FROM movement_relationships mr\n            LEFT JOIN movements m ON mr.source_movement_id = m.id\n            WHERE m.id IS NULL\n        ),\n        movement_relationships_target_orphans AS (\n            SELECT COUNT(*) as count FROM movement_relationships mr\n            LEFT JOIN movements m ON mr.target_movement_id = m.id\n            WHERE m.id IS NULL\n        )\n        SELECT\n            'circuits_melted' as table_name,\n            (SELECT count FROM circuits_melted_orphans) as orphaned_count\n        UNION ALL\n        SELECT 'user_movement_rules', (SELECT count FROM user_movement_rules_orphans)\n        UNION ALL\n        SELECT 'session_exercises', (SELECT count FROM session_exercises_orphans)\n        UNION ALL\n        SELECT 'top_set_logs', (SELECT count FROM top_set_logs_orphans)\n        UNION ALL\n        SELECT 'favorites', (SELECT count FROM favorites_orphans)\n        UNION ALL\n        SELECT 'movement_disciplines', (SELECT count FROM movement_disciplines_orphans)\n        UNION ALL\n        SELECT 'movement_equipment', (SELECT count FROM movement_equipment_orphans)\n        UNION ALL\n        SELECT 'movement_tags', (SELECT count FROM movement_tags_orphans)\n        UNION ALL\n        SELECT 'movement_coaching_cues', (SELECT count FROM movement_coaching_cues_orphans)\n        UNION ALL\n        SELECT 'movement_muscle_map', (SELECT count FROM movement_muscle_map_orphans)\n        UNION ALL\n        SELECT 'movement_relationships (source)', (SELECT count FROM movement_relationships_source_orphans)\n        UNION ALL\n        SELECT 'movement_relationships (target)', (SELECT count FROM movement_relationships_target_orphans)\n        ORDER BY orphaned_count DESC;\n    ]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)",
+  "movement_name_length_stats_error": "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InFailedSQLTransactionError'>: current transaction is aborted, commands ignored until end of transaction block\n[SQL: \n        SELECT\n            AVG(LENGTH(name)) as avg_name_length,\n            MIN(LENGTH(name)) as min_name_length,\n            MAX(LENGTH(name)) as max_name_length,\n            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY LENGTH(name)) as median_name_length\n        FROM movements;\n    ]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)",
+  "duplicate_movement_names_error": "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InFailedSQLTransactionError'>: current transaction is aborted, commands ignored until end of transaction block\n[SQL: \n        SELECT\n            LOWER(name) as name_lower,\n            COUNT(*) as count,\n            STRING_AGG(DISTINCT name, ', ') as variations\n        FROM movements\n        GROUP BY LOWER(name)\n        HAVING COUNT(*) > 1\n        ORDER BY count DESC;\n    ]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)",
+  "movement_completeness_error": "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InFailedSQLTransactionError'>: current transaction is aborted, commands ignored until end of transaction block\n[SQL: \n        SELECT\n            COUNT(*) as total_movements,\n            COUNT(CASE WHEN description IS NOT NULL THEN 1 END) as with_description,\n            COUNT(CASE WHEN biomechanics_profile IS NOT NULL THEN 1 END) as with_biomechanics,\n            COUNT(CASE WHEN embedding_description IS NOT NULL THEN 1 END) as with_embedding_description,\n            COUNT(CASE WHEN embedding_vector IS NOT NULL THEN 1 END) as with_embedding_vector\n        FROM movements;\n    ]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)"
+}

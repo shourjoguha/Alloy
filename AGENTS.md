@@ -119,37 +119,169 @@ Circuits <- Circuits_macro
 
 ### Core Services
 
-These services implement the business logic and should be understood when making changes:
+The application services are organized hierarchically. **ProgramService** acts as the main orchestrator, delegating planning to the **Logic & Planning Layer**, which then instructs the **Execution Layer** to generate content using **Core Engines**.
 
-- **ProgramService** (`app/services/program.py`): Orchestrates program creation with microcycles, split templates, and goal distribution. Handles the "ten-dollar method" where users select 3 goals with weights summing to 10.
+```mermaid
+graph TD
+    subgraph "Orchestration Layer"
+        PS[ProgramService]
+    end
 
-- **SessionGeneratorService** (`app/services/session_generator.py`): LLM-powered session creation with movement variety enforcement. This is the largest and most complex service (~158KB). It generates exercises using constraints from user preferences, movement history, and pattern interference rules.
+    subgraph "Logic & Planning Layer"
+        IS[InterferenceService]
+        AIS[AllocationIntegrationService]
+        AS[AdaptationService]
+    end
 
-- **MovementService** (`app/services/movement.py`): Movement selection with pattern interference detection. Prevents same movement patterns on consecutive days and enforces diversity rules.
+    subgraph "Execution Layer"
+        SGS[SessionGeneratorService]
+    end
 
-- **OptimizationService** (`app/services/optimization.py`): OR-Tools constraint solver for session planning. Optimizes exercise selection based on goals, time constraints, equipment availability, and recovery state.
+    subgraph "Core Engines"
+        OS[OptimizationService]
+        TES[TimeEstimationService]
+        CCS[CircuitComparisonService]
+        MS[MovementService]
+    end
 
-- **MetricsService** (`app/services/metrics.py`): e1RM calculations (Epley, Brzycki, Lombardi, O'Conner) and Pattern Strength Index (PSI) tracking.
+    %% Relationships
+    PS --> IS
+    PS --> AIS
+    PS --> SGS
+    
+    SGS --> OS
+    SGS --> TES
+    SGS --> CCS
+    SGS --> MS
+    
+    AS --> CCS
+    AS --> MS
+```
 
-- **TimeEstimationService** (`app/services/time_estimation.py`): Session duration predictions based on exercise count, sets, rest periods, and session type.
+#### 1. Orchestration Layer
+*   **ProgramService** (`app/services/program.py`)
+    *   **Role**: Entry point for program creation. Orchestrates microcycles, split templates, and goal distribution.
+    *   **Dependencies**:
+        *   `InterferenceService`: To validate goal conflicts.
+        *   `AllocationIntegrationService`: To plan session types.
+        *   `SessionGeneratorService`: To generate session content.
 
-- **AdaptationService** (`app/services/adaptation.py`): Real-time session adjustments based on user constraints (time, equipment, recovery).
+#### 2. Logic & Planning Layer
+*   **InterferenceService** (`app/services/interference.py`)
+    *   **Role**: Validates user goals and detects logical conflicts (e.g., incompatibility between "Powerlifting" focus and "Marathon" training).
+    *   **Dependencies**: None.
 
-- **DeloadService** (`app/services/deload.py`): Time-based and performance-triggered deload scheduling.
+*   **AllocationIntegrationService** (`app/services/allocation_integration.py`)
+    *   **Role**: Coordinates session type allocation (Finisher vs Accessory). Merges wizard goals with user settings and uses distribution logic to assign types across a microcycle.
+    *   **Dependencies**: Internal helpers (`SessionTypeCalculator`, `SessionTypeDistributor`).
 
-- **InterferenceService** (`app/services/interference.py`): Goal validation and conflict detection.
+*   **AdaptationService** (`app/services/adaptation.py`)
+    *   **Role**: Real-time session adjustments based on user constraints (time, equipment, recovery).
+    *   **Dependencies**: `CircuitComparisonService` (for circuit swaps), `MovementService` (for exercise swaps).
 
-- **CircuitAssignmentService** (`app/services/circuit_assignment.py`): Assigns CrossFit/Hyrox-style circuits to sessions with mutual exclusivity enforcement.
+#### 3. Execution Layer
+*   **SessionGeneratorService** (`app/services/session_generator.py`)
+    *   **Role**: Generates actual workout content (warmup, main, accessory, finisher).
+    *   **Mechanism**: Uses **OR-Tools** (Constraint Solver) exclusively. Legacy LLM generation has been removed.
+    *   **Dependencies**:
+        *   `OptimizationService`: The solver engine.
+        *   `TimeEstimationService`: To ensure sessions fit duration constraints.
+        *   `CircuitComparisonService`: To select appropriate finishers.
 
-### LLM Integration
+#### 4. Core Engines (Foundational Services)
+*   **OptimizationService** (`app/services/optimization.py`)
+    *   **Role**: Wrapper around Google OR-Tools. Solves the complex constraint satisfaction problem of selecting exercises that meet all biomechanical, equipment, and time rules.
 
-The application uses a provider-agnostic interface (`app/llm/base.py`) with Ollama implementation (`app/llm/ollama_provider.py`). The system is designed for future expansion to cloud providers (OpenAI, Anthropic).
+*   **MovementService** (`app/services/movement.py`)
+    *   **Role**: Manages movement data, pattern interference detection, and variety rules.
+    *   **Key Feature**: Prevents same movement patterns on consecutive days.
 
-**LLM prompts** are defined in `app/llm/prompts.py` and include:
-- Session generation with movement variety context
-- Exercise selection with pattern interference rules
-- Coach persona customization (tone and aggressiveness)
-- Adaptation logic for constraints
+*   **TimeEstimationService** (`app/services/time_estimation.py`)
+    *   **Role**: Predicts session duration based on exercise count, sets, reps, and rest periods.
+
+*   **CircuitComparisonService** (`app/services/circuit_assignment.py` / `circuit_comparison.py`)
+    *   **Role**: Assigns and compares CrossFit/Hyrox-style circuits. Handles mutual exclusivity enforcement.
+
+*   **MetricsService** (`app/services/metrics.py`)
+    *   **Role**: Calculates e1RM (Epley, Brzycki, etc.) and Pattern Strength Index (PSI).
+
+*   **DeloadService** (`app/services/deload.py`)
+    *   **Role**: Manages deload scheduling logic.
+
+### The Coaching Logic
+
+The "brain" of the application lies in how the **OptimizationService** (OR-Tools) selects exercises. It doesn't just pick random movements; it solves a mathematical optimization problem to find the "best" workout.
+
+#### 1. The Selection Formula (How Movements are Compared)
+The optimizer compares movements by calculating a **Score** for each candidate and trying to maximize the total session score.
+
+*   **Primary Driver**: `Stimulus` vs. `Goal Priority`
+    *   Logic: `Score = (Movement Stimulus × Goal Pressure) + Duration Incentive`
+    *   *Goal Pressure* comes from user goals (e.g., Strength goals prioritize high-stimulus compounds).
+    *   *Duration Incentive* ensures the session fills the time (rather than picking the fewest exercises).
+
+*   **The "Cost" (Constraints)**
+    *   **Fatigue Budget**: Every movement has a `fatigue_factor`. The session cannot exceed the global `max_fatigue` (default 8.0, relaxes if solving fails).
+    *   **Time Budget**: Calculated via `TimeEstimationService`. Rest periods + work time must fit within `target_duration ± tolerance`.
+
+*   **Tie-Breakers**:
+    *   **User Preference**: Preferred movements get a **15% score bonus**.
+    *   **Compound Requirement**: Solvers are forced to pick at least 2 compound movements first.
+
+#### 2. Global Configuration (Where the Rules Live)
+The rules are not hardcoded in the service but stored globally in `app/config/`. This allows for tuning the "Coach's Personality" without changing code.
+
+*   **`app/config/heuristics.py` (The Biomechanics & Physics)**
+    *   **`GOAL_DOSE_HEURISTICS`**: Defines the "dose" for each goal (e.g., Strength = Low Reps, High Rest, High CNS Cost).
+    *   **`TIME_ESTIMATION`**: Defines the physics of time (e.g., 1-5 reps takes 15s execution + 180s rest).
+    *   **`SECTION_PATTERN_FILTERS`**: Hard rules on what goes where (e.g., "No Isolation movements in Main Lift section").
+
+*   **`app/config/activity_distribution.py` (The Strategy)**
+    *   **`goal_bucket_weights`**: Determines the mix of session types (e.g., how many Finishers vs. Accessories based on Fat Loss vs. Strength goals).
+    *   **Solver Constraints**: Sets the global limits (e.g., `or_tools_max_fatigue = 8.0`).
+
+#### 3. Technical Illustration (Data Models)
+
+The following tables illustrate the data that drives the optimizer's decision-making process.
+
+**A. Goal Pressure (Heuristics)**
+This table defines the "dose" the optimizer attempts to construct for each goal type. Sourced from `GOAL_DOSE_HEURISTICS`.
+
+| Goal | Rep Range | Rest (Seconds) | CNS Budget | Volume (Sets/Muscle) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Strength** | 1 - 6 | 180 - 300 | High | 10 - 15 |
+| **Hypertrophy** | 6 - 15 | 60 - 120 | Moderate | 15 - 25 |
+| **Endurance** | 15 - 30 | 30 - 60 | Low | 12 - 20 |
+| **Fat Loss** | 10 - 20 | 30 - 60 | Moderate | 12 - 18 |
+| **Explosiveness** | 1 - 6 | 120 - 240 | High | 8 - 15 |
+
+**B. Scoring Influence (The "Why")**
+Factors that increase an exercise's score in the objective function.
+
+| Factor | Influence Multiplier | Description |
+| :--- | :--- | :--- |
+| **Stimulus** | `Goal Pressure × 100` | The primary driver. Heavily weighted by user's main goal (e.g., Squats score higher for Strength goals). |
+| **Duration** | `100` | Strong incentive to fill the session time budget completely. |
+| **User Preference** | `+15%` | Explicit bonus for exercises in the user's "Preferred" list. |
+| **Circuit Duration** | `10 × Cardio Pressure` | For endurance goals, longer circuits score higher. |
+
+**C. Solver Thresholds (Constraints)**
+Hard limits the solver must respect (defined in `activity_distribution.py`).
+
+| Threshold | Value | Description |
+| :--- | :--- | :--- |
+| **Max Fatigue** | `8.0` | Global limit for session fatigue score. Relaxes (+50%) if solving fails. |
+| **Duration Window** | `±12%` | A 60min session is valid between 53–67 minutes. |
+| **Sets per Move** | `2 - 5` | Exercises must have at least 2 sets, max 5. |
+| **Volume Reduction** | `20%` | Target volume is reduced by 20% to ensure solvable solutions. |
+
+### LLM Integration (Legacy/Deprecated)
+
+The application previously used LLMs for session generation. This has been replaced by deterministic solvers (OR-Tools) for reliability and speed.
+
+*   **Current Status**: largely deprecated.
+*   **Remaining Usage**: `ProgramService` contains logic to generate "Coach Notes" (Jerome Persona) via LLM, but this path is currently under refactoring.
+*   **Infrastructure**: `app/llm/` contains the provider-agnostic interface (`base.py`) and `ollama_provider.py`, which remain available for future features (e.g., chat, motivation).
 
 ### Session Structure
 
@@ -179,7 +311,7 @@ Critical for preventing overuse and maintaining training quality:
    - Intra-session deduplication (no exercise appears twice in same session)
    - Inter-session variety tracking across the week
    - Muscle group fatigue tracking
-   - Movement history context passed to LLM
+   - Movement history context passed to the Optimizer
 
 3. **Pattern Exposure Tracking** (`pattern_exposures` table)
    - Tracks consecutive uses of same pattern
@@ -236,7 +368,7 @@ JWT-based authentication with bcrypt password hashing:
 4. `ProgramService.create_program()` creates Program, Microcycles, Session shells
 5. Transaction committed
 6. Background task queued: `generate_active_microcycle_sessions()`
-7. `SessionGeneratorService` generates exercise content via LLM
+7. `AllocationIntegrationService` determines session types (finisher/accessory), then `SessionGeneratorService` generates exercise content via OR-Tools
 8. `ConstraintSolver` (OR-Tools) validates and optimizes selections
 9. Exercises saved to database with pattern exposure tracking
 
@@ -246,7 +378,7 @@ JWT-based authentication with bcrypt password hashing:
 2. User provides constraints (time, equipment, recovery)
 3. POST `/days/{date}/adapt` or `/days/{date}/adapt/stream` (SSE)
 4. `AdaptationService` adjusts session based on constraints
-5. LLM generates alternative exercises respecting pattern variety
+5. Alternative exercises are generated using database logic (substitution groups) and optimization rules.
 6. Updated session returned (streaming or complete)
 
 ### Testing Strategy
@@ -345,7 +477,7 @@ For deeper understanding of specific areas:
 
 2. **Session Generation is Async**: After program creation, sessions are generated in a background task. Don't expect immediate session content.
 
-3. **Movement Pattern Interference**: Respect the pattern interference rules when manually creating or modifying sessions. The LLM and optimizer enforce these, but manual database changes bypass them.
+3. **Movement Pattern Interference**: Respect the pattern interference rules when manually creating or modifying sessions. The Optimizer enforces these, but manual database changes bypass them.
 
 4. **JSON Fields**: Session content sections (warmup_json, main_json, etc.) are flexible schemas. Don't assume rigid structure—validate before accessing nested fields.
 

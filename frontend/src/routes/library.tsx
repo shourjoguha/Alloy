@@ -175,7 +175,7 @@ function AddMovementModal({ onClose, equipmentOptions }: { onClose: () => void; 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-3xl flex flex-col max-h-[85vh] rounded-lg bg-white border border-border shadow-xl">
+      <div className="w-full max-w-3xl flex flex-col max-h-[85vh] rounded-lg bg-background-elevated border border-border shadow-xl">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-bold text-foreground">Add Custom Movement</h2>
           <button onClick={onClose} className="text-foreground-muted hover:text-foreground">

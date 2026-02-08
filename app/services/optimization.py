@@ -155,6 +155,53 @@ class ConstraintSolver:
     def __init__(self):
         pass
 
+    def _validate_movement_pool(self, request: OptimizationRequest) -> dict:
+        """
+        Validate movement pool before optimization to prevent INFEASIBLE results.
+
+        Returns:
+            dict: {"is_valid": bool, "error": str}
+        """
+        # Check minimum movement count
+        available_after_exclusion = [
+            m for m in request.available_movements
+            if m.id not in request.excluded_movement_ids
+        ]
+
+        if len(available_after_exclusion) < 2:
+            return {
+                "is_valid": False,
+                "error": f"Insufficient movements available after exclusions: {len(available_after_exclusion)} (minimum 2 required)"
+            }
+
+        # Check if volume targets are achievable
+        for muscle, target in request.target_muscle_volumes.items():
+            available_for_muscle = [
+                m for m in available_after_exclusion
+                if m.primary_muscle == muscle
+            ]
+            max_possible_sets = len(available_for_muscle) * activity_distribution_config.or_tools_max_sets_per_movement
+            reduced_target = int(target * (1 - activity_distribution_config.or_tools_volume_target_reduction_pct))
+
+            if max_possible_sets < reduced_target:
+                return {
+                    "is_valid": False,
+                    "error": f"Cannot achieve {reduced_target} sets for {muscle}: only {len(available_for_muscle)} movements available (max {max_possible_sets} sets)"
+                }
+
+        # Check if compound requirement can be met
+        compound_movements = [
+            m for m in available_after_exclusion
+            if m.compound
+        ]
+        if len(compound_movements) < 2:
+            logger.warning(
+                f"[_validate_movement_pool] Limited compound movements: {len(compound_movements)} available. "
+                "Pass 4+ will relax this requirement."
+            )
+
+        return {"is_valid": True, "error": ""}
+
     def solve_session_with_progressive_relaxation(self, request: OptimizationRequest) -> OptimizationResult:
         """
         Solve with progressively relaxed constraints across multiple passes.
@@ -167,6 +214,13 @@ class ConstraintSolver:
 
         Returns the first feasible solution found, logging pass success data.
         """
+        # Validate movement pool before attempting optimization
+        validation_result = self._validate_movement_pool(request)
+        if not validation_result["is_valid"]:
+            logger.error(f"[ConstraintSolver] Movement pool validation failed: {validation_result['error']}")
+            # Return INFEASIBLE early with specific error
+            return OptimizationResult([], [], 0, 0, 0, "INFEASIBLE")
+
         passes = [
             {
                 "pass_number": 1,
@@ -696,7 +750,6 @@ class ConstraintSolver:
             for m in request.available_movements
             if m.id in movement_vars and not m.compound
         ]
-        total_isolation = sum(isolation_vars)
 
         # Ensure minimum compound movements based on pass config
         model.Add(total_compound >= min_compound)

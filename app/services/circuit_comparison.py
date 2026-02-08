@@ -605,7 +605,8 @@ class CircuitComparisonService:
         difficulty_tier: Optional[str] = None,
         max_equipment: int = None,
         limit: int = 10,
-        is_finisher: bool = False
+        is_finisher: bool = False,
+        exclude_circuit_ids: Optional[List[int]] = None,
     ) -> List[CircuitRecommendation]:
         """Recommend circuits for a training session.
         
@@ -621,6 +622,7 @@ class CircuitComparisonService:
             limit: Maximum number of recommendations
             is_finisher: If True, use similarity scoring (for finishers);
                          if False, use complementarity scoring (for variety)
+            exclude_circuit_ids: List of circuit IDs to strictly exclude (e.g. used in previous days)
             
         Returns:
             List of CircuitRecommendation sorted by relevance
@@ -635,7 +637,7 @@ class CircuitComparisonService:
         """
         logger.debug(
             f"[recommend_circuits_for_session] circuit_ids={circuit_ids}, regions={target_regions}, "
-            f"patterns={target_patterns}, tier={difficulty_tier}, is_finisher={is_finisher}"
+            f"patterns={target_patterns}, tier={difficulty_tier}, is_finisher={is_finisher}, exclude={exclude_circuit_ids}"
         )
         
         try:
@@ -655,6 +657,9 @@ class CircuitComparisonService:
             
             if circuit_ids:
                 stmt = stmt.where(CircuitMacro.circuit_id.notin_(circuit_ids))
+
+            if exclude_circuit_ids:
+                stmt = stmt.where(CircuitMacro.circuit_id.notin_(exclude_circuit_ids))
             
             # Execute query
             result = await self.db.execute(stmt)

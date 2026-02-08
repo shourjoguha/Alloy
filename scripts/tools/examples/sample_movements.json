@@ -1,0 +1,126 @@
+{
+  "movements": [
+    {
+      "name": "Zercher Squat",
+      "pattern": "squat",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "skill_level": "intermediate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "fatigue_factor": 1.2,
+      "stimulus_factor": 1.3,
+      "injury_risk_factor": 1.3,
+      "min_recovery_hours": 72,
+      "spinal_compression": "moderate",
+      "metric_type": "reps",
+      "tier": "silver",
+      "metabolic_demand": "neural",
+      "equipment": ["barbell", "squat_rack"],
+      "tags": ["compound", "lower_body", "squat_variation"],
+      "disciplines": ["powerlifting", "strongman"],
+      "description": "Squat with barbell held in crook of arms. Great for hip mobility and core strength.",
+      "biomechanics_profile": {
+        "force_vector": "vertical",
+        "joint_dominance": "knee",
+        "tempo_preference": "controlled",
+        "lumbar_shear": "moderate",
+        "eccentric_load": "high",
+        "concentric_drive": "glute_dominant",
+        "stability_demand": "high",
+        "unilateral_benefit": "none"
+      }
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "pattern": "lunge",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "skill_level": "intermediate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": true,
+      "fatigue_factor": 1.1,
+      "stimulus_factor": 1.2,
+      "injury_risk_factor": 1.1,
+      "min_recovery_hours": 48,
+      "spinal_compression": "low",
+      "metric_type": "reps",
+      "tier": "silver",
+      "metabolic_demand": "neural",
+      "equipment": ["dumbbell", "bench"],
+      "tags": ["unilateral", "lower_body", "balance"],
+      "disciplines": ["bodybuilding", "calisthenics"],
+      "description": "Unilateral squat with rear foot elevated. Excellent for leg hypertrophy and balance.",
+      "biomechanics_profile": {
+        "force_vector": "vertical",
+        "joint_dominance": "knee",
+        "tempo_preference": "controlled",
+        "lumbar_shear": "low",
+        "eccentric_load": "moderate",
+        "concentric_drive": "quad_dominant",
+        "stability_demand": "high",
+        "unilateral_benefit": "high"
+      }
+    },
+    {
+      "name": "Face Pulls",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "rear_delts",
+      "primary_region": "posterior_upper",
+      "skill_level": "beginner",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "fatigue_factor": 0.8,
+      "stimulus_factor": 1.0,
+      "injury_risk_factor": 0.5,
+      "min_recovery_hours": 24,
+      "spinal_compression": "none",
+      "metric_type": "reps",
+      "tier": "silver",
+      "metabolic_demand": "neural",
+      "equipment": ["cable_machine"],
+      "tags": ["isolation", "shoulder_health", "posterior_chain"],
+      "disciplines": ["bodybuilding", "powerlifting"],
+      "description": "Cable pull to face height. Excellent for rear delts, rotator cuff, and upper back health.",
+      "biomechanics_profile": {
+        "force_vector": "horizontal",
+        "joint_dominance": "shoulder",
+        "tempo_preference": "controlled",
+        "lumbar_shear": "none",
+        "eccentric_load": "low",
+        "concentric_drive": "posterior_delt_dominant",
+        "stability_demand": "low",
+        "unilateral_benefit": "none"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source": "Back Squat",
+      "target": "Zercher Squat",
+      "type": "variation",
+      "notes": "Barbell position changes center of mass and mobility requirements"
+    },
+    {
+      "source": "Back Squat",
+      "target": "Bulgarian Split Squat",
+      "type": "variation",
+      "notes": "Unilateral variation with reduced spinal loading"
+    },
+    {
+      "source": "Bulgarian Split Squat",
+      "target": "Reverse Lunge",
+      "type": "progression",
+      "notes": "More stable base than Bulgarian, easier progression"
+    },
+    {
+      "source": "Zercher Squat",
+      "target": "Goblet Squat",
+      "type": "regression",
+      "notes": "Easier loading pattern, less core demand"
+    }
+  ]
+}

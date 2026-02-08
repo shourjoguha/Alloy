@@ -7,7 +7,7 @@ import { Spinner } from '@/components/common/Spinner';
 import { useUIStore } from '@/stores/ui-store';
 import { ExperienceLevel, PersonaTone, Sex } from '@/types';
 import type { UserProfileUpdate } from '@/types';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 export function ProfileTab() {
   const { data: profile, isLoading, error: profileError } = useUserProfile();
@@ -18,6 +18,7 @@ export function ProfileTab() {
   const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm<UserProfileUpdate>();
 
   const disciplinePrefs = useWatch({ control, name: 'discipline_preferences' });
+  const schedulingPrefs = useWatch({ control, name: 'scheduling_preferences' });
 
   useEffect(() => {
     console.log('Profile data:', profile);
@@ -42,9 +43,9 @@ export function ProfileTab() {
         scheduling_preferences: profile.scheduling_preferences || {
           mix_disciplines: true,
           cardio_preference: 'finisher',
-          endurance_dedicated_cardio_day_policy: 'default',
           microcycle_length_days: 'auto',
           split_template_preference: 'none',
+          endurance_type: 'auto',
         },
         long_term_goal_category: profile.long_term_goal_category || 'general_fitness',
         long_term_goal_description: profile.long_term_goal_description || '',
@@ -376,20 +377,32 @@ export function ProfileTab() {
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Endurance-Heavy Cardio Day</label>
-                  <p className="text-xs text-foreground-muted">
-                    When endurance is your top goal, include at least one dedicated cardio day per 14-day microcycle.
-                  </p>
-                  <select
-                    {...register('scheduling_preferences.endurance_dedicated_cardio_day_policy')}
-                    className="w-full rounded-md border-0 bg-background-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="default">Use system default</option>
-                    <option value="always">Always include a cardio day</option>
-                    <option value="never">Never include a cardio day</option>
-                  </select>
-                </div>
+                {schedulingPrefs?.cardio_preference === 'dedicated_day' || schedulingPrefs?.cardio_preference === 'mixed' ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium">Endurance Type</label>
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-foreground-muted cursor-help" />
+                        <div className="absolute left-0 top-6 z-50 w-80 rounded-md bg-background-secondary border border-border px-3 py-2 text-xs shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                          <div className="font-medium mb-1">Endurance Type Options:</div>
+                          <ul className="space-y-1 list-disc list-inside">
+                            <li><strong>Auto:</strong> System decides based on your goals</li>
+                            <li><strong>Endurance only:</strong> Circuits, conditioning, metabolic work</li>
+                            <li><strong>Cardio only:</strong> Steady-state running, intervals, rowing</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <select
+                      {...register('scheduling_preferences.endurance_type')}
+                      className="w-full rounded-md border-0 bg-background-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="auto">Auto (based on goals)</option>
+                      <option value="endurance_only">Endurance only (circuits & conditioning)</option>
+                      <option value="cardio_only">Cardio only (steady-state & intervals)</option>
+                    </select>
+                  </div>
+                ) : null}
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Microcycle Duration</label>

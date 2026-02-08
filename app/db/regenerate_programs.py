@@ -56,33 +56,12 @@ async def regenerate_all_programs():
                     print(f"    Generating exercises for session {session.id} ({session.session_type})")
                     try:
                         # Generate and save session exercises
-                        content = await session_gen.generate_session_exercises(
-                            db=db,
-                            session=session,
-                            program=program,
-                            microcycle=microcycle,
+                        await session_gen.populate_session_by_id(
+                            session_id=session.id,
+                            program_id=program.id,
+                            microcycle_id=microcycle.id
                         )
                         
-                        # Update session metadata
-                        session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
-                        session.coach_notes = content.get("reasoning")
-                        
-                        # Build movement map for saving exercises
-                        all_movements = await session_gen._load_all_movements(db)
-                        movement_map = {}
-                        for m in all_movements:
-                            movement_map[m.name] = m.id
-                        
-                        # Save exercises to database
-                        await session_gen._save_session_exercises(
-                            db,
-                            session,
-                            content,
-                            movement_map,
-                            program.user_id
-                        )
-                        
-                        await db.commit()
                         print("      ✓ Success")
                     except Exception as e:
                         print(f"      ✗ Error: {e}")
